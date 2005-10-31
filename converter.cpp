@@ -359,7 +359,7 @@ inline float get_amiga_freq(unsigned period)
 
 int main(int argc, char *argv[])
 {
-/*
+
 	if (argc < 2) print_usage();
 	
 	for (int i = 1; i < argc; ++i)
@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
 		
 		fclose(fp);
 	}
-*/
+
 /*
 	for (unsigned i = 32; i < 255; ++i)
 	{

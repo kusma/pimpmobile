@@ -243,7 +243,6 @@ void mixer::mix(s8 *target, size_t samples)
 		if (0 != chan.sample) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
-//	dc_offs = 0;
 
 	BG_COLORS[0] = RGB5(0, 0, 31);
 	
@@ -255,13 +254,13 @@ void mixer::mix(s8 *target, size_t samples)
 	register s32 high_clamp = 127 + dc_offs;
 	register s32 low_clamp = -128 + dc_offs;
 	
-#define ITERATION                     \
-	{						          \
-		s32 samp = *src++ >> 8;       \
-		if (samp > high_clamp) samp = high_clamp;   \
-		if (samp < low_clamp) samp = low_clamp; \
-		samp -= dc_offs_local;        \
-		*dst++ = samp;                \
+#define ITERATION                                         \
+	{						  \
+		s32 samp = *src++ >> 8;                   \
+		if (samp > high_clamp) samp = high_clamp; \
+		if (samp < low_clamp) samp = low_clamp;   \
+		samp -= dc_offs_local;                    \
+		*dst++ = samp;                            \
 	}
 	
 	register u32 s = samples >> 4;
