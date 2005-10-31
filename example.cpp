@@ -51,6 +51,9 @@ int main()
 
 	da_sample.data = sample;
 	da_sample.len = &sample_end[0] - &sample[0];
+	da_sample.loop_type = mixer::LOOP_TYPE_FORWARD;
+	da_sample.loop_start = (&sample_end[0] - &sample[0]) / 2;
+	da_sample.loop_end = &sample_end[0] - &sample[0];
 	
 	iprintf("ballesatan %u\n", &sample_end[0] - &sample[0]);
 
@@ -65,8 +68,8 @@ int main()
 	for (u32 i = 0; i < 1; ++i)
 	{
 		mixer::channels[i].sample_cursor = 0;
-	//	mixer::channels[i].sample_cursor_delta = 3 << 11;
-		mixer::channels[i].sample_cursor_delta = (6 + i) << 8;
+		mixer::channels[i].sample_cursor_delta = 5 << 9;
+//		mixer::channels[i].sample_cursor_delta = (6 + i) << 8;
 		mixer::channels[i].volume = 127;
 		mixer::channels[i].sample = &da_sample;
 	}

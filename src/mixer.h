@@ -6,8 +6,6 @@
 #define CHANNELS 32
 #define SOUND_BUFFER_SIZE 304
 
-#define UNSIGNED_SAMPLES
-
 namespace mixer
 {
 
@@ -24,18 +22,14 @@ typedef struct sample_
 	u32         loop_start;
 	u32         loop_end;
 	loop_type_t loop_type;
-#ifdef UNSIGNED_SAMPLES
-	const u8   *data;
-#else
 	const s8   *data;
-#endif
 } sample_t;
 
 typedef struct channel_state_
 {
 	sample_t *sample;
 	u32       sample_cursor;
-	u32       sample_cursor_delta;
+	s32       sample_cursor_delta;
 	u32       volume;
 } channel_t;
 
