@@ -68,9 +68,9 @@ int main()
 	for (u32 i = 0; i < 1; ++i)
 	{
 		mixer::channels[i].sample_cursor = 0;
-		mixer::channels[i].sample_cursor_delta = 7 << 9;
+		mixer::channels[i].sample_cursor_delta = 5 << 8;
 //		mixer::channels[i].sample_cursor_delta = (6 + i) << 8;
-		mixer::channels[i].volume = 127;
+		mixer::channels[i].volume = 8;
 		mixer::channels[i].sample = &da_sample;
 	}
 	

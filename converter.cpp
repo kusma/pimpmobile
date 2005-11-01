@@ -73,6 +73,8 @@ typedef struct
 	char          name[22 + 1];
 } xm_sample_header_t;
 
+// #define PRINT_PATTERNS
+
 bool load_xm(FILE *fp)
 {
 	char temp[17];
@@ -318,48 +320,78 @@ static inline unsigned clz(unsigned input)
 	return clz_lut[input] + c;
 }
 
-#define PLAYBACK_FREQ 16000
+static inline unsigned clz16(unsigned input)
+{
+	/* 1 iteration of binary search */
+	unsigned c = 0;
+	
+	if (input & 0xFF00) input >>= 8;
+	else c += 8;
+
+	/* a 256 entries lut ain't too bad... */
+	return clz_lut[input] + c;
+}
+
+#define PLAYBACK_FREQ 18157
 
 unsigned short linear_freq_lut[12 * 64];
 
-inline float get_linear_freq(unsigned period)
+unsigned get_linear_delta(unsigned period)
 {
-	unsigned p = 10752 - period;
+	unsigned p = (12 * 64 * 14) - period;
 	unsigned octave        = p / (12 * 64);
 	unsigned octave_period = p % (12 * 64);
 	unsigned frequency = linear_freq_lut[octave_period] << octave;
-	return float(frequency) * (1.0 / (1 << 9));
+//	return float(frequency) * (1.0 / (1 << 9));
+
+	frequency = ((long long)frequency * unsigned((1.0 / PLAYBACK_FREQ) * (1 << 3) * (1ULL << 32)) + (1ULL << 31)) >> 32;
+	return frequency;
 }
 
-#define AMIGA_FREQ_TABLE_LOG_SIZE 8
+#define AMIGA_FREQ_TABLE_LOG_SIZE 7
 #define AMIGA_FREQ_TABLE_SIZE (1 << AMIGA_FREQ_TABLE_LOG_SIZE)
 #define AMIGA_FREQ_TABLE_FRAC_BITS (15 - AMIGA_FREQ_TABLE_LOG_SIZE)
-unsigned short amiga_freq_lut[AMIGA_FREQ_TABLE_SIZE + 1];
+unsigned short amiga_freq_lut[(AMIGA_FREQ_TABLE_SIZE / 2) + 1];
 
 /* TODO:
-- remove the first (unused part) of the lut
 - make the routine output in 20.12 fixedpoint-format
 */
 
-inline float get_amiga_freq(unsigned period)
+unsigned get_amiga_delta(unsigned period)
 {
-	unsigned shamt = clz(period) - 17; // (32 - AMIGA_FREQ_TABLE_LOG_SIZE);
+	unsigned shamt = clz16(period) - 1;
 	unsigned p = period << shamt;
 	unsigned p_frac = p & ((1 << AMIGA_FREQ_TABLE_FRAC_BITS) - 1);
-	p >>= 15 - AMIGA_FREQ_TABLE_LOG_SIZE;
+	p >>= AMIGA_FREQ_TABLE_FRAC_BITS;
 
 	// interpolate table-entries for better result
-	int f1 = amiga_freq_lut[p]; // (8363 * 1712) / float(p);
-	int f2 = amiga_freq_lut[p + 1]; // (8363 * 1712) / float(p + 1);
+	int f1 = amiga_freq_lut[p     - (AMIGA_FREQ_TABLE_SIZE / 2)]; // (8363 * 1712) / float(p);
+	int f2 = amiga_freq_lut[p + 1 - (AMIGA_FREQ_TABLE_SIZE / 2)]; // (8363 * 1712) / float(p + 1);
 	unsigned frequency = (f1 << AMIGA_FREQ_TABLE_FRAC_BITS) + (f2 - f1) * p_frac;
-	frequency >>= AMIGA_FREQ_TABLE_FRAC_BITS;
-	return (frequency * (1 << shamt)) / float(1 << 6);
+
+	if (shamt > AMIGA_FREQ_TABLE_FRAC_BITS) frequency <<= shamt - AMIGA_FREQ_TABLE_FRAC_BITS;
+	else frequency >>= AMIGA_FREQ_TABLE_FRAC_BITS - shamt;
+
+	// BEHOLD: the expression of the devil
+	// quasi-explaination:     the table-lookup  the playback freq  - the LUT presc - make it overflow - round it - pick the top
+	frequency = ((long long)frequency * unsigned(((1.0 / PLAYBACK_FREQ) * (1 << 6)) * (1LL << 32)) + (1ULL << 31)) >> 32;	
+	return frequency;
 }
 
+float get_normal_noise()
+{
+	float r = 0.0;
+	for (unsigned j = 0; j < 12; ++j)
+	{
+		r += rand();
+	}
+	r /= RAND_MAX;
+	r -= 6;
+	return r;
+}
 
 int main(int argc, char *argv[])
 {
-
 	if (argc < 2) print_usage();
 	
 	for (int i = 1; i < argc; ++i)
@@ -386,31 +418,28 @@ int main(int argc, char *argv[])
 	// generate a lut for linear frequencies
 	for (unsigned i = 0; i < 12 * 64; ++i)
 	{
-		linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9));
+		linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5);
 	}
 
 	// generate a lut for amiga frequencies
-	for (unsigned i = 0; i < AMIGA_FREQ_TABLE_SIZE + 1; ++i)
+	for (unsigned i = 0; i < (AMIGA_FREQ_TABLE_SIZE / 2) + 1; ++i)
 	{
-		amiga_freq_lut[i] = ((8363 * 1712) / float((i * 32768) / AMIGA_FREQ_TABLE_SIZE)) * (1 << 6);
+		unsigned p = i + (AMIGA_FREQ_TABLE_SIZE / 2);
+		amiga_freq_lut[i] = (unsigned short)(((8363 * 1712) / float((p * 32768) / AMIGA_FREQ_TABLE_SIZE)) * (1 << 6) + 0.5);
 	}
-	
-	for (unsigned i = 0; i < AMIGA_FREQ_TABLE_SIZE / 2; ++i)
-	{
-		amiga_freq_lut[i] = rand();
-	}
-	
-	for (unsigned period = 1; period < 32767; period += 128)
+#if 0
+	for (unsigned period = 1; period < 32767; period += 17)
 	{
 		float frequency1 = (8363 * 1712) / float(period);
 		float delta1 = frequency1 / PLAYBACK_FREQ;
+		delta1 = unsigned(delta1 * (1 << 12) + 0.5) * (1.0 / (1 << 12));
 		
-		float frequency2 = get_amiga_freq(period);
-		float delta2 = frequency2 / PLAYBACK_FREQ;
+		float delta2 = get_amiga_delta(period) * (1.0 / (1 << 12));
 		
 //		printf("%f %f\n", delta1, delta2);
-		printf("%f\n", fabs((delta1 - delta2) / delta1));
+		printf("%f %f, %f\n", delta1, delta2, fabs(delta1 - delta2) / delta1);
 	}
+#endif
 
 #if 0 // testcode for linear frequency-lut
 	for (unsigned i = 0; i < 12 * 14; ++i)
@@ -424,15 +453,28 @@ int main(int argc, char *argv[])
 			
 			float frequency1 = 8363 * pow(2.0, float(6 * 12 * 16 * 4 - period) / (12 * 16 * 4));
 			float delta1 = frequency1 / PLAYBACK_FREQ;
+			delta1 = unsigned(delta1 * (1 << 12) + 0.5) * (1.0 / (1 << 12));
 			
-			float frequency2 = get_linear_freq(period);
-			float delta2 = frequency2 / PLAYBACK_FREQ;
+			float delta2 = get_linear_delta(period) * (1.0 / (1 << 12));
 			
-//			printf("%f ", (delta1 - delta2) / delta1);
-			printf("%f\n", delta1);
+			printf("%f ", (delta1 - delta2) / delta1);
+//			printf("%f\n", delta1);
 		}
 		printf("\n");
 	}
 #endif
 
+#if 0
+	for (unsigned i = 0; i < 304; ++i)
+	{
+		float r;
+		
+		do {
+			r = get_normal_noise() * (2.0 / 3) * (1 << 6);
+		}
+		while (r > 127 || r < -128);
+		
+		printf("%i, ", int(r));
+	}
+#endif
 }
