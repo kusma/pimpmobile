@@ -49,8 +49,8 @@ clean:
 run: example.gba
 	$(GBAEMU) example.gba
 
-converter: converter.cpp
-	g++ converter.cpp -o converter
+converter: converter.cpp converter_xm.cpp converter.h
+	g++ converter.cpp converter_xm.cpp -o converter
 
 example.gba: converter
 example.elf: example.o sample.o lib/libpimpmobile.a
