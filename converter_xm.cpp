@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "converter.h"
 
@@ -76,8 +77,7 @@ module_t *load_module_XM(FILE *fp)
 	if (memcmp(temp, "Extended Module: ", 17) != 0) return 0;
 	
 	module_t *mod = (module_t *)malloc(sizeof(module_t));
-	if (!mod) return 0;
-	
+	assert(mod != 0);	
 	memset(mod, 0, sizeof(module_t));
 
 	char name[20 + 1];
@@ -160,11 +160,15 @@ module_t *load_module_XM(FILE *fp)
 	
 	mod->play_order_length = xm_header.len;
 	mod->play_order_repeat_position = xm_header.restart_pos;
+	
 	mod->play_order = (u8 *)malloc(sizeof(u8) * xm_header.len);
+	assert(mod->play_order != 0);
 	fread(mod->play_order, sizeof(u8), xm_header.len, fp);
 	
 	mod->num_channels = xm_header.channels;
+	
 	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->num_channels);
+	assert(mod->channel_states != 0);
 	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->num_channels);
 
 	// setup default pr channel settings.
@@ -176,7 +180,9 @@ module_t *load_module_XM(FILE *fp)
 	}
 	
 	mod->pattern_count = xm_header.patterns;
+	
 	mod->patterns = (pattern_header_t*) malloc(sizeof(pattern_header_t) * mod->pattern_count);
+	assert(mod->patterns != 0);
 	memset(mod->patterns, 0, sizeof(pattern_header_t) * mod->pattern_count);
 	
 	printf("dumping pattern-data...");
@@ -199,15 +205,19 @@ module_t *load_module_XM(FILE *fp)
 		
 		pattern_header_t *pat = &mod->patterns[p];
 		pat->num_rows = pattern_header.rows;
+
 		pat->pattern_data = (pattern_entry_t *)malloc(sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
+		assert(pat->pattern_data != 0);
 		memset(pat->pattern_data, 0, sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
 		
+#ifdef PRINT_PATTERNS
 		printf("pattern:              %u\n", p);
 		printf("pattern-header size:  %u\n", pattern_header.header_size);
 		printf("pattern packing type: %u\n", pattern_header.packing_type);
 		printf("pattern rows:         %u\n", pattern_header.rows);
 		printf("pattern data size:    %u\n", pattern_header.data_size);
-		
+#endif
+
 /*
 		if (pattern_header.data_size == 0)
 		{
@@ -291,8 +301,14 @@ module_t *load_module_XM(FILE *fp)
 		fseek(fp, last_pos + pattern_header.header_size + pattern_header.data_size, SEEK_SET);
 	}
 	printf("done!\n");
+	
+	printf("dumping instrument-data...\n");
+	
+	mod->instrument_count = xm_header.instruments;
 
-	printf("dumping instrument-data...");
+	mod->instruments = (instrument_t*) malloc(sizeof(instrument_t) * mod->instrument_count);
+	assert(mod->instruments != 0);
+	memset(mod->instruments, 0, sizeof(instrument_t) * mod->instrument_count);
 	
 	// load instruments
 	for (unsigned i = 0; i < xm_header.instruments; ++i)
@@ -300,90 +316,256 @@ module_t *load_module_XM(FILE *fp)
 	{
 		unsigned last_pos = ftell(fp);
 		
-		xm_instrument_header_t instrument_header;
-		memset(&instrument_header, 0, sizeof(instrument_header));
+		xm_instrument_header_t ih;
+		memset(&ih, 0, sizeof(ih));
+		
+		instrument_t &instr = mod->instruments[i];
 		
 //		printf("instrument: %i\n", i);
-		fread(&instrument_header.header_size,  4,  1, fp);
-		fread(&instrument_header.name,         1, 22, fp);
-		fread(&instrument_header.type,         1,  1, fp);
-		fread(&instrument_header.samples,      2,  1, fp);
-		instrument_header.name[22] = '\0';
+		fread(&ih.header_size,  4,  1, fp);
+		fread(&ih.name,         1, 22, fp);
+		fread(&ih.type,         1,  1, fp);
+		fread(&ih.samples,      2,  1, fp);
+		ih.name[22] = '\0';
 		
-//		printf("size:    %i\n",     instrument_header.header_size);
-//		printf("name:    \"%s\"\n", instrument_header.name);
-//		printf("samples: %i\n",     instrument_header.samples);
 		
-		if (instrument_header.samples == 0)
+//		printf("size:    %i\n",     ih.header_size);
+//		printf("name:    \"%s\"\n", ih.name);
+//		printf("samples: %i\n",     ih.samples);
+		
+		if (ih.samples != 0)
 		{
-			fseek(fp, last_pos + instrument_header.header_size, SEEK_SET);
-			continue;
+			unsigned last_pos2 = ftell(fp);
+			
+			fread(&ih.sample_header_size, 4,  1, fp);
+			fread(&ih.sample_number,      1, 96, fp);
+			fread(&ih.vol_env,            2, 24, fp);
+			fread(&ih.pan_env,            2, 24, fp);
+			fread(&ih.vol_env_points,     1,  1, fp);
+			fread(&ih.pan_env_points,     1,  1, fp);
+			fread(&ih.vol_sustain,        1,  1, fp);
+			fread(&ih.vol_loop_start,     1,  1, fp);
+			fread(&ih.vol_loop_end,       1,  1, fp);
+			fread(&ih.pan_sustain,        1,  1, fp);
+			fread(&ih.pan_loop_start,     1,  1, fp);
+			fread(&ih.pan_loop_end,       1,  1, fp);
+			fread(&ih.vol_type,           1,  1, fp);
+			fread(&ih.pan_type,           1,  1, fp);
+			fread(&ih.vibrato_type,       1,  1, fp);
+			fread(&ih.vibrato_sweep,      1,  1, fp);
+			fread(&ih.vibrato_depth,      1,  1, fp);
+			fread(&ih.vibrato_rate,       1,  1, fp);
+			fread(&ih.volume_fadeout,     2,  1, fp);
 		}
 		
-		unsigned last_pos2 = ftell(fp);
+//		printf("points: %i\n", ih.vol_env_points);
+		strcpy(instr.instrument_name, ih.name);
 		
-		fread(&instrument_header.sample_header_size, 4,  1, fp);
-		fread(&instrument_header.sample_number,      1, 96, fp);
-		fread(&instrument_header.vol_env,            2, 24, fp);
-		fread(&instrument_header.pan_env,            2, 24, fp);
-		fread(&instrument_header.vol_env_points,     1,  1, fp);
-		fread(&instrument_header.pan_env_points,     1,  1, fp);
-		fread(&instrument_header.vol_sustain,        1,  1, fp);
-		fread(&instrument_header.vol_loop_start,     1,  1, fp);
-		fread(&instrument_header.vol_loop_end,       1,  1, fp);
-		fread(&instrument_header.pan_sustain,        1,  1, fp);
-		fread(&instrument_header.pan_loop_start,     1,  1, fp);
-		fread(&instrument_header.pan_loop_end,       1,  1, fp);
-		fread(&instrument_header.vol_type,           1,  1, fp);
-		fread(&instrument_header.pan_type,           1,  1, fp);
-		fread(&instrument_header.vibrato_type,       1,  1, fp);
-		fread(&instrument_header.vibrato_sweep,      1,  1, fp);
-		fread(&instrument_header.vibrato_depth,      1,  1, fp);
-		fread(&instrument_header.vibrato_rate,       1,  1, fp);
-		fread(&instrument_header.volume_fadeout,     2,  1, fp);
-		
-		// seek to the end of the header (potentially variable amount of reserved bits at the end?)
-		fseek(fp, instrument_header.header_size - (ftell(fp) - last_pos), SEEK_CUR);
-		
-//		printf("sample header size: %i\n", instrument_header.sample_header_size);
-		
-#if 1
-		for (unsigned s = 0; s < instrument_header.samples; ++s)
+//		if (ih.vol_env_points > 0)
+		if ((ih.vol_type & 1) == 1)
 		{
-			xm_sample_header_t sample_header;
-			memset(&sample_header, 0, sizeof(sample_header));
+			instr.volume_envelope = (envelope_t*)malloc(sizeof(envelope_t));
+			assert(instr.volume_envelope != 0);
+			memset(instr.volume_envelope, 0, sizeof(envelope_t));
+
+			envelope_t *env = instr.volume_envelope;
+			env->node_count = ih.vol_env_points;
+			for (int i = 0; i < ih.vol_env_points; ++i)
+			{
+				env->node_tick[i]      = ih.vol_env[i * 2 + 0];
+				env->node_magnitude[i] = ih.vol_env[i * 2 + 1];
+				
+				if (i > 0)
+				{
+					int diff_mag  = env->node_magnitude[i] - env->node_magnitude[i - 1];
+					int diff_tick = env->node_tick[i] - env->node_tick[i - 1];
+					
+					env->node_delta[i - 1] = (diff_mag << 9) / diff_tick; // 7.9 fixedpoint. should this be auto-calculated somewhere for all mod-types instead?
+					
+//					printf("vol delta: %i (%i %i)\n", env->node_delta[i - 1], env->node_magnitude[i - 1], env->node_magnitude[i]);
+//					printf("vol %i hitpoint: %i\n", i, env->node_magnitude[i - 1] + ((env->node_delta[i - 1] * diff_tick + (1 << 8)) >> 9));
+				}
+			}
+			env->sustain_loop_start = env->sustain_loop_end = ih.vol_sustain;
+			env->loop_start  = ih.vol_loop_start;
+			env->loop_end    = ih.vol_loop_end;
+			
+			env->sustain_loop_enable = (ih.vol_type & (1 << 1)) == 1;
+			env->loop_enable         = (ih.vol_type & (1 << 2)) == 1;
+		}
+		
+//		if (ih.pan_env_points > 0)
+		if ((ih.pan_type & 1) == 1)
+		{
+			/* panning envelope */
+			instr.panning_envelope = (envelope_t*)malloc(sizeof(envelope_t));
+			assert(instr.panning_envelope != 0);
+			memset(instr.panning_envelope, 0, sizeof(envelope_t));
+
+			envelope_t *env = instr.panning_envelope;
+			env->node_count = ih.pan_env_points;
+			for (int i = 0; i < ih.pan_env_points; ++i)
+			{
+				env->node_tick[i]      = ih.pan_env[i * 2 + 0];
+				env->node_magnitude[i] = ih.pan_env[i * 2 + 1];
+				
+				if (i > 0)
+				{
+					int diff_mag  = env->node_magnitude[i] - env->node_magnitude[i - 1];
+					int diff_tick = env->node_tick[i] - env->node_tick[i - 1];
+					
+					env->node_delta[i - 1] = (diff_mag << 9) / diff_tick; // 7.9 fixedpoint. should this be auto-calculated somewhere for all mod-types instead?
+					
+//					printf("pan delta: %i (%i %i)\n", env->node_delta[i - 1], env->node_magnitude[i - 1], env->node_magnitude[i]);
+//					printf("pan %i hitpoint: %i\n", i, env->node_magnitude[i - 1] + ((env->node_delta[i - 1] * diff_tick + (1 << 8)) >> 9));
+				}
+			}
+			env->sustain_loop_start = env->sustain_loop_end = ih.pan_sustain;
+			env->loop_start = ih.pan_loop_start;
+			env->loop_end   = ih.pan_loop_end;
+			
+			env->sustain_loop_enable = (ih.pan_type & (1 << 1)) == 1;
+			env->loop_enable         = (ih.pan_type & (1 << 2)) == 1;
+		}
+		
+		instr.fadeout_rate = ih.volume_fadeout;
+		
+		/* "emulate" FT2-behavour on IT-fields */
+		instr.new_note_action = NNA_CUT;
+		instr.duplicate_check_type = DCT_OFF;
+		instr.duplicate_check_action = DCA_CUT;
+		
+		instr.sample_count = ih.samples;
+
+		instr.sample_headers = (sample_header_t*)malloc(sizeof(sample_header_t) * instr.sample_count);
+		assert(instr.sample_headers != NULL);
+		memset(instr.sample_headers, 0, sizeof(sample_header_t) * instr.sample_count);
+		
+		fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
+		
+		for (unsigned s = 0; s < ih.samples; ++s)
+		{
+			xm_sample_header_t sh;
+			memset(&sh, 0, sizeof(sh));
 			
 			// load sample-header
-			fread(&sample_header.length,      4,  1, fp);
-			fread(&sample_header.loop_start,  4,  1, fp);
-			fread(&sample_header.loop_length, 4,  1, fp);
-			fread(&sample_header.volume,      1,  1, fp);
-			fread(&sample_header.finetune,    1,  1, fp);
-			fread(&sample_header.type,        1,  1, fp);
-			fread(&sample_header.pan,         1,  1, fp);
-			fread(&sample_header.rel_note,    1,  1, fp);
+			fread(&sh.length,      4,  1, fp);
+			fread(&sh.loop_start,  4,  1, fp);
+			fread(&sh.loop_length, 4,  1, fp);
+			fread(&sh.volume,      1,  1, fp);
+			fread(&sh.finetune,    1,  1, fp);
+			fread(&sh.type,        1,  1, fp);
+			fread(&sh.pan,         1,  1, fp);
+			fread(&sh.rel_note,    1,  1, fp);
 			fseek(fp, 1, SEEK_CUR);
-			fread(&sample_header.name,        1, 22, fp);
-			sample_header.name[22] = '\0';
+			fread(&sh.name,        1, 22, fp);
+			sh.name[22] = '\0';
+
+//			printf("length: %i\n",     sh.length);
+			printf("name: \"%s\"\n", sh.name);
 			
-//			printf("length: %i\n",     sample_header.length);
-//			printf("name:   \"%s\"\n", sample_header.name);
+			/* fill converter-struct */
+			sample_header_t &samp = instr.sample_headers[s];
+			strcpy(samp.sample_name, sh.name);
+			samp.is_stereo = false; /* no stereo samples in XM */
+			switch (sh.type & ((1 << 2) - 1))
+			{
+				case 0:
+					samp.loop_type = LOOP_NONE;
+				break;
+				case 1:
+					samp.loop_type = LOOP_FORWARD;
+				break;
+				case 2:
+					samp.loop_type = LOOP_PINGPONG;
+				break;
+				default: assert(0);
+			}
 			
-			// fseek(fp, sample_header.length, SEEK_CUR);
+			samp.loop_start = sh.loop_start;
+			samp.loop_end   = sh.loop_start + sh.loop_length;
+			
+			/* IT only */
+			samp.sustain_loop_type = LOOP_NONE;
+			samp.sustain_loop_start = 0;
+			samp.sustain_loop_end = 0;
+			
+			samp.default_volume = sh.volume;
+			samp.default_pan_position = sh.pan;
+			samp.ignore_default_pan_position = false; /* allways pan from instrument in XM */
+			
+			samp.sample_note_offset = sh.rel_note; /* + 12; */
+			samp.finetune = sh.finetune;
+
+			samp.note_period_translation_map_index = 0;
+			
+			samp.vibrato_speed = ih.vibrato_rate;
+			samp.vibrato_depth = ih.vibrato_depth;
+			samp.vibrato_sweep = ih.vibrato_sweep;
+			
+			/* no documentation, this is reversed from MPT */
+			switch (ih.vibrato_type)
+			{
+				case 0:
+					samp.vibrato_waveform = SAMPLE_VIBRATO_SINE;
+				break;
+				case 1:
+					samp.vibrato_waveform = SAMPLE_VIBRATO_SQUARE;
+				break;
+				case 2:
+					samp.vibrato_waveform = SAMPLE_VIBRATO_RAMP_UP;
+				break;
+				case 3:
+					samp.vibrato_waveform = SAMPLE_VIBRATO_RAMP_DOWN;
+				break;
+				case 4:
+					samp.vibrato_waveform = SAMPLE_VIBRATO_RANDOM;
+				break;
+				default: assert(0);
+			}
+			
+			samp.sample_waveform = malloc(sh.length);
+			assert(samp.sample_waveform != NULL);
+			memset(samp.sample_waveform, 0, sh.length);
+			
+			if (sh.type & (1 << 4))
+			{
+				samp.sample_format = SAMPLE_SIGNED_16BIT;
+				samp.sample_length = sh.length / 2;
+			}
+			else
+			{
+				samp.sample_format = SAMPLE_SIGNED_8BIT;
+				samp.sample_length = sh.length;
+			}
+			
+			// fseek(fp, sh.length, SEEK_CUR);
 			char temp[256];
 			sprintf(temp, "sample_%i_%i.raw", i, s);
 			FILE *fp2 = fopen(temp, "wb");
-			signed char samp = 0;
-			for (unsigned i = 0; i < sample_header.length; ++i)
+			signed char prev = 0;
+			for (unsigned i = 0; i < sh.length; ++i)
 			{
 				unsigned char data;
 				fread(&data, 1, 1, fp);
-				samp += data;
-				fwrite(&samp, 1, 1, fp2);
+				prev += data;
+				fwrite(&prev, 1, 1, fp2);
+				((signed char*)samp.sample_waveform)[i] = prev;
 			}
 			fclose(fp2);
 		}
+		
+		for (unsigned i = 0; i < 96; ++i)
+		{
+			instr.instrument_sample_map[i + 12] = ih.sample_number[i]; /* some offset here? */
+		}
+		
+#if 0
+		/* some fields left: */
+		s8 pitch_pan_separation; // no idea what this one does
+		u8 pitch_pan_center; // not this on either; this one seems to be a note index
 #endif
+
 	}
 	printf("done!\n");
 	
