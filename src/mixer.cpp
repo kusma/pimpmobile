@@ -259,7 +259,7 @@ void mixer::mix(s8 *target, size_t samples)
 #define ITERATION                                 \
 	{						                      \
         s32 noise = *noise_ptr++ << 2;            \
-		s32 samp = (*src++ + noise) >> 8;         \
+		s32 samp = (*src++) >> 8;         \
 		if (samp > high_clamp) samp = high_clamp; \
 		if (samp < low_clamp) samp = low_clamp;   \
 		samp -= dc_offs_local;                    \
