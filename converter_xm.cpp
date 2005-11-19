@@ -539,17 +539,20 @@ module_t *load_module_XM(FILE *fp)
 				samp.sample_length = sh.length;
 			}
 			
-			// fseek(fp, sh.length, SEEK_CUR);
+//			fseek(fp, sh.length, SEEK_CUR);
 			char temp[256];
 			sprintf(temp, "sample_%i_%i.raw", i, s);
 			FILE *fp2 = fopen(temp, "wb");
+
 			signed char prev = 0;
 			for (unsigned i = 0; i < sh.length; ++i)
 			{
-				unsigned char data;
+				signed char data;
 				fread(&data, 1, 1, fp);
 				prev += data;
-				fwrite(&prev, 1, 1, fp2);
+				
+				unsigned char data2 = (unsigned char)(int(prev) + 128);
+				fwrite(&data2, 1, 1, fp2);
 				((signed char*)samp.sample_waveform)[i] = prev;
 			}
 			fclose(fp2);
