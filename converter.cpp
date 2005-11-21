@@ -123,4 +123,5 @@ int main(int argc, char *argv[])
 			convert_samples(mod); // convert all samples to unsigned 8bit format
 		}
 	}
+	return 0;
 }
