@@ -111,18 +111,18 @@ typedef enum
 
 typedef struct
 {
-	char sample_name[32];
+	char name[32];
 	
 	/*
 		actual sample-data: NULL/zero length means that sample doesn't exist.
 	*/
-	void *sample_waveform; /* pointer to actual sample waveform data */
-	u32    sample_length;
+	void *waveform; /* pointer to actual sample waveform data */
+	u32    length;
 
 	/*
 		sample format
 	*/
-	sample_format_t sample_format;
+	sample_format_t format;
 	bool is_stereo; /* is this ever actually supported in practice????? */
 
 	/*
@@ -243,7 +243,7 @@ typedef enum
 
 typedef struct
 {
-	char instrument_name[32];
+	char name[32];
 
 	/*
 		pointers to the envelope data structures

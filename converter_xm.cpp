@@ -205,7 +205,7 @@ module_t *load_module_XM(FILE *fp)
 		
 		pattern_header_t *pat = &mod->patterns[p];
 		pat->num_rows = pattern_header.rows;
-
+		
 		pat->pattern_data = (pattern_entry_t *)malloc(sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
 		assert(pat->pattern_data != 0);
 		memset(pat->pattern_data, 0, sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
@@ -359,7 +359,7 @@ module_t *load_module_XM(FILE *fp)
 		}
 		
 //		printf("points: %i\n", ih.vol_env_points);
-		strcpy(instr.instrument_name, ih.name);
+		strcpy(instr.name, ih.name);
 		
 //		if (ih.vol_env_points > 0)
 		if ((ih.vol_type & 1) == 1)
@@ -462,11 +462,12 @@ module_t *load_module_XM(FILE *fp)
 			sh.name[22] = '\0';
 
 //			printf("length: %i\n",     sh.length);
-			printf("name: \"%s\"\n", sh.name);
+//			printf("sample-name: \"%s\"\n", sh.name);
 			
 			/* fill converter-struct */
 			sample_header_t &samp = instr.sample_headers[s];
-			strcpy(samp.sample_name, sh.name);
+			strcpy(samp.name, sh.name);
+			
 			samp.is_stereo = false; /* no stereo samples in XM */
 			switch (sh.type & ((1 << 2) - 1))
 			{
@@ -524,40 +525,63 @@ module_t *load_module_XM(FILE *fp)
 				default: assert(0);
 			}
 			
-			samp.sample_waveform = malloc(sh.length);
-			assert(samp.sample_waveform != NULL);
-			memset(samp.sample_waveform, 0, sh.length);
+			samp.waveform = malloc(sh.length);
+			assert(samp.waveform != NULL);
+			memset(samp.waveform, 0, sh.length);
 			
 			if (sh.type & (1 << 4))
 			{
-				samp.sample_format = SAMPLE_SIGNED_16BIT;
-				samp.sample_length = sh.length / 2;
+				printf("16bit\n");
+				samp.format = SAMPLE_SIGNED_16BIT;
+				samp.length = sh.length / 2;
 			}
 			else
 			{
-				samp.sample_format = SAMPLE_SIGNED_8BIT;
-				samp.sample_length = sh.length;
+				samp.format = SAMPLE_SIGNED_8BIT;
+				samp.length = sh.length;
 			}
 			
-//			fseek(fp, sh.length, SEEK_CUR);
-			char temp[256];
-			sprintf(temp, "sample_%i_%i.raw", i, s);
-			FILE *fp2 = fopen(temp, "wb");
-
+#if 0
 			signed char prev = 0;
 			for (unsigned i = 0; i < sh.length; ++i)
 			{
 				signed char data;
 				fread(&data, 1, 1, fp);
+				
+//				if (sh.type & (1 << 4)) prev = data;
+//				else prev += data;
+				
 				prev += data;
 				
-				unsigned char data2 = (unsigned char)(int(prev) + 128);
-				fwrite(&data2, 1, 1, fp2);
-				((signed char*)samp.sample_waveform)[i] = prev;
+				((signed char*)samp.waveform)[i] = prev;
 			}
-			fclose(fp2);
 		}
-		
+#else
+			if (sh.type & (1 << 4))
+			{
+				signed short prev = 0;
+				for (unsigned i = 0; i < sh.length / 2; ++i)
+				{
+					signed short data = 0;
+					fread(&data, 1, 2, fp);
+					prev += data;
+					((signed short*)(samp.waveform))[i] = prev;
+				}
+			}
+			else
+			{
+				signed char prev = 0;
+				for (unsigned i = 0; i < sh.length; ++i)
+				{
+					signed char data = 0;
+					fread(&data, 1, 1, fp);
+					prev += data;
+					((signed char*)samp.waveform)[i] = prev;
+				}
+			}
+		}
+
+#endif
 		for (unsigned i = 0; i < 96; ++i)
 		{
 			instr.instrument_sample_map[i + 12] = ih.sample_number[i]; /* some offset here? */

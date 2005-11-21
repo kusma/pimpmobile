@@ -3,16 +3,14 @@
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 
-// #include <mappy.h>
 #include <stdio.h>
 #include <assert.h>
-#include "include/pimpmobile.h"
 
+#include "include/pimpmobile.h"
 #include "src/mixer.h"
 
 extern const s8  sample[];
 extern const s8  sample_end[];
-extern const u16 sample_size;
 
 void vblank()
 {
@@ -28,7 +26,6 @@ void vblank()
 }
 
 const u8 samp_data[2] IWRAM_DATA = {0, 255};
-mixer::sample_t da_sample;
 
 #define REG_WAITCNT *(vs16*)(REG_BASE + 0x0204)
 
@@ -49,34 +46,24 @@ int main()
 	SetInterrupt(IE_VBL, vblank);
 	EnableInterrupt(IE_VBL);
 
-	da_sample.data = sample;
-	da_sample.len = &sample_end[0] - &sample[0];
-	da_sample.loop_type = mixer::LOOP_TYPE_PINGPONG;
-	da_sample.loop_start = (&sample_end[0] - &sample[0]) / 2;
-	da_sample.loop_end = (&sample_end[0] - &sample[0]);
+	mixer::sample_t mixer_sample;
+	mixer_sample.data = sample;
+	mixer_sample.len = &sample_end[0] - &sample[0];
+	mixer_sample.loop_type = mixer::LOOP_TYPE_FORWARD;
+	mixer_sample.loop_start = 0;
+	mixer_sample.loop_end = (&sample_end[0] - &sample[0]);
 	
 	iprintf("ballesatan %u\n", &sample_end[0] - &sample[0]);
 
-#if 0
 	mixer::channels[0].sample_cursor = 0;
-//	mixer::channels[0].sample_cursor_delta = 3 << 11;
-	mixer::channels[0].sample_cursor_delta = 7 << 9;
+	mixer::channels[0].sample_cursor_delta = 4 << 11;
 	mixer::channels[0].volume = 127;
-	mixer::channels[0].sample = &da_sample;
-#endif
-
-	for (u32 i = 0; i < 1; ++i)
-	{
-		mixer::channels[i].sample_cursor = 0;
-		mixer::channels[i].sample_cursor_delta = 5 << 9;
-//		mixer::channels[i].sample_cursor_delta = (6 + i) << 8;
-		mixer::channels[i].volume = 127;
-		mixer::channels[i].sample = &da_sample;
-	}
+	mixer::channels[0].sample = &mixer_sample;
 	
 	while (1)
 	{
 		VBlankIntrWait();
 	}
+	
 	pimp_close();
 }

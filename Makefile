@@ -52,6 +52,9 @@ run: example.gba
 converter: converter.cpp converter_xm.cpp converter.h
 	g++ converter.cpp converter_xm.cpp -o converter
 
+lut_gen: lut_gen.cpp
+	g++ lut_gen.cpp -o lut_gen
+
 example.gba: converter
 example.elf: example.o sample.o lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
