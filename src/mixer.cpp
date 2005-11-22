@@ -140,7 +140,7 @@ inline void timing_end()
 {
 	unsigned int fjall = REG_TM3CNT_L;
 	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
-	iprintf("%i per cent cpu\n", (fjall * 100) / 280896);
+	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
 }
 
 u32 dc_offs = 0;
@@ -212,6 +212,8 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 
 	/*
 	update: just fixed it. 11 cycles. i think this might be the best we'll get with the wuline approach.
+	(with the exception of the dataskip-branch, but that's a low priority issue as it's a constant
+	overhead pr channel of only a few cycles. it might be an issue with short frame-lengths...)
 	*/
 	timing_start();
 
@@ -223,43 +225,43 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 .dataskip:                                  \n\
 	str sp, .stack                          \n\
 .loop2k3:                                   \n\
-    ldmia %[target], {r0-r7}                \n\
-                                            \n\
+	ldmia %[target], {r0-r7}                \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r0, sp, %[vol], r0                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r0, sp, %[vol], r0                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r1, sp, %[vol], r1                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r1, sp, %[vol], r1                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r2, sp, %[vol], r2                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r2, sp, %[vol], r2                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r3, sp, %[vol], r3                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r3, sp, %[vol], r3                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r4, sp, %[vol], r4                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r4, sp, %[vol], r4                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r5, sp, %[vol], r5                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r5, sp, %[vol], r5                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r6, sp, %[vol], r6                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r6, sp, %[vol], r6                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla	  r7, sp, %[vol], r7                \n\
-	add	  %[cursor], %[cursor], %[delta]    \n\
-                                            \n\
+	mla   r7, sp, %[vol], r7                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
 	stmia %[target]!, {r0-r7}               \n\
 	subs  %[counter], %[counter], #1        \n\
-	bne	.loop2k3                            \n\
+	bne .loop2k3                            \n\
 	ldr sp, .stack                          \n\
 "
 	:
@@ -327,7 +329,6 @@ void mixer::reset()
 }
 
 s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA ALIGN(4);
-signed char normal_noise[] IWRAM_DATA = { 20, -90, -42, 54, 47, -20, 20, -1, -25, 17, 0, 20, 38, -14, 21, -103, -23, 44, -41, 57, -15, 57, 2, -52, 50, 3, 2, 4, -15, -10, 39, -61, 29, -62, -59, 27, 36, -14, 18, -13, 32, -86, 77, -24, -48, 61, 24, 17, -9, -102, 22, -18, -5, -37, 41, -13, 74, 54, 5, -5, -55, -26, -8, -72, -24, -13, -15, 76, 63, 41, -10, -55, 7, 35, -46, 51, -71, -3, 64, 35, -74, -5, -30, -13, 103, 33, -7, 8, -2, 30, 0, -21, 40, -31, 29, -2, 10, -2, -86, 69, -13, 31, -91, -49, 31, 70, -14, -15, 42, 7, -60, 11, -100, -12, 7, -11, -2, 7, 77, -75, 33, -21, -30, 30, -78, -43, 5, 15, -100, 1, 14, 2, -45, 19, 29, -3, 55, -41, 14, -50, -78, 2, 55, -7, -64, -10, -45, -12, 15, -47, 60, -20, -20, -37, 13, -41, -12, 29, 45, 9, 57, 29, -68, 32, -2, -8, 40, 26, 110, -16, 71, -66, 21, 9, 58, -36, 19, 72, 9, 55, 16, -19, -74, 33, -9, 14, 35, 6, 10, 0, 50, -34, 0, 67, 79, 18, 59, -65, -29, 26, -30, 47, 12, -33, 114, -68, -65, 82, 10, -34, -9, -33, -13, -47, 2, 29, 12, -52, -63, -53, 21, -56, 92, -86, -27, 16, -25, -10, -1, 5, 19, 25, 1, 7, 40, 34, 103, 9, -74, -47, 23, -43, 9, -38, -2, 24, 21, 38, 31, -35, 1, -64, 49, 15, 30, -31, -40, -8, -12, 16, 57, -21, -81, 10, 24, 65, 11, -4, 17, 18, 20, 29, 87, 72, -72, 29, -5, 12, 10, -78, -8, 7, -81, 46, -4, -52, 21, -53, -9, -21, -22, 3, 9, 10, -4, 10, -17, -5, 41, -34, 55, 29, -10, 1, };
 
 void mixer::mix(s8 *target, size_t samples)
 {
@@ -359,15 +360,13 @@ void mixer::mix(s8 *target, size_t samples)
 	register s32 *src = sound_mix_buffer;
 	register s8  *dst = target;
 	register u32 dc_offs_local = dc_offs;
-	register s8 *noise_ptr = normal_noise;
 	
 	// the compiler is too smart -- we need to prevent it from doing some arm11-optimizations.
 	register s32 high_clamp = 127 + dc_offs;
 	register s32 low_clamp = -128 + dc_offs;
 	
 #define ITERATION                                 \
-	{						                      \
-        s32 noise = *noise_ptr++ << 2;            \
+	{	                                          \
 		s32 samp = (*src++) >> 8;         \
 		if (samp > high_clamp) samp = high_clamp; \
 		if (samp < low_clamp) samp = low_clamp;   \
