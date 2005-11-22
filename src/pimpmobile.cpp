@@ -11,7 +11,7 @@
 
 #include "mixer.h"
 
-s8  sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA ALIGN(4);
 static u32 sound_buffer_index = 0;
 
 extern "C" void pimp_init()
