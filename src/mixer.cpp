@@ -5,6 +5,7 @@
 #include <gba_systemcalls.h>
 #include <gba_video.h>
 #include <gba_dma.h>
+#include <gba_timers.h>
 
 using namespace mixer;
 
@@ -128,6 +129,20 @@ bool process_loop_event(channel_t &chan)
 	return true;
 }
 
+inline void timing_start()
+{
+	REG_TM3CNT_H = 0;
+	REG_TM3CNT_L = 0;
+	REG_TM3CNT_H = TIMER_START;
+}
+
+inline void timing_end()
+{
+	unsigned int fjall = REG_TM3CNT_L;
+	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
+	iprintf("%i per cent cpu\n", (fjall * 100) / 280896);
+}
+
 u32 dc_offs = 0;
 static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 {
@@ -165,23 +180,114 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	
 	BG_COLORS[0] = RGB5(31, 0, 31);
 	
-	register const u8 *const sample_data = (const u8 *const)chan.sample->data;
-	register u32 sample_cursor = chan.sample_cursor;
-	register const u32 sample_cursor_delta = chan.sample_cursor_delta;
-	register const u32 vol = chan.volume;
+	const u8 *const sample_data = (const u8 *const)chan.sample->data;
+	u32 sample_cursor = chan.sample_cursor;
+	const u32 sample_cursor_delta = chan.sample_cursor_delta;
+	const u32 vol = chan.volume;
 	
-#define ITERATION           \
-	{                       \
-		register s32 samp = sample_data[sample_cursor >> 12]; \
-		sample_cursor += sample_cursor_delta; \
-		*target++ += samp * vol;    \
-	}
+	/*
+		ldrb	r3, [sl, r4, lsr #12]	@ zero_extendqisi2	@ samp,* sample_data
+		ldr	r2, [r5, #0]	@ tmp348,* target
+		mla	r1, r3, r8, r2	@ tmp349, samp, <variable>.volume, tmp348
+		str	r1, [r5], #4	@ tmp349,
+		add	r4, r4, r6	@ sample_cursor, sample_cursor, <variable>.sample_cursor_delta
+		
+		LDRB: 1S + 1N + 1I <- 5 cycles?! (wait state, vettu) (men, to cycles...?)
+		LDR : 1S + 1N + 1I <- 3 cycles
+		MLA : 1S + 1I + 1I <- multiply-delen koster 2 cycles over ADD, accumulate-delen koster 1 cycle over MUL
+		STR : 2N
+		ADD : 1S
+	*/
+
+	/* TODO: non-duffs device "real" unrolling with LDM/STM. should save us 4 cycles, and get this loop down to 10 cycles (yay) */
+
 #if 1
+
+	/*
+	12 cycles / sample. TODO: manage to squeeze in 8 (4 more) samples each load/store.
+	we seem to only be one register short, so disabling the stack-pointer might work.
+	
+	hmm, need an absolute adressed temp-storage for sp... ?	
+	*/
+
+	/*
+	update: just fixed it. 11 cycles. i think this might be the best we'll get with the wuline approach.
+	*/
+	timing_start();
+
+	asm(
+"\
+	b .dataskip                             \n\
+.stack:                                     \n\
+.word                                       \n\
+.dataskip:                                  \n\
+	str sp, .stack                          \n\
+.loop2k3:                                   \n\
+    ldmia %[target], {r0-r7}                \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r0, sp, %[vol], r0                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r1, sp, %[vol], r1                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r2, sp, %[vol], r2                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r3, sp, %[vol], r3                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r4, sp, %[vol], r4                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r5, sp, %[vol], r5                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r6, sp, %[vol], r6                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla	  r7, sp, %[vol], r7                \n\
+	add	  %[cursor], %[cursor], %[delta]    \n\
+                                            \n\
+	stmia %[target]!, {r0-r7}               \n\
+	subs  %[counter], %[counter], #1        \n\
+	bne	.loop2k3                            \n\
+	ldr sp, .stack                          \n\
+"
+	:
+	:
+		[cursor]  "r"(sample_cursor),
+		[counter] "r"(samples >> 3),
+		[data]    "r"(sample_data),
+		[target]  "r"(target),
+		[delta]   "r"(sample_cursor_delta),
+		[vol]     "r"(vol)
+	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp"
+	);
+	timing_end();
+
+#else
+
+	timing_start();
 	register u32 s = samples >> 4;
 	switch (samples & 15)
 	{
 		do
 		{
+#define ITERATION                             \
+	{                                         \
+		register s32 samp = sample_data[sample_cursor >> 12]; \
+		sample_cursor += sample_cursor_delta; \
+		*target++ += samp * vol;              \
+	}
 		ITERATION;
 		case 15: ITERATION;
 		case 14: ITERATION;
@@ -198,14 +304,15 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 		case 3:  ITERATION;
 		case 2:  ITERATION;
 		case 1:  ITERATION;
+#undef ITERATION
 		case 0:;
 		}
 		while (s--);
 	}
+	timing_end();
 #endif
 	chan.sample_cursor = sample_cursor;
 
-#undef ITERATION
 	BG_COLORS[0] = RGB5(31, 0, 0);
 }
 
@@ -230,8 +337,10 @@ void mixer::mix(s8 *target, size_t samples)
 	
 	u32 zero = 0;
 	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
-
-	// CpuFastSet works on groups of 4 bytes, so the last byte might not be cleared.
+	
+	
+	/* these comments are for 16bit mixing, we're currently doing it in 32bit */
+	// CpuFastSet works on groups of 4 bytes, so the last sample might not be cleared.
 	// unconditional clear is faster, so let's do it anyway
 //	u32 zero = 0;
 //	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
