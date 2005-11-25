@@ -148,10 +148,10 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	asm(
 "\
 	b .dataskip                             \n\
-.stack:                                     \n\
-.word                                       \n\
+.stack_store:                               \n\
+.align 4                                    \n\
 .dataskip:                                  \n\
-	str sp, .stack                          \n\
+	str sp, .stack_store                    \n\
 .loop:                                      \n\
 	ldmia %[target], {r0-r7}                \n\
 	                                        \n\
@@ -190,7 +190,7 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	stmia %[target]!, {r0-r7}               \n\
 	subs  %[counter], %[counter], #1        \n\
 	bne .loop                               \n\
-	ldr sp, .stack                          \n\
+	ldr sp, .stack_store                    \n\
 "
 	: "=r"(sample_cursor)
 	:
@@ -212,10 +212,11 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	asm(
 "\
 	b .dataskip2                            \n\
-.stack2:                                    \n\
+.stack_store2:                              \n\
+.align 4                                    \n\
 .word                                       \n\
 .dataskip2:                                 \n\
-	str sp, .stack2                         \n\
+	str sp, .stack_store2                   \n\
 	ldrb  sp, [%[data]], #1                 \n\
 	mul   sp, %[vol], sp                    \n\
 .loop2:                                     \n\
@@ -264,7 +265,7 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	stmia %[target]!, {r0-r7}               \n\
 	subs  %[counter], %[counter], #1        \n\
 	bne .loop2                              \n\
-	ldr sp, .stack2                         \n\
+	ldr sp, .stack_store2                   \n\
 "
 	: "=r"(sample_cursor), "=r"(sample_data)
 	:
@@ -353,7 +354,6 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	*/
 	timing_start();
 
-//	iprintf("fjas\n");
 //	chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 //	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 
