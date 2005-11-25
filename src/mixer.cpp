@@ -139,11 +139,11 @@ inline void timing_start()
 inline void timing_end()
 {
 	unsigned int fjall = REG_TM3CNT_L;
-//	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
+	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
 //	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
 }
 
-static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	asm(
 "\
@@ -206,7 +206,7 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	return sample_cursor;
 }
 
-static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	const u8 *old_sample_data = sample_data;
 	sample_data += (sample_cursor >> 12);
@@ -357,8 +357,8 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	timing_start();
 
 //	chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-/*
+//	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+
 	if (sample_cursor_delta > 0 && sample_cursor_delta < u32((1 << 12) * 0.95))
 	{
 		BG_COLORS[0] = RGB5(0, 0, 31);
@@ -369,7 +369,7 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 		BG_COLORS[0] = RGB5(31, 0, 0);
 		chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 	}
-*/
+
 	timing_end();
 
 #else
