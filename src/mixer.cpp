@@ -143,7 +143,7 @@ inline void timing_end()
 //	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
 }
 
-u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	asm(
 "\
@@ -206,7 +206,7 @@ u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sam
 	return sample_cursor;
 }
 
-u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	const u8 *old_sample_data = sample_data;
 	sample_data += (sample_cursor >> 12);
