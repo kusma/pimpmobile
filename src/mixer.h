@@ -22,7 +22,7 @@ typedef struct sample_
 	u32         loop_start;
 	u32         loop_end;
 	loop_type_t loop_type;
-	const s8   *data;
+	const u8   *data;
 } sample_t;
 
 typedef struct channel_state_
@@ -33,7 +33,7 @@ typedef struct channel_state_
 	u32       volume;
 } channel_t;
 
-extern channel_t channels[CHANNELS];
+extern volatile channel_t channels[CHANNELS];
 
 void reset();
 void mix(s8 *target, size_t samples);
