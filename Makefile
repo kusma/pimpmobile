@@ -14,7 +14,7 @@ CXX     = $(PREFIX)g++
 OBJCOPY = $(PREFIX)objcopy
 STRIP   = $(PREFIX)strip
 LD      = $(PREFIX)g++
-AS      = $(PREFIX)gcc
+AS      = $(PREFIX)as
 AR      = $(PREFIX)ar
 
 CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include

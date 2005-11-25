@@ -9,8 +9,8 @@
 #include "include/pimpmobile.h"
 #include "src/mixer.h"
 
-extern const s8  sample[];
-extern const s8  sample_end[];
+extern const u8  sample[];
+extern const u8  sample_end[];
 
 void vblank()
 {
@@ -19,6 +19,7 @@ void vblank()
 	BG_COLORS[0] = RGB5(0, 0, 0);
 	
 	while (REG_VCOUNT != 0);
+//	while (REG_VCOUNT != 100);
 	
 	BG_COLORS[0] = RGB5(0, 31, 0);
 	pimp_frame();
@@ -27,7 +28,7 @@ void vblank()
 
 const u8 samp_data[2] IWRAM_DATA = {0, 255};
 
-#define REG_WAITCNT *(vs16*)(REG_BASE + 0x0204)
+#define REG_WAITCNT *(vu16*)(REG_BASE + 0x0204)
 
 int main()
 {
@@ -43,22 +44,34 @@ int main()
 	REG_DISPCNT = MODE_0 | BG0_ON;
 	
 	pimp_init();
-	SetInterrupt(IE_VBL, vblank);
-	EnableInterrupt(IE_VBL);
 
 	mixer::sample_t mixer_sample;
 	mixer_sample.data = sample;
 	mixer_sample.len = &sample_end[0] - &sample[0];
-	mixer_sample.loop_type = mixer::LOOP_TYPE_FORWARD;
+
+/*	mixer_sample.data = samp_data;
+	mixer_sample.len = 2; */
+
+	mixer_sample.loop_type = mixer::LOOP_TYPE_PINGPONG;
 	mixer_sample.loop_start = 0;
 	mixer_sample.loop_end = (&sample_end[0] - &sample[0]);
 	
-	iprintf("ballesatan %u\n", &sample_end[0] - &sample[0]);
+//	iprintf("ballesatan %u\n", &sample_end[0] - &sample[0]);
 
 	mixer::channels[0].sample_cursor = 0;
-	mixer::channels[0].sample_cursor_delta = 4 << 11;
+	mixer::channels[0].sample_cursor_delta = 1 << 11;
 	mixer::channels[0].volume = 127;
 	mixer::channels[0].sample = &mixer_sample;
+	
+	
+/*
+	mixer::channels[1].sample_cursor = 0;
+	mixer::channels[1].sample_cursor_delta = 5 << 10;
+	mixer::channels[1].volume = 64;
+	mixer::channels[1].sample = &mixer_sample;
+*/
+	SetInterrupt(IE_VBL, vblank);
+	EnableInterrupt(IE_VBL);
 	
 	while (1)
 	{
