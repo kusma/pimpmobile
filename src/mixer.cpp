@@ -36,7 +36,7 @@ end for
 
 */
 
-channel_t mixer::channels[CHANNELS] IWRAM_DATA;
+volatile channel_t mixer::channels[CHANNELS] IWRAM_DATA;
 
 #include <gba_console.h>
 #include <stdio.h>
@@ -139,8 +139,144 @@ inline void timing_start()
 inline void timing_end()
 {
 	unsigned int fjall = REG_TM3CNT_L;
-	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
-	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
+//	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
+//	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
+}
+
+static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+{
+	asm(
+"\
+	b .dataskip                             \n\
+.stack:                                     \n\
+.word                                       \n\
+.dataskip:                                  \n\
+	str sp, .stack                          \n\
+.loop:                                      \n\
+	ldmia %[target], {r0-r7}                \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r0, sp, %[vol], r0                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r1, sp, %[vol], r1                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r2, sp, %[vol], r2                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r3, sp, %[vol], r3                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r4, sp, %[vol], r4                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r5, sp, %[vol], r5                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r6, sp, %[vol], r6                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
+	mla   r7, sp, %[vol], r7                \n\
+	add   %[cursor], %[cursor], %[delta]    \n\
+	                                        \n\
+	stmia %[target]!, {r0-r7}               \n\
+	subs  %[counter], %[counter], #1        \n\
+	bne .loop                               \n\
+	ldr sp, .stack                          \n\
+"
+	: "=r"(sample_cursor)
+	:
+		[cursor]  "0"(sample_cursor),
+		[counter] "r"(samples >> 3),
+		[data]    "r"(sample_data),
+		[target]  "r"(target),
+		[delta]   "r"(sample_cursor_delta),
+		[vol]     "r"(vol)
+	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "1", "2", "4", "cc"
+	);
+	return sample_cursor;
+}
+
+static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+{
+	const u8 *old_sample_data = sample_data;
+	sample_data += (sample_cursor >> 12);
+	asm(
+"\
+	b .dataskip2                            \n\
+.stack2:                                    \n\
+.word                                       \n\
+.dataskip2:                                 \n\
+	str sp, .stack2                         \n\
+	ldrb  sp, [%[data]], #1                 \n\
+	mul   sp, %[vol], sp                    \n\
+.loop2:                                     \n\
+	ldmia %[target], {r0-r7}                \n\
+	                                        \n\
+	add   r0, sp, r0                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r1, sp, r1                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r2, sp, r2                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r3, sp, r3                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r4, sp, r4                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r5, sp, r5                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r6, sp, r6                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	add   r7, sp, r7                        \n\
+	adds  %[cursor], %[cursor], %[delta]    \n\
+	ldrcsb sp, [%[data]], #1                \n\
+	mulcs  sp, %[vol], sp                   \n\
+	                                        \n\
+	stmia %[target]!, {r0-r7}               \n\
+	subs  %[counter], %[counter], #1        \n\
+	bne .loop2                              \n\
+	ldr sp, .stack2                         \n\
+"
+	: "=r"(sample_cursor), "=r"(sample_data)
+	:
+		[cursor]  "0"(sample_cursor << 20),
+		[counter] "r"(samples >> 3),
+		[data]    "1"(sample_data),
+		[target]  "r"(target),
+		[delta]   "r"(sample_cursor_delta << 20),
+		[vol]     "r"(vol)
+	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "cc"
+	);
+	return ((sample_data - old_sample_data) << 12) + (sample_cursor >> 20);
 }
 
 u32 dc_offs = 0;
@@ -217,63 +353,21 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	*/
 	timing_start();
 
-	asm(
-"\
-	b .dataskip                             \n\
-.stack:                                     \n\
-.word                                       \n\
-.dataskip:                                  \n\
-	str sp, .stack                          \n\
-.loop2k3:                                   \n\
-	ldmia %[target], {r0-r7}                \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r0, sp, %[vol], r0                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r1, sp, %[vol], r1                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r2, sp, %[vol], r2                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r3, sp, %[vol], r3                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r4, sp, %[vol], r4                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r5, sp, %[vol], r5                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r6, sp, %[vol], r6                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
-	mla   r7, sp, %[vol], r7                \n\
-	add   %[cursor], %[cursor], %[delta]    \n\
-	                                        \n\
-	stmia %[target]!, {r0-r7}               \n\
-	subs  %[counter], %[counter], #1        \n\
-	bne .loop2k3                            \n\
-	ldr sp, .stack                          \n\
-"
-	:
-	:
-		[cursor]  "r"(sample_cursor),
-		[counter] "r"(samples >> 3),
-		[data]    "r"(sample_data),
-		[target]  "r"(target),
-		[delta]   "r"(sample_cursor_delta),
-		[vol]     "r"(vol)
-	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp"
-	);
+//	iprintf("fjas\n");
+//	chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+//	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+
+	if (sample_cursor_delta > 0 && sample_cursor_delta < u32((1 << 12) * 0.95))
+	{
+		BG_COLORS[0] = RGB5(0, 0, 31);
+		chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+	}
+	else
+	{
+		BG_COLORS[0] = RGB5(31, 0, 0);
+		chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+	}
+
 	timing_end();
 
 #else
@@ -313,8 +407,6 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	}
 	timing_end();
 #endif
-	chan.sample_cursor = sample_cursor;
-
 	BG_COLORS[0] = RGB5(31, 0, 0);
 }
 
@@ -350,7 +442,7 @@ void mixer::mix(s8 *target, size_t samples)
 	dc_offs = 0;
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
-		channel_t &chan = channels[c];
+		channel_t &chan = (channel_t &)channels[c];
 		if (0 != chan.sample) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
@@ -367,7 +459,7 @@ void mixer::mix(s8 *target, size_t samples)
 	
 #define ITERATION                                 \
 	{	                                          \
-		s32 samp = (*src++) >> 8;         \
+		s32 samp = (*src++) >> 8;                 \
 		if (samp > high_clamp) samp = high_clamp; \
 		if (samp < low_clamp) samp = low_clamp;   \
 		samp -= dc_offs_local;                    \
