@@ -116,9 +116,11 @@ int main(int argc, char *argv[])
 			printf("failed to load!\n");
 		}
 		fclose(fp);
+		printf("done loading\n");
 		
 		if (mod != 0)
 		{
+			printf("converting samples\n");
 			convert_samples(mod); // convert all samples to unsigned 8bit format
 		}
 	}

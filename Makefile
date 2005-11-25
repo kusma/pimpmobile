@@ -28,6 +28,8 @@ THUMB = -mthumb
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
+	CXXFLAGS += -g3 -ggdb
+	CFLAGS   += -g3 -ggdb
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer

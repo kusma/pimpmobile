@@ -56,13 +56,10 @@ int main()
 	mixer_sample.loop_start = 0;
 	mixer_sample.loop_end = (&sample_end[0] - &sample[0]);
 	
-//	iprintf("ballesatan %u\n", &sample_end[0] - &sample[0]);
-
 	mixer::channels[0].sample_cursor = 0;
 	mixer::channels[0].sample_cursor_delta = 1 << 11;
 	mixer::channels[0].volume = 127;
 	mixer::channels[0].sample = &mixer_sample;
-	
 	
 /*
 	mixer::channels[1].sample_cursor = 0;

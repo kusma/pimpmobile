@@ -147,12 +147,12 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 {
 	asm(
 "\
-	b .dataskip                             \n\
-.stack_store:                               \n\
+	b .Ldataskip%=                          \n\
+.Lstack_store%=:                            \n\
 .align 4                                    \n\
-.dataskip:                                  \n\
-	str sp, .stack_store                    \n\
-.loop:                                      \n\
+.Ldataskip%=:                               \n\
+	str sp, .Lstack_store%=                 \n\
+.Lloop%=:                                   \n\
 	ldmia %[target], {r0-r7}                \n\
 	                                        \n\
 	ldrb  sp, [%[data], %[cursor], lsr #12] \n\
@@ -189,8 +189,8 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	                                        \n\
 	stmia %[target]!, {r0-r7}               \n\
 	subs  %[counter], %[counter], #1        \n\
-	bne .loop                               \n\
-	ldr sp, .stack_store                    \n\
+	bne .Lloop%=                            \n\
+	ldr sp, .Lstack_store%=                 \n\
 "
 	: "=r"(sample_cursor)
 	:
@@ -202,6 +202,7 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 		[vol]     "r"(vol)
 	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "1", "2", "4", "cc"
 	);
+	
 	return sample_cursor;
 }
 
@@ -211,15 +212,15 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	sample_data += (sample_cursor >> 12);
 	asm(
 "\
-	b .dataskip2                            \n\
-.stack_store2:                              \n\
+	b .Ldataskip%=                          \n\
+.Lstack_store%=:                            \n\
 .align 4                                    \n\
 .word                                       \n\
-.dataskip2:                                 \n\
-	str sp, .stack_store2                   \n\
+.Ldataskip%=:                               \n\
+	str sp, .Lstack_store%=                 \n\
 	ldrb  sp, [%[data]], #1                 \n\
 	mul   sp, %[vol], sp                    \n\
-.loop2:                                     \n\
+.Lloop%=:                                   \n\
 	ldmia %[target], {r0-r7}                \n\
 	                                        \n\
 	add   r0, sp, r0                        \n\
@@ -264,8 +265,8 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	                                        \n\
 	stmia %[target]!, {r0-r7}               \n\
 	subs  %[counter], %[counter], #1        \n\
-	bne .loop2                              \n\
-	ldr sp, .stack_store2                   \n\
+	bne .Lloop%=                            \n\
+	ldr sp, .Lstack_store%=                 \n\
 "
 	: "=r"(sample_cursor), "=r"(sample_data)
 	:
@@ -277,6 +278,7 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 		[vol]     "r"(vol)
 	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "cc"
 	);
+	
 	return ((sample_data - old_sample_data) << 12) + (sample_cursor >> 20);
 }
 
@@ -355,8 +357,8 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	timing_start();
 
 //	chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-//	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-
+	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+/*
 	if (sample_cursor_delta > 0 && sample_cursor_delta < u32((1 << 12) * 0.95))
 	{
 		BG_COLORS[0] = RGB5(0, 0, 31);
@@ -367,7 +369,7 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 		BG_COLORS[0] = RGB5(31, 0, 0);
 		chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 	}
-
+*/
 	timing_end();
 
 #else

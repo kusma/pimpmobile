@@ -312,7 +312,6 @@ module_t *load_module_XM(FILE *fp)
 	
 	// load instruments
 	for (unsigned i = 0; i < xm_header.instruments; ++i)
-//	for (unsigned i = 0; i < 1; ++i)
 	{
 		unsigned last_pos = ftell(fp);
 		
@@ -321,17 +320,16 @@ module_t *load_module_XM(FILE *fp)
 		
 		instrument_t &instr = mod->instruments[i];
 		
-//		printf("instrument: %i\n", i);
 		fread(&ih.header_size,  4,  1, fp);
 		fread(&ih.name,         1, 22, fp);
 		fread(&ih.type,         1,  1, fp);
 		fread(&ih.samples,      2,  1, fp);
 		ih.name[22] = '\0';
 		
-		
-//		printf("size:    %i\n",     ih.header_size);
-//		printf("name:    \"%s\"\n", ih.name);
-//		printf("samples: %i\n",     ih.samples);
+		printf("size:    %i\n",     ih.header_size);
+		printf("name:    \"%s\"\n", ih.name);
+		printf("type:    %i\n",     ih.type);
+		printf("samples: %i\n",     ih.samples);
 		
 		if (ih.samples != 0)
 		{
@@ -448,8 +446,11 @@ module_t *load_module_XM(FILE *fp)
 			xm_sample_header_t sh;
 			memset(&sh, 0, sizeof(sh));
 			
+			int read = 0;
 			// load sample-header
-			fread(&sh.length,      4,  1, fp);
+			sh.length = 0xDEADBEEF;
+			if ((read = fread(&sh.length,      4,  1, fp)) != 4) printf("POTATOOOO! %i\n", read);
+			printf("length: %x\n",     sh.length);
 			fread(&sh.loop_start,  4,  1, fp);
 			fread(&sh.loop_length, 4,  1, fp);
 			fread(&sh.volume,      1,  1, fp);
@@ -461,8 +462,9 @@ module_t *load_module_XM(FILE *fp)
 			fread(&sh.name,        1, 22, fp);
 			sh.name[22] = '\0';
 
-//			printf("length: %i\n",     sh.length);
-//			printf("sample-name: \"%s\"\n", sh.name);
+			printf("length: %x\n",     sh.length);
+			printf("sample-name: \"%s\"\n", sh.name);
+			for (unsigned i = 0; i < 22; ++i) printf("%x(%c), ", sh.name[i], sh.name[i]);
 			
 			/* fill converter-struct */
 			sample_header_t &samp = instr.sample_headers[s];
@@ -557,6 +559,7 @@ module_t *load_module_XM(FILE *fp)
 			}
 		}
 #else
+//			printf("banan\n");
 			if (sh.type & (1 << 4))
 			{
 				signed short prev = 0;
@@ -580,7 +583,6 @@ module_t *load_module_XM(FILE *fp)
 				}
 			}
 		}
-
 #endif
 		for (unsigned i = 0; i < 96; ++i)
 		{
