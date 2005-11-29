@@ -50,6 +50,11 @@ clean:
 
 run: example.gba
 	$(GBAEMU) example.gba
+	
+debug: example.elf
+	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
+	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
+	
 
 converter: converter.cpp converter_xm.cpp converter.h
 	g++ converter.cpp converter_xm.cpp -o converter

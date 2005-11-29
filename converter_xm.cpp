@@ -76,19 +76,42 @@ module_t *load_module_XM(FILE *fp)
 	fread(temp, 17, 1, fp);
 	if (memcmp(temp, "Extended Module: ", 17) != 0) return 0;
 	
-	module_t *mod = (module_t *)malloc(sizeof(module_t));
-	assert(mod != 0);	
-	memset(mod, 0, sizeof(module_t));
-
+	// song name
 	char name[20 + 1];
 	fread(name, 20, 1, fp);
 	name[20] = '\0';
 	printf("name : \"%s\"\n", name);
+
+	// just another file-sanity-check
+	unsigned char magic;
+	fread(&magic, 1, 1, fp);
+	if (magic != 0x1a) return 0;
 	
+	// tracker name (seems to not be very reliable for bug-emulating)
+	char tracker_name[20 + 1];
+	fread(tracker_name, 20, 1, fp);
+	tracker_name[20] = '\0';
+	printf("tracker-name : \"%s\"\n", tracker_name);
+	
+	unsigned short version;
+	fread(&version, 2, 1, fp);
+	printf("version: %x\n", version);
+	if (version < 0x104)
+	{
+		printf("too old file format version, please open and resave in ft2\n");
+		fclose(fp);
+		exit(1);
+	}
+	
+	module_t *mod = (module_t *)malloc(sizeof(module_t));
+	if (mod == 0)
+	{
+		printf("out of memory\n");
+		fclose(fp);
+		exit(1);		
+	}
+	memset(mod, 0, sizeof(module_t));
 	strcpy(mod->module_name, name);
-	
-	// seek to start of song-header
-	fseek(fp, 60, SEEK_SET);
 	
 	xm_header_t xm_header;
 	memset(&xm_header, 0, sizeof(xm_header));
@@ -441,16 +464,18 @@ module_t *load_module_XM(FILE *fp)
 		
 		fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
 		
+		xm_sample_header_t *sample_headers = (xm_sample_header_t *)malloc(sizeof(xm_sample_header_t) * ih.samples);
+		assert(sample_headers != 0);
+		memset(sample_headers, 0, sizeof(xm_sample_header_t) * ih.samples);
+		
+		/* all sample headers are stored first, and THEN comes all sample-data. now it's time for them headers */
 		for (unsigned s = 0; s < ih.samples; ++s)
 		{
-			xm_sample_header_t sh;
-			memset(&sh, 0, sizeof(sh));
+			xm_sample_header_t &sh = sample_headers[s];
 			
-			int read = 0;
 			// load sample-header
 			sh.length = 0xDEADBEEF;
-			if ((read = fread(&sh.length,      4,  1, fp)) != 4) printf("POTATOOOO! %i\n", read);
-			printf("length: %x\n",     sh.length);
+			fread(&sh.length,      4,  1, fp);
 			fread(&sh.loop_start,  4,  1, fp);
 			fread(&sh.loop_length, 4,  1, fp);
 			fread(&sh.volume,      1,  1, fp);
@@ -542,24 +567,14 @@ module_t *load_module_XM(FILE *fp)
 				samp.format = SAMPLE_SIGNED_8BIT;
 				samp.length = sh.length;
 			}
-			
-#if 0
-			signed char prev = 0;
-			for (unsigned i = 0; i < sh.length; ++i)
-			{
-				signed char data;
-				fread(&data, 1, 1, fp);
-				
-//				if (sh.type & (1 << 4)) prev = data;
-//				else prev += data;
-				
-				prev += data;
-				
-				((signed char*)samp.waveform)[i] = prev;
-			}
 		}
-#else
-//			printf("banan\n");
+		
+		/* now load all samples */
+		for (unsigned s = 0; s < ih.samples; ++s)
+		{
+			xm_sample_header_t &sh = sample_headers[s];
+			sample_header_t &samp = instr.sample_headers[s];
+			
 			if (sh.type & (1 << 4))
 			{
 				signed short prev = 0;
@@ -583,7 +598,7 @@ module_t *load_module_XM(FILE *fp)
 				}
 			}
 		}
-#endif
+		
 		for (unsigned i = 0; i < 96; ++i)
 		{
 			instr.instrument_sample_map[i + 12] = ih.sample_number[i]; /* some offset here? */
