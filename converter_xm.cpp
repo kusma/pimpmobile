@@ -95,7 +95,6 @@ module_t *load_module_XM(FILE *fp)
 	
 	unsigned short version;
 	fread(&version, 2, 1, fp);
-	printf("version: %x\n", version);
 	if (version < 0x104)
 	{
 		printf("too old file format version, please open and resave in ft2\n");
@@ -349,11 +348,6 @@ module_t *load_module_XM(FILE *fp)
 		fread(&ih.samples,      2,  1, fp);
 		ih.name[22] = '\0';
 		
-		printf("size:    %i\n",     ih.header_size);
-		printf("name:    \"%s\"\n", ih.name);
-		printf("type:    %i\n",     ih.type);
-		printf("samples: %i\n",     ih.samples);
-		
 		if (ih.samples != 0)
 		{
 			unsigned last_pos2 = ftell(fp);
@@ -487,10 +481,6 @@ module_t *load_module_XM(FILE *fp)
 			fread(&sh.name,        1, 22, fp);
 			sh.name[22] = '\0';
 
-			printf("length: %x\n",     sh.length);
-			printf("sample-name: \"%s\"\n", sh.name);
-			for (unsigned i = 0; i < 22; ++i) printf("%x(%c), ", sh.name[i], sh.name[i]);
-			
 			/* fill converter-struct */
 			sample_header_t &samp = instr.sample_headers[s];
 			strcpy(samp.name, sh.name);
@@ -558,7 +548,6 @@ module_t *load_module_XM(FILE *fp)
 			
 			if (sh.type & (1 << 4))
 			{
-				printf("16bit\n");
 				samp.format = SAMPLE_SIGNED_16BIT;
 				samp.length = sh.length / 2;
 			}
