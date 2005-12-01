@@ -274,7 +274,7 @@ typedef struct
 		
 		0 means no sample, and the first sample is 1.
 	*/
-	u8 instrument_sample_map[120];
+	u8 sample_map[120];
 } instrument_t;
 
 
@@ -292,7 +292,7 @@ typedef struct
 /* toplevel data structure for the module */
 typedef struct
 {
-	char module_name[32];
+	char name[32];
 
 	/*
 		special flags affecting the playback of the module

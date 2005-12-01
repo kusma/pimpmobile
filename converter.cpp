@@ -12,6 +12,7 @@ void print_usage()
 }
 
 module_t *load_module_XM(FILE *fp);
+module_t *load_module_MOD(FILE *fp);
 
 float normal_noise()
 {
@@ -85,9 +86,8 @@ void convert_samples(module_t *mod)
 		{
 			sample_header_t &samp = instr.sample_headers[s];
 			convert_sample(&samp);
-//			printf("converting sample: '%s'\n", samp.name);
-
-			if (i == 47)
+			
+			if (i == 16)
 			{
 				printf("converting sample: '%s'\n", samp.name);
 				FILE *fp = fopen("sample.raw", "wb");
@@ -111,10 +111,14 @@ int main(int argc, char *argv[])
 		FILE *fp = fopen(argv[i], "rb");
 		if (!fp) print_usage();
 		
-		if (!(mod = load_module_XM(fp)))
+		mod = load_module_XM(fp);
+		if (!mod) mod = load_module_MOD(fp);
+		if (!mod)
 		{
 			printf("failed to load!\n");
+			exit(1);
 		}
+		
 		fclose(fp);
 		printf("done loading\n");
 		

@@ -110,7 +110,7 @@ module_t *load_module_XM(FILE *fp)
 		exit(1);		
 	}
 	memset(mod, 0, sizeof(module_t));
-	strcpy(mod->module_name, name);
+	strcpy(mod->name, name);
 	
 	xm_header_t xm_header;
 	memset(&xm_header, 0, sizeof(xm_header));
@@ -590,7 +590,7 @@ module_t *load_module_XM(FILE *fp)
 		
 		for (unsigned i = 0; i < 96; ++i)
 		{
-			instr.instrument_sample_map[i + 12] = ih.sample_number[i]; /* some offset here? */
+			instr.sample_map[i + 12] = ih.sample_number[i]; /* some offset here? */
 		}
 		
 #if 0
