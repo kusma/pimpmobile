@@ -17,10 +17,10 @@ void vblank()
 	BG_COLORS[0] = RGB5(0, 0, 31);
 	pimp_vblank();
 	BG_COLORS[0] = RGB5(0, 0, 0);
-	
+
 	while (REG_VCOUNT != 0);
 //	while (REG_VCOUNT != 100);
-	
+
 	BG_COLORS[0] = RGB5(0, 31, 0);
 	pimp_frame();
 	BG_COLORS[0] = RGB5(0, 0, 0);
@@ -34,15 +34,15 @@ int main()
 {
 //	REG_WAITCNT = 0x46d6; // lets set some cool waitstates...
 	REG_WAITCNT = 0x46da; // lets set some cool waitstates...
-	
+
 	InitInterrupt();
 	EnableInterrupt(IE_VBL);
 	consoleInit(0, 4, 0, NULL, 0, 15);
-	
+
 	BG_COLORS[0]=RGB5(0, 0, 0);
 	BG_COLORS[241]=RGB5(31, 31, 31);
 	REG_DISPCNT = MODE_0 | BG0_ON;
-	
+
 	pimp_init();
 
 	mixer::sample_t mixer_sample;
@@ -55,12 +55,12 @@ int main()
 	mixer_sample.loop_type = mixer::LOOP_TYPE_PINGPONG;
 	mixer_sample.loop_start = 0;
 	mixer_sample.loop_end = (&sample_end[0] - &sample[0]);
-	
+
 	mixer::channels[0].sample_cursor = 0;
-	mixer::channels[0].sample_cursor_delta = 1 << 12;
+	mixer::channels[0].sample_cursor_delta = 1 << 11;
 	mixer::channels[0].volume = 127;
 	mixer::channels[0].sample = &mixer_sample;
-	
+
 /*
 	mixer::channels[1].sample_cursor = 0;
 	mixer::channels[1].sample_cursor_delta = 5 << 10;
@@ -69,11 +69,11 @@ int main()
 */
 	SetInterrupt(IE_VBL, vblank);
 	EnableInterrupt(IE_VBL);
-	
+
 	while (1)
 	{
 		VBlankIntrWait();
 	}
-	
+
 	pimp_close();
 }
