@@ -98,7 +98,7 @@ module_t *load_module_mod(FILE *fp)
 	mod->initial_bpm                = 125;
 	
 	
-	// this is behavour-flags for the player, used to flag differences between MOD, XM, S3M and IT
+	/* verify these */
 	mod->volume_slide_in_tick0        = false;
 	mod->vibrato_in_tick0             = false;
 	mod->vol0_optimizations           = false;
@@ -106,7 +106,7 @@ module_t *load_module_mod(FILE *fp)
 	mod->tremor_has_memory            = true;
 	mod->retrig_kills_note            = false;
 	mod->note_cut_kills_note          = false;
-	mod->allow_nested_loops           = true;
+	mod->allow_nested_loops           = false;
 	mod->retrig_note_source_is_period = false;
 	mod->delay_global_volume          = false;
 	mod->sample_offset_clamp          = false;
