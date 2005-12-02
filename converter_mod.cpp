@@ -247,5 +247,18 @@ module_t *load_module_mod(FILE *fp)
 		}
 	}
 	
+	/* check file length */
+	int eof1 = feof(fp);
+	fread(buf, 1, 1, fp);	
+	int eof2 = feof(fp);
+	if ((eof1 != 0) == (eof2 != 0))
+	{
+		/* uhm, still need to free the rest later. */
+		free(mod);
+		mod = NULL;
+		
+		return NULL;
+	}
+	
 	return mod;
 }
