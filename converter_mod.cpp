@@ -89,6 +89,31 @@ module_t *load_module_mod(FILE *fp)
 	memset(mod, 0, sizeof(module_t));
 	
 	
+	mod->use_linear_frequency_table = false;            // behavour flag
+	mod->period_low_clamp           = 113; // B-3 in MOD
+	mod->period_high_clamp          = 856; // C-1 in MOD
+	mod->instrument_vibrato_use_linear_frequency_table = false; // behavour flag
+	mod->initial_global_volume      = 64;
+	mod->initial_tempo              = 6;
+	mod->initial_bpm                = 125;
+	
+	
+	// this is behavour-flags for the player, used to flag differences between MOD, XM, S3M and IT
+	mod->volume_slide_in_tick0        = false;
+	mod->vibrato_in_tick0             = false;
+	mod->vol0_optimizations           = false;
+	mod->tremor_extra_delay           = true;
+	mod->tremor_has_memory            = true;
+	mod->retrig_kills_note            = false;
+	mod->note_cut_kills_note          = false;
+	mod->allow_nested_loops           = true;
+	mod->retrig_note_source_is_period = false;
+	mod->delay_global_volume          = false;
+	mod->sample_offset_clamp          = false;
+	mod->tone_porta_share_memory      = false; // unsure, need to check
+	mod->remember_tone_porta_target   = true;
+
+	
 	// song name
 	char name[20 + 1];
 	rewind(fp);
