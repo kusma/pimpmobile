@@ -14,7 +14,7 @@ int return_nearest_note(int p)
 	double log2p = log(p)/log(2);
 	double note = (log2( 428 << 5) - log2p) * 12.0 + 1;
 	
-	int note_int = floor( note + .5 );
+	int note_int = int(floor( note + .5 ));
 
 	if (note_int <= 0 || note_int > 120) return 0; // this is not a note
 	return note_int;
