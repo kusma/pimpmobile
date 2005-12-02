@@ -56,8 +56,8 @@ debug: example.elf
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 	
 
-converter: converter.cpp converter_xm.cpp converter_mod.cpp converter.h
-	g++ converter.cpp converter_xm.cpp converter_mod.cpp -o converter
+converter: converter.cpp converter_xm.cpp converter_s3m.cpp converter_mod.cpp converter.h
+	g++ converter.cpp converter_xm.cpp converter_s3m.cpp converter_mod.cpp -o converter
 
 lut_gen: lut_gen.cpp
 	g++ lut_gen.cpp -o lut_gen

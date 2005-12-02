@@ -11,9 +11,6 @@ void print_usage()
 	exit(1);
 }
 
-module_t *load_module_XM(FILE *fp);
-module_t *load_module_MOD(FILE *fp);
-
 float normal_noise()
 {
 	float r = 0.0;
@@ -99,6 +96,10 @@ void convert_samples(module_t *mod)
 	}
 }
 
+module_t *load_module_xm(FILE *fp);
+module_t *load_module_mod(FILE *fp);
+module_t *load_module_s3m(FILE *fp);
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2) print_usage();
@@ -111,8 +112,9 @@ int main(int argc, char *argv[])
 		FILE *fp = fopen(argv[i], "rb");
 		if (!fp) print_usage();
 		
-		mod = load_module_XM(fp);
-		if (!mod) mod = load_module_MOD(fp);
+		mod           = load_module_xm(fp);
+		if (!mod) mod = load_module_s3m(fp);
+		if (!mod) mod = load_module_mod(fp);
 		if (!mod)
 		{
 			printf("failed to load!\n");

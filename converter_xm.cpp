@@ -69,7 +69,7 @@ typedef struct
 	char          name[22 + 1];
 } xm_sample_header_t;
 
-module_t *load_module_XM(FILE *fp)
+module_t *load_module_xm(FILE *fp)
 {
 	rewind(fp);	
 	char temp[17];

@@ -20,7 +20,7 @@ int return_nearest_note(int p)
 	return note_int;
 }
 
-module_t *load_module_MOD(FILE *fp)
+module_t *load_module_mod(FILE *fp)
 {
 	fseek(fp, 1080, SEEK_SET);
 
