@@ -132,6 +132,8 @@ void update_row()
 #endif
 }
 
+u32 samples_per_tick = 300;
+
 static void update_tick()
 {
 	for (u32 c = 0; c < CHANNELS; ++c)
@@ -140,8 +142,30 @@ static void update_tick()
 	}
 }
 
+#define min(x, y) ((x) > (y) ? (y) : (x))
+
 extern "C" void pimp_frame()
 {
-	update_tick();
-	mixer::mix(sound_buffers[sound_buffer_index], SOUND_BUFFER_SIZE);
+	BG_COLORS[0] = RGB5(31, 31, 31);
+	
+	u32 samples_left = SOUND_BUFFER_SIZE;
+	s8 *buf = sound_buffers[sound_buffer_index];
+	
+	static int remainder = 0;
+	while(1)
+	{
+		int samples_to_mix = min(remainder, samples_left);
+		
+		if (samples_to_mix != 0) mixer::mix(buf, samples_to_mix);
+		BG_COLORS[0] = RGB5(31, 31, 31);
+		buf += samples_to_mix;
+		
+		samples_left -= samples_to_mix;
+		remainder -= samples_to_mix;
+		
+		if (!samples_left) break;
+		update_tick();
+		remainder = samples_per_tick;
+	}
+	BG_COLORS[0] = RGB5(0, 0, 0);
 }

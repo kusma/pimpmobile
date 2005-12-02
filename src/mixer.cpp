@@ -139,7 +139,7 @@ inline void timing_start()
 inline void timing_end()
 {
 	unsigned int fjall = REG_TM3CNT_L;
-	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
+//	iprintf("cycles pr sample: %i\n", fjall / SOUND_BUFFER_SIZE);
 //	iprintf("%i per cent cpu\n", (fjall * 1000) / 280896);
 }
 
@@ -192,7 +192,7 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	bne .Lloop%=                            \n\
 	ldr sp, .Lstack_store%=                 \n\
 "
-	: "=r"(sample_cursor)
+	:   "=r"(sample_cursor)
 	:
 		[cursor]  "0"(sample_cursor),
 		[counter] "r"(samples >> 3),
@@ -323,42 +323,23 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	u32 sample_cursor = chan.sample_cursor;
 	const u32 sample_cursor_delta = chan.sample_cursor_delta;
 	const u32 vol = chan.volume;
-	
-	/*
-		ldrb	r3, [sl, r4, lsr #12]	@ zero_extendqisi2	@ samp,* sample_data
-		ldr	r2, [r5, #0]	@ tmp348,* target
-		mla	r1, r3, r8, r2	@ tmp349, samp, <variable>.volume, tmp348
-		str	r1, [r5], #4	@ tmp349,
-		add	r4, r4, r6	@ sample_cursor, sample_cursor, <variable>.sample_cursor_delta
-		
-		LDRB: 1S + 1N + 1I <- 5 cycles?! (wait state, vettu) (men, to cycles...?)
-		LDR : 1S + 1N + 1I <- 3 cycles
-		MLA : 1S + 1I + 1I <- multiply-delen koster 2 cycles over ADD, accumulate-delen koster 1 cycle over MUL
-		STR : 2N
-		ADD : 1S
-	*/
 
-	/* TODO: non-duffs device "real" unrolling with LDM/STM. should save us 4 cycles, and get this loop down to 10 cycles (yay) */
-
-#if 1
-
-	/*
-	12 cycles / sample. TODO: manage to squeeze in 8 (4 more) samples each load/store.
-	we seem to only be one register short, so disabling the stack-pointer might work.
-	
-	hmm, need an absolute adressed temp-storage for sp... ?	
-	*/
-
-	/*
-	update: just fixed it. 11 cycles. i think this might be the best we'll get with the wuline approach.
-	(with the exception of the dataskip-branch, but that's a low priority issue as it's a constant
-	overhead pr channel of only a few cycles. it might be an issue with short frame-lengths...)
-	*/
 	timing_start();
+	for (unsigned i = samples & 7; i; --i)
+	{
+		register s32 samp = sample_data[sample_cursor >> 12];
+		sample_cursor += sample_cursor_delta;
+		*target++ += samp * vol;
+		samples--;
+	}
 
-//	chan.sample_cursor = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-//	chan.sample_cursor = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-
+	if (samples == 0)
+	{
+		chan.sample_cursor = sample_cursor;
+		timing_end();
+		return;
+	}
+	
 	if (sample_cursor_delta > 0 && sample_cursor_delta < u32((1 << 12) * 0.95))
 	{
 		BG_COLORS[0] = RGB5(0, 0, 31);
@@ -371,44 +352,6 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	}
 
 	timing_end();
-
-#else
-
-	timing_start();
-	register u32 s = samples >> 4;
-	switch (samples & 15)
-	{
-		do
-		{
-#define ITERATION                             \
-	{                                         \
-		register s32 samp = sample_data[sample_cursor >> 12]; \
-		sample_cursor += sample_cursor_delta; \
-		*target++ += samp * vol;              \
-	}
-		ITERATION;
-		case 15: ITERATION;
-		case 14: ITERATION;
-		case 13: ITERATION;
-		case 12: ITERATION;
-		case 11: ITERATION;
-		case 10: ITERATION;
-		case 9:  ITERATION;
-		case 8:  ITERATION;
-		case 7:  ITERATION;
-		case 6:  ITERATION;
-		case 5:  ITERATION;
-		case 4:  ITERATION;
-		case 3:  ITERATION;
-		case 2:  ITERATION;
-		case 1:  ITERATION;
-#undef ITERATION
-		case 0:;
-		}
-		while (s--);
-	}
-	timing_end();
-#endif
 	BG_COLORS[0] = RGB5(31, 0, 0);
 }
 
@@ -428,7 +371,7 @@ void mixer::mix(s8 *target, size_t samples)
 {
 	assert(samples > 0);
 	
-	BG_COLORS[0] = RGB5(31, 0, 0);
+	BG_COLORS[0] = RGB5(0, 31, 0);
 	
 	u32 zero = 0;
 	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
@@ -448,8 +391,7 @@ void mixer::mix(s8 *target, size_t samples)
 		if (0 != chan.sample) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
-
-	BG_COLORS[0] = RGB5(0, 0, 31);
+	BG_COLORS[0] = RGB5(0, 31, 0);
 	
 	register s32 *src = sound_mix_buffer;
 	register s8  *dst = target;
@@ -494,6 +436,4 @@ void mixer::mix(s8 *target, size_t samples)
 		while (s--);
 	}
 #undef ITERATION
-
-	BG_COLORS[0] = RGB5(0, 0, 0);
 }
