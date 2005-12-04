@@ -37,6 +37,7 @@ extern volatile channel_t channels[CHANNELS];
 
 void reset();
 void mix(s8 *target, size_t samples);
+u32 mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);
 
 }
 
