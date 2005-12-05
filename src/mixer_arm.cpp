@@ -6,7 +6,8 @@
 
 static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
-
+	assert(target != 0);
+	assert(sample_data != 0);
 	assert((samples & 7) == 0);
 	assert(samples != 0);
 
@@ -76,6 +77,8 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	const u8 *old_sample_data = sample_data;
 	sample_data += (sample_cursor >> 12);
 
+	assert(target != 0);
+	assert(sample_data != 0);
 	assert((samples & 7) == 0);
 	assert(samples != 0);
 
@@ -153,6 +156,9 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 
 u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
+	assert(target != 0);
+	assert(sample_data != 0);
+
 	/* mix heading 0-7 samples (the innerloops are unrolled 8 times) */
 	for (unsigned i = samples & 7; i; --i)
 	{

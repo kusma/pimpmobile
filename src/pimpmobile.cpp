@@ -132,7 +132,7 @@ void update_row()
 #endif
 }
 
-u32 samples_per_tick = 300;
+u32 samples_per_tick = 304;
 
 static void update_tick()
 {

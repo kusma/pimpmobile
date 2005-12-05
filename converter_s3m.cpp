@@ -36,20 +36,20 @@ module_t *load_module_s3m(FILE *fp)
 	}
 	memset(mod, 0, sizeof(module_t));
 	
-	/* veryfy these */
+	mod->use_linear_frequency_table = false;
 	mod->instrument_vibrato_use_linear_frequency_table = false;
 	mod->volume_slide_in_tick0        = false;
 	mod->vibrato_in_tick0             = false;
-	mod->tremor_extra_delay           = true;
-	mod->tremor_has_memory            = true;
-	mod->retrig_kills_note            = false;
-	mod->note_cut_kills_note          = false;
-	mod->allow_nested_loops           = true;
-	mod->retrig_note_source_is_period = false;
-	mod->delay_global_volume          = false;
-	mod->sample_offset_clamp          = false;
+	mod->tremor_extra_delay           = false;
+	mod->tremor_has_memory            = false;
+	mod->retrig_kills_note            = true;
+	mod->note_cut_kills_note          = true;
+	mod->allow_nested_loops           = false;
+	mod->retrig_note_source_is_period = true;
+	mod->delay_global_volume          = true;
+	mod->sample_offset_clamp          = false; // unsure, need to check
 	mod->tone_porta_share_memory      = false; // unsure, need to check
-	mod->remember_tone_porta_target   = true;
+	mod->remember_tone_porta_target   = false;
 	
 	/* load module-name */
 	char name[28 + 1];
@@ -73,19 +73,18 @@ module_t *load_module_s3m(FILE *fp)
 	mod->pattern_count     = patnum;
 	mod->instrument_count  = insnum;
 	
-	mod->use_linear_frequency_table = (flags & 4) == 0;
 	mod->vol0_optimizations         = (flags & 8) != 0;
 	
 	if (flags & 16) // amiga-limits
 	{
 		printf("AMIGAH limits.\n");
-		mod->period_low_clamp  = (flags & 4) == 0 ? 0     : 113; // linear period is wrong (not the amiga-limit, but rather the xm-limit)
-		mod->period_high_clamp = (flags & 4) == 0 ? 10752 : 856; // linear period is wrong (not the amiga-limit, but rather the xm-limit)
+		mod->period_low_clamp  = 113; // linear period is wrong (not the amiga-limit, but rather the xm-limit)
+		mod->period_high_clamp = 856; // linear period is wrong (not the amiga-limit, but rather the xm-limit)
 	}
 	else // no amiga-limits
 	{
-		mod->period_low_clamp  = (flags & 4) == 0 ? 0     : 1;     // fist value is linear, second is amiga
-		mod->period_high_clamp = (flags & 4) == 0 ? 10752 : 32767; // fist value is linear, second is amiga
+		mod->period_low_clamp  = 128;   // fist value is linear, second is amiga
+		mod->period_high_clamp = 32767; // fist value is linear, second is amiga
 	}
 
 //	mod->num_channels = ;                 /* number of channels in the pattern-data of the module. */

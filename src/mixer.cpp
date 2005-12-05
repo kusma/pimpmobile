@@ -11,7 +11,7 @@ using namespace mixer;
 
 /*
 
-miksing:
+mixing:
 
 for each chan
 	if looping && loop event (sample-stop is loop event)
@@ -29,8 +29,7 @@ for each chan
 		
 		mix all samples in tick with loop-check
 	else
-		if (volume == max) mix_megafast()
-		mix all samples (unroll, baby)
+		mix all samples
 	end if
 end for
 
@@ -149,6 +148,8 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	dc_offs += chan.volume * 128;
 
 	assert(samples > 0);
+
+	/*  */
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
 		BG_COLORS[0] = RGB5(0, 31, 0);
@@ -181,6 +182,7 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	BG_COLORS[0] = RGB5(31, 31, 0);
 	timing_start();
 
+	assert(chan.sample->data != 0);
 	chan.sample_cursor = mix_samples(target, samples, chan.sample->data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
 
 	timing_end();
@@ -205,15 +207,10 @@ void mixer::mix(s8 *target, size_t samples)
 	
 	BG_COLORS[0] = RGB5(0, 31, 0);
 	
+	// zero out the sample-buffer
 	u32 zero = 0;
 	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
 	
-	/* these comments are for 16bit mixing, we're currently doing it in 32bit */
-	// CpuFastSet works on groups of 4 bytes, so the last sample might not be cleared.
-	// unconditional clear is faster, so let's do it anyway
-//	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
-//	sound_mix_buffer[samples - 1] = 0;
-
 	dc_offs = 0;
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
@@ -231,7 +228,7 @@ void mixer::mix(s8 *target, size_t samples)
 	register s32 high_clamp = 127 + dc_offs;
 	register s32 low_clamp = -128 + dc_offs;
 	
-	/* consider optimizing this further */
+	// consider optimizing this further
 #define ITERATION                                 \
 	{	                                          \
 		s32 samp = (*src++) >> 8;                 \
