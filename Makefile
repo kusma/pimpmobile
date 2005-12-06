@@ -42,12 +42,16 @@ OBJS = \
 	src/mixer.iwram.o \
 	src/mixer_arm.iwram.o
 
-.PHONY: all clean converter
+EXAMPLE_OBJS = \
+	example/example.o \
+	example/data.o
+	
+.PHONY: all clean
 
 all: bin/example.gba
 
 clean:
-	$(RM) bin/example.elf bin/example.gba example.o example.map sample.o $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/example.elf bin/example.gba $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
 
 run: bin/example.gba
 	$(GBAEMU) bin/example.gba
@@ -59,11 +63,11 @@ debug: example.elf
 bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/converter.h
 	g++ converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp -o bin/converter
 
-bin/lut_gen: lut_gen.cpp
+bin/lut_gen: lut_gen.cpp src/config.h
 	g++ lut_gen.cpp -o bin/lut_gen
 
 bin/example.gba: converter
-bin/example.elf: example.o sample.o lib/libpimpmobile.a
+bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
 
 %.a:

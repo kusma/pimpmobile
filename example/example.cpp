@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "include/pimpmobile.h"
-#include "src/mixer.h"
+#include "../include/pimpmobile.h"
+#include "../src/mixer.h"
 
 extern const u8  sample[];
 extern const u8  sample_end[];
