@@ -51,7 +51,7 @@ EXAMPLE_OBJS = \
 all: bin/example.gba
 
 clean:
-	$(RM) bin/example.elf bin/example.gba $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/example.elf bin/example.gba bin/example.map $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
 
 run: bin/example.gba
 	$(GBAEMU) bin/example.gba
@@ -66,7 +66,7 @@ bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/conv
 bin/lut_gen: lut_gen.cpp src/config.h
 	g++ lut_gen.cpp -o bin/lut_gen
 
-bin/example.gba: converter
+bin/example.gba: 
 bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
 
