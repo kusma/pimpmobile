@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 
@@ -124,11 +125,8 @@ int main(int argc, char *argv[])
 		fclose(fp);
 		printf("done loading\n");
 		
-		if (mod != 0)
-		{
-			printf("converting samples\n");
-			convert_samples(mod); // convert all samples to unsigned 8bit format
-		}
+		printf("converting samples\n");
+		convert_samples(mod); // convert all samples to unsigned 8bit format
 	}
 	return 0;
 }

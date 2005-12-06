@@ -43,7 +43,7 @@ int main()
 	BG_COLORS[241]=RGB5(31, 31, 31);
 	REG_DISPCNT = MODE_0 | BG0_ON;
 
-	pimp_init();
+	pimp_init(0, 0);
 
 	mixer::sample_t mixer_sample;
 	mixer_sample.data = sample;

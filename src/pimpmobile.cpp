@@ -23,12 +23,16 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "internal.h"
 #include "mixer.h"
 
 s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA ALIGN(4);
 static u32 sound_buffer_index = 0;
 
-extern "C" void pimp_init()
+unsigned char *sample_bank;
+pimp_module_t *mod;
+
+extern "C" void pimp_init(void *module, void *sample_bank)
 {
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
@@ -36,7 +40,7 @@ extern "C" void pimp_init()
 	REG_SOUNDCNT_X = SOUND_ENABLE;
 	
 	/* setup timer-shit */
-	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / 18157);
+	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
 }
 
@@ -107,15 +111,27 @@ end for
 
 */
 
+pimp_pattern_entry_t *get_next_pattern_entry(unsigned chan)
+{
+	static int row = -1;
+	if (chan == 0) row++;
+	return 0;
+}
+
+static pimp_channel_t channels[CHANNELS];
+
 void update_row()
 {
-#if 0
+	assert(mod != 0);
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
-		pimp_channel_t &chan = mod->channels[c];
-		unsigned instr = mod->curr_pattern[mod->row][c].sample;
+		pimp_channel_t &chan = channels[c];
 		
-		if (instr > 0)
+		pimp_pattern_entry_t *note = get_next_pattern_entry(c);
+		
+//		unsigned instr = mod->curr_pattern[mod->row][c].sample;
+		
+		if (0) // note->instr > 0)
 		{
 //			NOTE ON !
 //			unsigned note = mod->pattern_data[offs].note;
@@ -125,20 +141,60 @@ void update_row()
 		
 		switch (chan.effect)
 		{
-			case
+			case 0x00:
+				// effect 0 with parameter 0 is no effect at all
+				if (chan.effect_param == 0) continue;
+				
 			default: assert(0);
 		}
 	}
-#endif
 }
 
-u32 samples_per_tick = 304;
+u32 samples_per_tick = 200;
 
 static void update_tick()
 {
+	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
+	
 	for (u32 c = 0; c < CHANNELS; ++c)
-	{
+	{		
+		pimp_channel_t &chan = channels[c];
+
+		chan.period      = 1000;
+		chan.effect      = EFF_PORTA_UP;
+		chan.porta_speed = 1;
+
+		bool period_dirty = false;
 		
+		switch (chan.effect)
+		{
+			case EFF_NONE: break;
+			
+			case EFF_PORTA_UP:
+				chan.period += chan.porta_speed;
+				period_dirty = true;
+			break;
+			
+			case EFF_PORTA_DOWN:
+				chan.period -= chan.porta_speed;
+				period_dirty = true;
+			break;
+			
+			case EFF_PORTA_NOTE:
+				period_dirty = true;
+			break;
+			
+			case EFF_VIBRATO:
+			break;
+			
+			default: assert(0);
+		}
+		
+		if (period_dirty)
+		{
+			// period to delta-conversion
+			
+		}
 	}
 }
 

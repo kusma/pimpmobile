@@ -42,29 +42,28 @@ OBJS = \
 	src/mixer.iwram.o \
 	src/mixer_arm.iwram.o
 
-.PHONY: all clean
+.PHONY: all clean converter
 
-all: example.gba
+all: bin/example.gba
 
 clean:
-	$(RM) example.elf example.gba example.o example.map sample.o converter converter.exe $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/example.elf bin/example.gba example.o example.map sample.o $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
 
-run: example.gba
-	$(GBAEMU) example.gba
+run: bin/example.gba
+	$(GBAEMU) bin/example.gba
 	
 debug: example.elf
 	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
-	
 
-converter: converter.cpp converter_xm.cpp converter_s3m.cpp converter_mod.cpp converter.h
-	g++ converter.cpp converter_xm.cpp converter_s3m.cpp converter_mod.cpp -o converter
+bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/converter.h
+	g++ converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp -o bin/converter
 
-lut_gen: lut_gen.cpp
-	g++ lut_gen.cpp -o lut_gen
+bin/lut_gen: lut_gen.cpp
+	g++ lut_gen.cpp -o bin/lut_gen
 
-example.gba: converter
-example.elf: example.o sample.o lib/libpimpmobile.a
+bin/example.gba: converter
+bin/example.elf: example.o sample.o lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
 
 %.a:
