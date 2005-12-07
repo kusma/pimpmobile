@@ -39,6 +39,7 @@ endif
 LIBS = $(LIBGBA)/lib/libgba.a
 OBJS = \
 	src/pimpmobile.o \
+	src/math.iwram.o \
 	src/mixer.iwram.o \
 	src/mixer_arm.iwram.o
 

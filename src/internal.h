@@ -1,5 +1,5 @@
-#ifndef _INTERNAL_H_
-#define _INTERNAL_H_
+#ifndef _PIMP_INTERNAL_H_
+#define _PIMP_INTERNAL_H_
 
 #include "config.h"
 
@@ -140,4 +140,4 @@ typedef enum
           91: "set surround sound" ???
 */
 
-#endif /* _INTERNAL_H_ */
+#endif /* _PIMP_INTERNAL_H_ */

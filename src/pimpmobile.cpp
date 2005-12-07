@@ -25,9 +25,13 @@
 
 #include "internal.h"
 #include "mixer.h"
+#include "math.h"
 
 s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA ALIGN(4);
 static u32 sound_buffer_index = 0;
+
+static pimp_channel_t channels[CHANNELS];
+u32 samples_per_tick = SOUND_BUFFER_SIZE;
 
 unsigned char *sample_bank;
 pimp_module_t *mod;
@@ -42,6 +46,16 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 	/* setup timer-shit */
 	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
+	
+	for (u32 c = 0; c < 1; ++c)
+	{
+		pimp_channel_t   &chan = channels[c];
+		volatile mixer::channel_t &mc   = mixer::channels[c];
+		
+		chan.period      = 1000;
+		chan.effect      = EFF_PORTA_DOWN;
+		chan.porta_speed = 1;
+	}
 }
 
 extern "C" void pimp_close()
@@ -60,18 +74,6 @@ extern "C" void pimp_vblank()
 	}
 	sound_buffer_index ^= 1;
 }
-
-/*	Timer = 62610 = 65536 - (16777216 /  5734), buf = 96
-	Timer = 63940 = 65536 - (16777216 / 10512), buf = 176
-	Timer = 64282 = 65536 - (16777216 / 13379), buf = 224
-	Timer = 64612 = 65536 - (16777216 / 18157), buf = 304
-	Timer = 64738 = 65536 - (16777216 / 21024), buf = 352
-	Timer = 64909 = 65536 - (16777216 / 26758), buf = 448
-	Timer = 65004 = 65536 - (16777216 / 31536), buf = 528
-	Timer = 65073 = 65536 - (16777216 / 36314), buf = 608
-	Timer = 65118 = 65536 - (16777216 / 40137), buf = 672
-	Timer = 65137 = 65536 - (16777216 / 42048), buf = 704
-	Timer = 65154 = 65536 - (16777216 / 43959), buf = 736 */
 
 /*
 ideer:
@@ -118,8 +120,6 @@ pimp_pattern_entry_t *get_next_pattern_entry(unsigned chan)
 	return 0;
 }
 
-static pimp_channel_t channels[CHANNELS];
-
 void update_row()
 {
 	assert(mod != 0);
@@ -150,20 +150,15 @@ void update_row()
 	}
 }
 
-u32 samples_per_tick = 200;
-
 static void update_tick()
 {
-	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
+//	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
 	
 	for (u32 c = 0; c < CHANNELS; ++c)
-	{		
-		pimp_channel_t &chan = channels[c];
-
-		chan.period      = 1000;
-		chan.effect      = EFF_PORTA_UP;
-		chan.porta_speed = 1;
-
+	{
+		pimp_channel_t   &chan = channels[c];
+		volatile mixer::channel_t &mc   = mixer::channels[c];
+		
 		bool period_dirty = false;
 		
 		switch (chan.effect)
@@ -172,11 +167,13 @@ static void update_tick()
 			
 			case EFF_PORTA_UP:
 				chan.period += chan.porta_speed;
+//				if (period < 70) period = 0;
 				period_dirty = true;
 			break;
 			
 			case EFF_PORTA_DOWN:
 				chan.period -= chan.porta_speed;
+				if (chan.period < 1) chan.period = 1;
 				period_dirty = true;
 			break;
 			
@@ -193,7 +190,7 @@ static void update_tick()
 		if (period_dirty)
 		{
 			// period to delta-conversion
-			
+			mc.sample_cursor_delta = get_amiga_delta(chan.period);
 		}
 	}
 }

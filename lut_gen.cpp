@@ -1,80 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include <math.h>
+#include <typeinfo>
 
 #include "src/config.h" // get the current config
+#include "src/math.h"   // get the current config
+
+/*
+this is the lut-generator for pimpmobile.
+the delta-luts are dependant on the sample-rate, and must be re-generated whenever the sample-rate-config has changed.
+*/
 
 const unsigned char clz_lut[256] =
 {
 	0x8, 0x7, 0x6, 0x6, 0x5, 0x5, 0x5, 0x5, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
 };
 
-static inline unsigned clz(unsigned input)
-{
-	/* 2 iterations of binary search */
-	unsigned c = 0;
-	if (input & 0xFFFF0000) input >>= 16;
-	else c = 16;
-
-	if (input & 0xFF00) input >>= 8;
-	else c += 8;
-
-	/* a 256 entries lut ain't too bad... */
-	return clz_lut[input] + c;
-}
-
-static inline unsigned clz16(unsigned input)
-{
-	/* 1 iteration of binary search */
-	unsigned c = 0;
-	
-	if (input & 0xFF00) input >>= 8;
-	else c += 8;
-
-	/* a 256 entries lut ain't too bad... */
-	return clz_lut[input] + c;
-}
-
 unsigned short linear_freq_lut[12 * 64];
-
-unsigned get_linear_delta(unsigned period)
-{
-	unsigned p = (12 * 64 * 14) - period;
-	unsigned octave        = p / (12 * 64);
-	unsigned octave_period = p % (12 * 64);
-	unsigned frequency = linear_freq_lut[octave_period] << octave;
-
-	// BEHOLD: the expression of the devil 2.0
-	frequency = ((long long)frequency * unsigned((1.0 / SAMPLERATE) * (1 << 3) * (1ULL << 32)) + (1ULL << 31)) >> 32;
-	return frequency;
-}
-
-#define AMIGA_FREQ_TABLE_LOG_SIZE 7
-#define AMIGA_FREQ_TABLE_SIZE (1 << AMIGA_FREQ_TABLE_LOG_SIZE)
-#define AMIGA_FREQ_TABLE_FRAC_BITS (15 - AMIGA_FREQ_TABLE_LOG_SIZE)
 unsigned short amiga_freq_lut[(AMIGA_FREQ_TABLE_SIZE / 2) + 1];
-
-unsigned get_amiga_delta(unsigned period)
-{
-	unsigned shamt = clz16(period) - 1;
-	unsigned p = period << shamt;
-	unsigned p_frac = p & ((1 << AMIGA_FREQ_TABLE_FRAC_BITS) - 1);
-	p >>= AMIGA_FREQ_TABLE_FRAC_BITS;
-
-	// interpolate table-entries for better result
-	int f1 = amiga_freq_lut[p     - (AMIGA_FREQ_TABLE_SIZE / 2)]; // (8363 * 1712) / float(p);
-	int f2 = amiga_freq_lut[p + 1 - (AMIGA_FREQ_TABLE_SIZE / 2)]; // (8363 * 1712) / float(p + 1);
-	unsigned frequency = (f1 << AMIGA_FREQ_TABLE_FRAC_BITS) + (f2 - f1) * p_frac;
-
-	if (shamt > AMIGA_FREQ_TABLE_FRAC_BITS) frequency <<= shamt - AMIGA_FREQ_TABLE_FRAC_BITS;
-	else frequency >>= AMIGA_FREQ_TABLE_FRAC_BITS - shamt;
-
-	// BEHOLD: the expression of the devil
-	// quasi-explaination:     the table-lookup  the playback freq  - the LUT presc - make it overflow - round it - pick the top
-	frequency = ((long long)frequency * unsigned(((1.0 / SAMPLERATE) * (1 << 6)) * (1LL << 32)) + (1ULL << 31)) >> 32;
-	return frequency;
-}
 
 float get_normal_noise()
 {
@@ -87,6 +32,18 @@ float get_normal_noise()
 	r -= 6;
 	return r;
 }
+
+template <typename T>
+void print_lut(T *lut, size_t size)
+{
+	for (size_t i = 0; i < size; ++i)
+	{
+		printf("%d, ", lut[i]);
+	}
+}
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define PRINT_LUT(x) print_lut(x, ARRAY_SIZE(x))
 
 int main(int argc, char *argv[])
 {
@@ -102,6 +59,10 @@ int main(int argc, char *argv[])
 	{
 		linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5);
 	}
+	// dump it
+	printf("u16 linear_freq_lut[%d] = {\n", ARRAY_SIZE(linear_freq_lut));
+	PRINT_LUT(linear_freq_lut);
+	printf("};\n\n");
 
 	// generate a lut for amiga frequencies
 	for (unsigned i = 0; i < (AMIGA_FREQ_TABLE_SIZE / 2) + 1; ++i)
@@ -109,7 +70,12 @@ int main(int argc, char *argv[])
 		unsigned p = i + (AMIGA_FREQ_TABLE_SIZE / 2);
 		amiga_freq_lut[i] = (unsigned short)(((8363 * 1712) / float((p * 32768) / AMIGA_FREQ_TABLE_SIZE)) * (1 << 6) + 0.5);
 	}
-#if 1
+	// dump it
+	printf("u16 amiga_freq_lut[%d] = {\n", ARRAY_SIZE(amiga_freq_lut));
+	PRINT_LUT(amiga_freq_lut);
+	printf("};\n\n");
+
+#if 0
 	for (unsigned period = 1; period < 32767; period += 17)
 	{
 		float frequency1 = (8363 * 1712) / float(period);

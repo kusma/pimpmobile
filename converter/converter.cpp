@@ -97,12 +97,58 @@ void convert_samples(module_t *mod)
 	}
 }
 
+/*
+	x  	pad byte
+	b 	byte  ( 8 bit)
+	h 	short (16 bit)
+	i 	int   (32 bit)
+*/
+
+#include <stdarg.h>
+void print_datastruct(const char *format, ...)
+{
+	va_list marker;	
+	va_start(marker, format);
+	
+	unsigned int data;
+
+	while (*format != '\0')
+	{
+		switch (*format++)
+		{
+			case 'x':
+				printf("x");
+			break;
+			
+			case 'b':
+				data = va_arg(marker, int);
+				printf("%i", data);
+			break;
+			
+			case 'h':
+				data = va_arg(marker, int);
+				printf("%i", data);
+			break;
+			
+			case 'i':
+				data = va_arg(marker, int);
+				printf("%i", data);
+			break;
+		}
+	}
+	va_end(marker);
+}
+
 module_t *load_module_xm(FILE *fp);
 module_t *load_module_mod(FILE *fp);
 module_t *load_module_s3m(FILE *fp);
 
 int main(int argc, char *argv[])
 {
+
+	print_datastruct("xixIx", -5, -5);
+	exit(0);
+
 	if (argc < 2) print_usage();
 	
 	for (int i = 1; i < argc; ++i)

@@ -8,6 +8,7 @@
 
 #include "../include/pimpmobile.h"
 #include "../src/mixer.h"
+#include "../src/config.h"
 
 extern const u8  sample[];
 extern const u8  sample_end[];
@@ -60,6 +61,8 @@ int main()
 	mixer::channels[0].sample_cursor_delta = 1 << 12;
 	mixer::channels[0].volume = 255;
 	mixer::channels[0].sample = &mixer_sample;
+	
+	iprintf("%i\n", SOUND_BUFFER_SIZE);
 
 /*
 	mixer::channels[1].sample_cursor = 0;
