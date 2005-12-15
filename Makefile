@@ -61,11 +61,13 @@ debug: example.elf
 	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 
-bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/converter.h
-	g++ converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp -o bin/converter
+bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/dump_module.cpp converter/converter.h
+	g++ converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/dump_module.cpp -o bin/converter
 
 bin/lut_gen: lut_gen.cpp src/config.h
 	g++ lut_gen.cpp -o bin/lut_gen
+
+example/data.o: example/sample.raw
 
 bin/example.gba: 
 bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a

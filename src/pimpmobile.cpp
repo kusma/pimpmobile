@@ -53,8 +53,8 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
 		chan.period      = 1000;
-		chan.effect      = EFF_PORTA_DOWN;
-		chan.porta_speed = 1;
+		chan.effect      = EFF_PORTA_UP;
+		chan.porta_speed = 2;
 	}
 }
 
@@ -166,14 +166,14 @@ static void update_tick()
 			case EFF_NONE: break;
 			
 			case EFF_PORTA_UP:
-				chan.period += chan.porta_speed;
-//				if (period < 70) period = 0;
+				chan.period -= chan.porta_speed;
+				if (chan.period < 1) chan.period = 1;
 				period_dirty = true;
 			break;
 			
 			case EFF_PORTA_DOWN:
-				chan.period -= chan.porta_speed;
-				if (chan.period < 1) chan.period = 1;
+				chan.period += chan.porta_speed;
+//				if (period < 70) period = 0;
 				period_dirty = true;
 			break;
 			

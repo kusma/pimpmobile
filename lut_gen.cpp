@@ -6,7 +6,7 @@
 #include <typeinfo>
 
 #include "src/config.h" // get the current config
-#include "src/math.h"   // get the current config
+#include "src/math.h"
 
 /*
 this is the lut-generator for pimpmobile.
@@ -47,22 +47,15 @@ void print_lut(T *lut, size_t size)
 
 int main(int argc, char *argv[])
 {
-/*
-	for (unsigned i = 32; i < 255; ++i)
-	{
-		printf("%f\n", (18157 * 5) / float(i * 2));
-	}
-*/
-
 	// generate a lut for linear frequencies
 	for (unsigned i = 0; i < 12 * 64; ++i)
 	{
 		linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5);
 	}
 	// dump it
-	printf("u16 linear_freq_lut[%d] = {\n", ARRAY_SIZE(linear_freq_lut));
+	printf("u16 linear_freq_lut[%d] = {\n\t", ARRAY_SIZE(linear_freq_lut));
 	PRINT_LUT(linear_freq_lut);
-	printf("};\n\n");
+	printf("\n};\n\n");
 
 	// generate a lut for amiga frequencies
 	for (unsigned i = 0; i < (AMIGA_FREQ_TABLE_SIZE / 2) + 1; ++i)
@@ -71,9 +64,9 @@ int main(int argc, char *argv[])
 		amiga_freq_lut[i] = (unsigned short)(((8363 * 1712) / float((p * 32768) / AMIGA_FREQ_TABLE_SIZE)) * (1 << 6) + 0.5);
 	}
 	// dump it
-	printf("u16 amiga_freq_lut[%d] = {\n", ARRAY_SIZE(amiga_freq_lut));
+	printf("u16 amiga_freq_lut[%d] = {\n\t", ARRAY_SIZE(amiga_freq_lut));
 	PRINT_LUT(amiga_freq_lut);
-	printf("};\n\n");
+	printf("\n};\n\n");
 
 #if 0
 	for (unsigned period = 1; period < 32767; period += 17)
@@ -89,7 +82,7 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-#if 0 // testcode for linear frequency-lut
+#if 1 // testcode for linear frequency-lut
 	for (unsigned i = 0; i < 12 * 14; ++i)
 	{
 //		Period = 10*12*16*4 - Note*16*4 - FineTune/2;

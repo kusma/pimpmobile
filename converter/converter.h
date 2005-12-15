@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 typedef unsigned char  u8;
 typedef   signed char  s8;
 typedef unsigned short u16;
@@ -364,3 +366,11 @@ typedef struct
 	u8 initial_tempo;
 	u8 initial_bpm;
 } module_t;
+
+/* loaders */
+module_t *load_module_xm(FILE *fp);
+module_t *load_module_mod(FILE *fp);
+module_t *load_module_s3m(FILE *fp);
+
+/* dumper */
+void dump_module(module_t *mod);
