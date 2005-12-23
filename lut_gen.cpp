@@ -1,3 +1,10 @@
+/*
+	this is the lut-generator for pimpmobile.
+	
+	the delta-luts are dependant on the sample-rate, and must be re-generated
+	whenever the sample-rate-config has changed.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,24 +13,19 @@
 #include <typeinfo>
 
 #include "src/config.h" // get the current config
-#include "src/math.h"
 
-/*
-this is the lut-generator for pimpmobile.
-the delta-luts are dependant on the sample-rate, and must be re-generated whenever the sample-rate-config has changed.
-*/
-
-const unsigned char clz_lut[256] =
+void error(const char *reason)
 {
-	0x8, 0x7, 0x6, 0x6, 0x5, 0x5, 0x5, 0x5, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-};
+	fprintf(stderr, "error %s\n", reason);
+	exit(1);
+}
 
 unsigned short linear_freq_lut[12 * 64];
-unsigned short amiga_freq_lut[(AMIGA_FREQ_TABLE_SIZE / 2) + 1];
+unsigned short amiga_freq_lut[(AMIGA_DELTA_LUT_SIZE / 2) + 1];
 
 float get_normal_noise()
 {
-	float r = 0.0;
+	float r = 0.0f;
 	for (unsigned j = 0; j < 12; ++j)
 	{
 		r += rand();
@@ -34,41 +36,66 @@ float get_normal_noise()
 }
 
 template <typename T>
-void print_lut(T *lut, size_t size)
+void print_lut(FILE *fp, T *lut, size_t size)
 {
+	int line_start = ftell(fp);
 	for (size_t i = 0; i < size; ++i)
 	{
-		printf("%d, ", lut[i]);
+		fprintf(fp, "%d, ", lut[i]);
+		
+		// some newlines every now and then isn't too annoying ;)
+		if (ftell(fp) > (line_start + 80))
+		{
+			fprintf(fp, "\n\t", line_start, ftell(fp));
+			line_start = ftell(fp);
+		}
 	}
 }
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#define PRINT_LUT(x) print_lut(x, ARRAY_SIZE(x))
+#define PRINT_LUT(fp, x) print_lut(fp, x, ARRAY_SIZE(x))
 
 int main(int argc, char *argv[])
 {
-	// generate a lut for linear frequencies
-	for (unsigned i = 0; i < 12 * 64; ++i)
+	/* todo: use some flags and stuff to decide what to dump and to what filename */
+	if (1)
 	{
-		linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5);
+		// generate a lut for linear frequencies
+		for (unsigned i = 0; i < 12 * 64; ++i)
+		{
+			linear_freq_lut[i] = unsigned(float(pow(2.0, i / 768.0) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5);
+		}
+		
+		// now dump it
+		FILE *fp = fopen("src/linear_delta_lut.h", "wb");
+		if (!fp) error("failed to open out-file");
+		fprintf(fp, "const u16 linear_delta_lut[%d] =\n{\n\t", ARRAY_SIZE(linear_freq_lut));
+		PRINT_LUT(fp, linear_freq_lut);
+		fprintf(fp, "\n};\n\n");
+		fclose(fp);
 	}
-	// dump it
-	printf("u16 linear_freq_lut[%d] = {\n\t", ARRAY_SIZE(linear_freq_lut));
-	PRINT_LUT(linear_freq_lut);
-	printf("\n};\n\n");
 
-	// generate a lut for amiga frequencies
-	for (unsigned i = 0; i < (AMIGA_FREQ_TABLE_SIZE / 2) + 1; ++i)
+	if (1)
 	{
-		unsigned p = i + (AMIGA_FREQ_TABLE_SIZE / 2);
-		amiga_freq_lut[i] = (unsigned short)(((8363 * 1712) / float((p * 32768) / AMIGA_FREQ_TABLE_SIZE)) * (1 << 6) + 0.5);
+		// generate a lut for amiga frequencies
+		for (unsigned i = 0; i < (AMIGA_DELTA_LUT_SIZE / 2) + 1; ++i)
+		{
+			unsigned p = i + (AMIGA_DELTA_LUT_SIZE / 2);
+			amiga_freq_lut[i] = (unsigned short)(((8363 * 1712) / float((p * 32768) / AMIGA_DELTA_LUT_SIZE)) * (1 << 6) + 0.5);
+		}
+		
+		// now dump it
+		FILE *fp = fopen("src/amiga_delta_lut.h", "wb");
+		if (!fp) error("failed to open out-file");
+		
+		fprintf(fp, "const u16 amiga_delta_lut[%d] =\n{\n\t", ARRAY_SIZE(amiga_freq_lut));
+		PRINT_LUT(fp, amiga_freq_lut);
+		fprintf(fp, "\n};\n\n");
+		fclose(fp);
 	}
-	// dump it
-	printf("u16 amiga_freq_lut[%d] = {\n\t", ARRAY_SIZE(amiga_freq_lut));
-	PRINT_LUT(amiga_freq_lut);
-	printf("\n};\n\n");
 
 #if 0
+	// testcode for amiga frequency-lut
 	for (unsigned period = 1; period < 32767; period += 17)
 	{
 		float frequency1 = (8363 * 1712) / float(period);
@@ -82,7 +109,7 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-#if 1 // testcode for linear frequency-lut
+#if 0 // testcode for linear frequency-lut
 	for (unsigned i = 0; i < 12 * 14; ++i)
 	{
 //		Period = 10*12*16*4 - Note*16*4 - FineTune/2;

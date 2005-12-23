@@ -96,13 +96,6 @@ void convert_samples(module_t *mod)
 	}
 }
 
-/*
-	x  	pad byte
-	b 	byte  ( 8 bit)
-	h 	short (16 bit)
-	i 	int   (32 bit)
-*/
-
 int main(int argc, char *argv[])
 {
 

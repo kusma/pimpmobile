@@ -279,18 +279,6 @@ typedef struct
 	u8 sample_map[120];
 } instrument_t;
 
-
-/*
-	helper structure to aid the translation of notes into
-	periods for one sample-frequency.
-*/
-typedef struct
-{
-	u16 translation_table[120];
-} note_period_translation_table_t;
-
-
-
 /* toplevel data structure for the module */
 typedef struct
 {
@@ -335,7 +323,7 @@ typedef struct
 	/*
 		channel configuration
 	*/
-	u8 num_channels;                 /* number of channels in the pattern-data of the module. */
+	u8 channel_count;                 /* number of channels in the pattern-data of the module. */
 	channel_state_t *channel_states; /* array of per-channel configuration data */
 
 	/*
@@ -349,15 +337,6 @@ typedef struct
 	*/
 	u8 instrument_count;
 	instrument_t *instruments;
-
-	/*
-		pointer to an array of helper structures to help
-		translation form notes to amiga frequency table ticks.
-		One such table is supplied for each sample frequency
-		used in the module;
-	*/
-	u16 translation_table_count;
-	note_period_translation_table_t *translation_table_array;
 
 	/*
 		initial player settings for the module

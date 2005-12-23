@@ -187,14 +187,14 @@ module_t *load_module_xm(FILE *fp)
 	assert(mod->play_order != 0);
 	fread(mod->play_order, sizeof(u8), xm_header.len, fp);
 	
-	mod->num_channels = xm_header.channels;
+	mod->channel_count = xm_header.channels;
 	
-	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->num_channels);
+	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->channel_count);
 	assert(mod->channel_states != 0);
-	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->num_channels);
+	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->channel_count);
 
 	// setup default pr channel settings.
-	for (unsigned i = 0; i < mod->num_channels; ++i)
+	for (unsigned i = 0; i < mod->channel_count; ++i)
 	{
 		mod->channel_states[i].default_pan = 127;
 		mod->channel_states[i].initial_channel_volume = 64;

@@ -1,5 +1,5 @@
-#ifndef _PIMP_CONFIG_H_
-#define _PIMP_CONFIG_H_
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #define CYCLES_PR_FRAME 280896
 
@@ -10,11 +10,11 @@
 #define SAMPLERATE 18157
 
 /* only 130 bytes big, quite damn pleasing results */
-#define AMIGA_FREQ_TABLE_LOG_SIZE 7
+#define AMIGA_DELTA_LUT_LOG_SIZE 7
 
 /* derivated settings. don't touch. */
 #define SOUND_BUFFER_SIZE (CYCLES_PR_FRAME / ((1 << 24) / SAMPLERATE))
-#define AMIGA_FREQ_TABLE_SIZE (1 << AMIGA_FREQ_TABLE_LOG_SIZE)
-#define AMIGA_FREQ_TABLE_FRAC_BITS (15 - AMIGA_FREQ_TABLE_LOG_SIZE)
+#define AMIGA_DELTA_LUT_SIZE (1 << AMIGA_DELTA_LUT_LOG_SIZE)
+#define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG_SIZE)
 
-#endif /* _PIMP_CONFIG_H_ */
+#endif /* CONFIG_H */

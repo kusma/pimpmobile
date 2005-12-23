@@ -10,3 +10,5 @@
 datafile sample, example/sample.raw
 .global sample_end
 sample_end:
+
+datafile module, out.bin

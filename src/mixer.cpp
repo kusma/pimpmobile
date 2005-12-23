@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "mixer.h"
+#include "debug.h"
 
 #include <gba_systemcalls.h>
 #include <gba_video.h>
@@ -152,7 +153,7 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 	/*  */
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
-		BG_COLORS[0] = RGB5(0, 31, 0);
+		DEBUG_COLOR(0, 31, 0);
 		do
 		{
 			assert((chan.sample_cursor >> 12) < chan.sample->len);
@@ -179,14 +180,14 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 		}
 	}
 
-	BG_COLORS[0] = RGB5(31, 31, 0);
+	DEBUG_COLOR(31, 31, 0);
 	timing_start();
 
 	assert(chan.sample->data != 0);
 	chan.sample_cursor = mix_samples(target, samples, chan.sample->data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
 
 	timing_end();
-	BG_COLORS[0] = RGB5(31, 0, 0);
+	DEBUG_COLOR(31, 0, 0);
 }
 
 void mixer::reset()
@@ -205,7 +206,7 @@ void mixer::mix(s8 *target, size_t samples)
 {
 	assert(samples > 0);
 	
-	BG_COLORS[0] = RGB5(0, 31, 0);
+	DEBUG_COLOR(0, 31, 0);
 	
 	// zero out the sample-buffer
 	u32 zero = 0;
@@ -218,7 +219,7 @@ void mixer::mix(s8 *target, size_t samples)
 		if (0 != chan.sample) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
-	BG_COLORS[0] = RGB5(0, 31, 0);
+	DEBUG_COLOR(0, 31, 0);
 	
 	register s32 *src = sound_mix_buffer;
 	register s8  *dst = target;
@@ -263,4 +264,5 @@ void mixer::mix(s8 *target, size_t samples)
 		while (s--);
 	}
 #undef ITERATION
+	DEBUG_COLOR(0, 0, 0);
 }

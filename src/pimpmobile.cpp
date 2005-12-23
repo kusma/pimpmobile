@@ -26,8 +26,9 @@
 #include "internal.h"
 #include "mixer.h"
 #include "math.h"
+#include "debug.h"
 
-s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA ALIGN(4);
+s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
 static pimp_channel_t channels[CHANNELS];
@@ -38,6 +39,15 @@ pimp_module_t *mod;
 
 extern "C" void pimp_init(void *module, void *sample_bank)
 {
+	mod = (pimp_module_t*)module;
+	
+	iprintf("\n\n%d %d\n", mod->period_low_clamp, mod->period_high_clamp);
+//	iprintf("%d %d\n", mod->order_length, mod->order_repeat);
+//	iprintf("%d %d %d\n", mod->volume, mod->tempo, mod->bpm);
+	iprintf("%d\n", mod->channel_count);
+	if (mod->flags & FLAG_LINEAR_PERIODS) iprintf("LINEAR\n");
+	
+	
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
@@ -77,12 +87,8 @@ extern "C" void pimp_vblank()
 
 /*
 ideer:
-	- tick-lengde-tabell i modul-formatet
-	- ping-pong looping med flipping     (kan være tricky med sample offset)
 	- klipping av samples etter loop-end (kan feile med sample offset)
-	- hvis looping skjer i gjeldende tick - evaluer looping for hver eneste sample
 	- ikke glissando i første omgang
-	- hvis ping-pong looping skjer, ta overflow i forhold til loop-punkt og trekk fra.
 
 normal-looping:		if (sample_cursor >= loop_end) sample_cursor -= loop_len;
 pingpong-looping:	if (sample_cursor_delta < 0 && sample_cursor < loop_start) sample_cursor_delta -= sample_cursor_delta;
@@ -152,7 +158,7 @@ void update_row()
 
 static void update_tick()
 {
-//	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
+	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
 	
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
@@ -167,13 +173,13 @@ static void update_tick()
 			
 			case EFF_PORTA_UP:
 				chan.period -= chan.porta_speed;
-				if (chan.period < 1) chan.period = 1;
+				if (chan.period < mod->period_low_clamp) chan.period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
 			
 			case EFF_PORTA_DOWN:
 				chan.period += chan.porta_speed;
-//				if (period < 70) period = 0;
+				if (chan.period > mod->period_high_clamp) chan.period = mod->period_high_clamp;
 				period_dirty = true;
 			break;
 			
@@ -195,22 +201,27 @@ static void update_tick()
 	}
 }
 
-#define min(x, y) ((x) > (y) ? (y) : (x))
+#ifndef MAX
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#endif
+#ifndef MIN
+#define MIN(x, y) ((x) > (y) ? (y) : (x))
+#endif
 
 extern "C" void pimp_frame()
 {
-	BG_COLORS[0] = RGB5(31, 31, 31);
+	DEBUG_COLOR(31, 31, 31);
 	
 	u32 samples_left = SOUND_BUFFER_SIZE;
 	s8 *buf = sound_buffers[sound_buffer_index];
 	
 	static int remainder = 0;
-	while(1)
+	while (true)
 	{
-		int samples_to_mix = min(remainder, samples_left);
+		int samples_to_mix = MIN(remainder, samples_left);
 		
 		if (samples_to_mix != 0) mixer::mix(buf, samples_to_mix);
-		BG_COLORS[0] = RGB5(31, 31, 31);
+		DEBUG_COLOR(31, 31, 31);
 		buf += samples_to_mix;
 		
 		samples_left -= samples_to_mix;
@@ -220,5 +231,5 @@ extern "C" void pimp_frame()
 		update_tick();
 		remainder = samples_per_tick;
 	}
-	BG_COLORS[0] = RGB5(0, 0, 0);
+	DEBUG_COLOR(0, 0, 0);
 }

@@ -26,33 +26,36 @@ ASFLAGS  = -mthumb-interwork
 ARM   = -marm
 THUMB = -mthumb
 
-ifeq ($(DEBUG), 1)
-	CPPFLAGS += -DDEBUG
-	CXXFLAGS += -g3 -ggdb
-	CFLAGS   += -g3 -ggdb
-else
-	CPPFLAGS += -DRELEASE -DNDEBUG
-	CXXFLAGS += -O3 -fomit-frame-pointer
-	CFLAGS   += -O3 -fomit-frame-pointer
-endif
-
 LIBS = $(LIBGBA)/lib/libgba.a
 OBJS = \
 	src/pimpmobile.o \
 	src/math.iwram.o \
-	src/mixer.iwram.o \
-	src/mixer_arm.iwram.o
+	src/mixer.iwram.o
 
 EXAMPLE_OBJS = \
 	example/example.o \
 	example/data.o
+	
+
+ifeq ($(DEBUG), 1)
+	CPPFLAGS += -DDEBUG
+	CXXFLAGS += -g3 -ggdb
+	CFLAGS   += -g3 -ggdb
+	OBJS     += src/mixer_portable.iwram.o
+else
+	CPPFLAGS += -DRELEASE -DNDEBUG
+	CXXFLAGS += -O3 -fomit-frame-pointer
+	CFLAGS   += -O3 -fomit-frame-pointer
+	OBJS     += src/mixer_arm.iwram.o
+endif
+
 	
 .PHONY: all clean
 
 all: bin/example.gba
 
 clean:
-	$(RM) bin/example.elf bin/example.gba bin/example.map $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/* $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
 
 run: bin/example.gba
 	$(GBAEMU) bin/example.gba
@@ -72,6 +75,9 @@ example/data.o: example/sample.raw
 bin/example.gba: 
 bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
+
+%.bin: %.mod bin/converter
+	bin/converter $<
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $?

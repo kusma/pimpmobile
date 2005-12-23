@@ -122,7 +122,7 @@ module_t *load_module_mod(FILE *fp)
 	printf("name : \"%s\"\n", name);
 
 	strcpy(mod->name, name);
-	mod->num_channels = channels;
+	mod->channel_count = channels;
 	mod->instruments = (instrument_t*) malloc(sizeof(instrument_t) * 31);
 	mod->instrument_count = 31;
 	assert(mod->instruments != 0);
@@ -241,7 +241,7 @@ module_t *load_module_mod(FILE *fp)
 				pe.note             = return_nearest_note(((buf[0] & 0x0F) <<8 ) + buf[1]);
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
-				
+#if 0				
 				if (pe.note != 0)
 				{
 					const int o = (pe.note - 1) / 12;
@@ -254,6 +254,7 @@ module_t *load_module_mod(FILE *fp)
 				else printf("--- ");
 				
 				printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
+#endif
 			}
 			printf("\n");
 		}

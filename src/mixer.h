@@ -1,5 +1,5 @@
-#ifndef _PIMP_MIXER_H_
-#define _PIMP_MIXER_H_
+#ifndef MIXER_H
+#define MIXER_H
 
 #include <gba_base.h>
 #include "config.h"
@@ -39,4 +39,4 @@ namespace mixer
 
 }
 
-#endif /* _PIMP_MIXER_H_ */
+#endif /* MIXER_H */
