@@ -27,11 +27,18 @@ float normal_noise()
 void convert_sample(sample_header_t *samp)
 {
 	assert(samp != 0);
-	assert(samp->waveform != 0);
 	
 	// no conversion needed
 	if (samp->format == SAMPLE_UNSIGNED_8BIT) return;
 	
+	/* in case there's an empty sample... (this should really remove the sample, but hey) */
+	if (samp->waveform == 0 && samp->length == 0)
+	{
+		samp->format = SAMPLE_UNSIGNED_8BIT;
+		return;
+	}
+	
+	assert(samp->waveform != 0);
 	// we need a new buffer
 	u8 *new_data = (u8*)malloc(sizeof(u8) * samp->length);
 	assert(new_data != 0);
@@ -96,6 +103,42 @@ void convert_samples(module_t *mod)
 	}
 }
 
+void print_pattern(module_t *mod, pattern_header_t &pat)
+{
+	for (unsigned i = 0; i < pat.num_rows; ++i)
+	{
+		for (unsigned j = 0; j < mod->channel_count; ++j)
+		{
+			pattern_entry_t &pe = pat.pattern_data[i * mod->channel_count + j];
+			
+			if (pe.note != 0)
+			{
+				const int o = (pe.note - 1) / 12;
+				const int n = (pe.note - 1) % 12;
+				/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
+				printf("%c%c%X ",
+					"CCDDEFFGGAAB"[n],
+					"-#-#--#-#-#-"[n], o);
+			}
+			else printf("--- ");
+			
+			printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
+		}
+		printf("\n");
+	}
+}
+
+void print_patterns(module_t *mod)
+{
+	for (unsigned p = 0; p < mod->pattern_count; ++p)
+	{
+		pattern_header_t &pat = mod->patterns[p];
+		assert(pat.pattern_data != NULL);
+		print_pattern(mod, pat);
+		printf("\n");
+	}
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -123,6 +166,9 @@ int main(int argc, char *argv[])
 		
 		printf("converting samples\n");
 		convert_samples(mod); // convert all samples to unsigned 8bit format
+		
+		print_patterns(mod);
+//		exit(0);
 		
 		/* dumpeti dump */
 		dump_module(mod);

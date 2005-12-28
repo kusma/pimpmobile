@@ -55,7 +55,7 @@ endif
 all: bin/example.gba
 
 clean:
-	$(RM) bin/* $(EXAMPLE_OBJS) $(OBJS) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/* $(EXAMPLE_OBJS) $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a *~ src/*~ include/*~
 
 run: bin/example.gba
 	$(GBAEMU) bin/example.gba
@@ -70,7 +70,7 @@ bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/conv
 bin/lut_gen: lut_gen.cpp src/config.h
 	g++ lut_gen.cpp -o bin/lut_gen
 
-example/data.o: example/sample.raw
+example/data.o: example/sample.raw out.bin
 
 bin/example.gba: 
 bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a
@@ -90,10 +90,10 @@ lib/libpimpmobile.a: $(OBJS)
 	gbafix $@ -t$(basename $@)
 
 %.iwram.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
 %.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
 %.iwram.s: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(ARM) -c $< -o $@
@@ -108,3 +108,5 @@ lib/libpimpmobile.a: $(OBJS)
 	--redefine-sym _binary_$*_raw_end=$*_end \
 	--redefine-sym _binary_$*_raw_size=$*_size \
 	-B arm $< $@
+
+-include $(OBJS:.o=.d)

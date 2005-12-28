@@ -31,20 +31,90 @@
 s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
-static pimp_channel_t channels[CHANNELS];
+static pimp_channel_state_t channels[CHANNELS];
 u32 samples_per_tick = SOUND_BUFFER_SIZE;
 
 unsigned char *sample_bank;
 pimp_module_t *mod;
 
+int get_order(pimp_module_t *mod, int i)
+{
+	return ((char*)mod + mod->order_ptr)[i];
+}
+
+pimp_pattern_t &get_pattern(pimp_module_t *mod, int i)
+{
+	return ((pimp_pattern_t*)((char*)mod + mod->pattern_ptr))[i];
+}
+
+pimp_pattern_entry_t *get_pattern_data(pimp_module_t *mod, pimp_pattern_t &pat)
+{
+	return (pimp_pattern_entry_t*)((char*)mod + pat.data_ptr);
+}
+
+pimp_channel_t &get_channel(pimp_module_t *mod, int i)
+{
+	return ((pimp_channel_t*)((char*)mod + mod->channel_ptr))[i];
+}
+
+void print_pattern(pimp_module_t *mod, pimp_pattern_t &pat)
+{
+	pimp_pattern_entry_t *pd = get_pattern_data(mod, pat);
+
+	iprintf("%02x\n", pat.row_count);
+	
+	for (unsigned i = 0; i < 5; ++i)
+	{
+		for (unsigned j = 0; j < mod->channel_count; ++j)
+		{
+			pimp_pattern_entry_t &pe = pd[i * mod->channel_count + j];
+			
+			if (pe.note != 0)
+			{
+				const int o = (pe.note - 1) / 12;
+				const int n = (pe.note - 1) % 12;
+				/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
+				printf("%c%c%X ",
+					"CCDDEFFGGAAB"[n],
+					"-#-#--#-#-#-"[n], o);
+			}
+			else printf("--- ");
+			
+//			printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
+		}
+		printf("\n");
+	}
+}
+
 extern "C" void pimp_init(void *module, void *sample_bank)
 {
 	mod = (pimp_module_t*)module;
 	
-	iprintf("\n\n%d %d\n", mod->period_low_clamp, mod->period_high_clamp);
-//	iprintf("%d %d\n", mod->order_length, mod->order_repeat);
-//	iprintf("%d %d %d\n", mod->volume, mod->tempo, mod->bpm);
-	iprintf("%d\n", mod->channel_count);
+/*	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
+	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
+	iprintf("global volume: %d\ntempo: %d\nbpm: %d\n", mod->volume, mod->tempo, mod->bpm); */
+	iprintf("channels: %d\n", mod->channel_count);
+	iprintf("order ptr: %d\n", mod->order_ptr);
+/*
+	for (unsigned i = 0; i < mod->order_count; ++i)
+	{
+		iprintf("%02x, ", get_order(mod, i));
+	}
+*/
+	
+	iprintf("pattern ptr: %d\n", mod->pattern_ptr);
+	for (unsigned i = 0; i < 1; ++i)
+	{
+		print_pattern(mod, get_pattern(mod, i));
+	}
+
+	for (unsigned i = 0; i < mod->channel_count; ++i)
+	{
+		pimp_channel_t &c = get_channel(mod, i);
+		iprintf("%d %d %d\n", c.volume, c.pan, c.mute);
+	}
+
+
 	if (mod->flags & FLAG_LINEAR_PERIODS) iprintf("LINEAR\n");
 	
 	
@@ -59,7 +129,7 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 	
 	for (u32 c = 0; c < 1; ++c)
 	{
-		pimp_channel_t   &chan = channels[c];
+		pimp_channel_state_t &chan = channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
 		chan.period      = 1000;
@@ -131,13 +201,13 @@ void update_row()
 	assert(mod != 0);
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
-		pimp_channel_t &chan = channels[c];
+		pimp_channel_state_t &chan = channels[c];
 		
 		pimp_pattern_entry_t *note = get_next_pattern_entry(c);
 		
 //		unsigned instr = mod->curr_pattern[mod->row][c].sample;
 		
-		if (0) // note->instr > 0)
+		if (note->instrument > 0)
 		{
 //			NOTE ON !
 //			unsigned note = mod->pattern_data[offs].note;
@@ -147,10 +217,16 @@ void update_row()
 		
 		switch (chan.effect)
 		{
-			case 0x00:
-				// effect 0 with parameter 0 is no effect at all
-				if (chan.effect_param == 0) continue;
-				
+			case EFF_NONE: break;
+			
+			case EFF_PORTA_UP:
+				chan.porta_speed = note->effect_parameter;
+			break;
+			
+			case EFF_PORTA_DOWN:
+				chan.porta_speed = note->effect_parameter;
+			break;
+			
 			default: assert(0);
 		}
 	}
@@ -162,7 +238,7 @@ static void update_tick()
 	
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
-		pimp_channel_t   &chan = channels[c];
+		pimp_channel_state_t &chan = channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
 		bool period_dirty = false;

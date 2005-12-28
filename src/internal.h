@@ -2,7 +2,7 @@
 #define INTERNAL_H
 
 #include "config.h"
-
+	
 typedef struct
 {
 	/* offset relative to sample-bank */
@@ -11,21 +11,40 @@ typedef struct
 	u32 length;
 	u32 loop_start;
 	u32 loop_length;
+	
+/*
+	IT ONLY (later)
+	u32 sustain_loop_start;
+	u32 sustain_loop_end;
+*/
+
 	u8  volume;
 	s8  finetune;
-	u8  type;
+	u8  loop_type;
 	u8  pan;
 	s8  rel_note;
+	
+	u8 vibrato_speed;
+	u8 vibrato_depth;
+	u8 vibrato_sweep;
+	u8 vibrato_waveform;
+
+/*
+	IT ONLY (later)
+	u8  sustain_loop_type;
+*/
+
 } pimp_sample_t;
 
 typedef struct
 {
+	s32 period;        /* signed so we can check for underfow */
+	s32 porta_speed;
+	
 	u8  note;
 	u8  effect;
 	u8  effect_param;
-	s32 period;        /* signed so we can check for underfow */
-	s32 porta_speed;   /* signed so we can check for underfow */
-} pimp_channel_t;
+} pimp_channel_state_t;
 
 typedef enum
 {
@@ -37,7 +56,8 @@ typedef enum
 	/* todo: fill in the rest */
 } pimp_effect_t;
 
-typedef struct
+/* packed, because it's all bytes. no member-alignment or anything needed */
+typedef struct __attribute__((packed))
 {
 	u8 note;
 	u8 instrument;
@@ -67,13 +87,70 @@ enum
 
 typedef struct
 {
+	// this is an offset relative to the begining of the pimp_module_t-structure
+	u32 data_ptr;
+	
+	u16 row_count;
+} pimp_pattern_t;
+
+/* packed, because it's all bytes. no member-alignment or anything needed */
+typedef struct __attribute__((packed))
+{
+	u8 pan;
+	u8 volume;
+	u8 mute;
+} pimp_channel_t;
+
+typedef struct
+{
+	u16 node_tick[25];
+	s16 node_magnitude[25];
+	s16 node_delta[25];
+	u8 node_count;
+	u8 flags; // bit 0: loop enable, bit 1: sustain loop enable
+	u8 loop_start, loop_end;
+	u8 sustain_loop_start, sustain_loop_end;
+} pimp_envelope_t;
+
+typedef struct
+{
+	u32 sample_ptr;
+	u32 volume_envelope_ptr;
+	u32 panning_envelope_ptr;
+	u32 pitch_envelope_ptr;
+
+	u16 volume_fadeout;
+	u8 sample_count;                 /* number of samples tied to instrument */
+
+#if 0
+	// IT ONLY (later)
+	new_note_action_t        new_note_action;
+	duplicate_check_type_t   duplicate_check_type;
+	duplicate_check_action_t duplicate_check_action;
+	
+	// UNKNOWN
+	s8 pitch_pan_separation; // no idea what this one does
+	u8 pitch_pan_center;     // not this on either; this one seems to be a note index
+#endif
+	u8 sample_map[120];
+} pimp_instrument_t;
+
+typedef struct
+{
 	char name[32];
 	
 	u32 flags;
+	u32 reserved; /* for future flags */
+
+	// these are offsets relative to the begining of the pimp_module_t-structure
+	u32 order_ptr;
+	u32 pattern_ptr;
+	u32 channel_ptr;
+	u32 instrument_ptr;
 	
 	u16 period_low_clamp;
 	u16 period_high_clamp;
-	u16 order_length;
+	u16 order_count;
 	
 	u8  order_repeat;
 	u8  volume;
@@ -83,12 +160,6 @@ typedef struct
 	u8  instrument_count;
 	u8  pattern_count;
 	u8  channel_count;
-	
-	// these are offsets relative to the begining of the pimp_module_t-structure
-	unsigned order_ptr;
-	unsigned pattern_data_ptr;
-	unsigned channel_ptr;
-	unsigned instrument_ptr;
 } pimp_module_t;
 
 #endif /* INTERNAL_H */

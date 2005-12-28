@@ -67,8 +67,8 @@ typedef enum
 typedef struct
 {
 	u8 default_pan;
-	u8 initial_channel_volume;
-	channel_mute_state_t channel_mute_state;
+	u8 initial_volume;
+	channel_mute_state_t mute_state;
 } channel_state_t;
 
 /*

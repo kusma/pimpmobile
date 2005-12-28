@@ -77,6 +77,8 @@ module_t *load_module_mod(FILE *fp)
 		
 		default: return NULL; // not a mod as far as we can see.
 	}
+	printf("sig: %c%c%c%c\n", ((char*)&sig)[0], ((char*)&sig)[1], ((char*)&sig)[2], ((char*)&sig)[3]);
+	
 	printf("chans: %i\n", channels);
 	
 	module_t *mod = (module_t *)malloc(sizeof(module_t));
@@ -90,8 +92,14 @@ module_t *load_module_mod(FILE *fp)
 	
 	
 	mod->use_linear_frequency_table = false;            // behavour flag
+	
 	mod->period_low_clamp           = 113; // B-3 in MOD
 	mod->period_high_clamp          = 856; // C-1 in MOD
+	
+	/* this should be correct if no notes outside this range is used */
+	mod->period_low_clamp           = 108; // B-3 with fine tune 8 in MOD
+	mod->period_high_clamp          = 907; // C-1 wuth fine tune -8 in MOD
+	
 	mod->instrument_vibrato_use_linear_frequency_table = false; // behavour flag
 	mod->initial_global_volume      = 64;
 	mod->initial_tempo              = 6;
@@ -202,12 +210,15 @@ module_t *load_module_mod(FILE *fp)
 
 	fread(buf, 1, 1, fp);
 	mod->play_order_length = buf[0];
+	if (mod->play_order_length > 128) mod->play_order_length = 128;
+	
 	printf("song length: %i\n", mod->play_order_length);
 
 	mod->play_order_repeat_position = 0;
 	fseek(fp, 1, SEEK_CUR); // discard unused byte (this may be repeat position, but that is impossible to tell)
 	
 	mod->play_order = (u8*)malloc(mod->play_order_length);
+	memset(mod->play_order, 0, mod->play_order_length);
 
 	mod->pattern_count = 0;
 	for (int i = 0; i < mod->play_order_length; ++i)
@@ -216,8 +227,8 @@ module_t *load_module_mod(FILE *fp)
 		if (mod->play_order[i] > mod->pattern_count) mod->pattern_count = mod->play_order[i];
 	}
 	mod->pattern_count++;
-	fseek(fp, 128 - mod->play_order_length, SEEK_CUR); // discard unused orders
 	
+	fseek(fp, 128 - mod->play_order_length, SEEK_CUR); // discard unused orders
 	fseek(fp, 4, SEEK_CUR); // discard mod-signature
 	
 	mod->patterns = (pattern_header_t*) malloc(sizeof(pattern_header_t) * mod->pattern_count);
@@ -231,6 +242,8 @@ module_t *load_module_mod(FILE *fp)
 		assert(pat.pattern_data != NULL);
 		memset(pat.pattern_data, 0, sizeof(pattern_entry_t) * channels * 64);
 		
+		pat.num_rows = 64;
+		
 		for (unsigned i = 0; i < 64; ++i)
 		{
 			for (unsigned j = 0; j < channels; ++j)
@@ -241,7 +254,7 @@ module_t *load_module_mod(FILE *fp)
 				pe.note             = return_nearest_note(((buf[0] & 0x0F) <<8 ) + buf[1]);
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
-#if 0				
+#if 0
 				if (pe.note != 0)
 				{
 					const int o = (pe.note - 1) / 12;
@@ -256,11 +269,11 @@ module_t *load_module_mod(FILE *fp)
 				printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
 #endif
 			}
-			printf("\n");
+//			printf("\n");
 		}
 	}
 	
-	for (unsigned i=0; i<31; i++)
+	for (unsigned i = 0; i < 31; ++i)
 	{
 		instrument_t &instr = mod->instruments[i];
 		sample_header_t &samp = instr.sample_headers[0];
@@ -273,6 +286,19 @@ module_t *load_module_mod(FILE *fp)
 		}
 	}
 	
+	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->channel_count);
+	assert(mod->channel_states != 0);
+	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->channel_count);
+
+	// setup default pr channel settings.
+	for (unsigned i = 0; i < mod->channel_count; ++i)
+	{
+		mod->channel_states[i].default_pan = 127; // NOT correct.
+		mod->channel_states[i].initial_volume = 64;
+		mod->channel_states[i].mute_state = CHANNEL_NOT_MUTED;
+	}
+	
+#if 0	
 	/* check file length */
 	int eof1 = feof(fp);
 	fread(buf, 1, 1, fp);	
@@ -285,6 +311,6 @@ module_t *load_module_mod(FILE *fp)
 		
 		return NULL;
 	}
-	
+#endif
 	return mod;
 }

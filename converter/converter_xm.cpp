@@ -130,6 +130,7 @@ module_t *load_module_xm(FILE *fp)
 	not the number of patterns as documented.
 	ohwell, let's convert. */
 	
+#define PRINT_HEADER
 #ifdef PRINT_HEADER
 	printf("header size: %u\n", xm_header.header_size);
 	printf("len:         %u\n", xm_header.len);
@@ -197,8 +198,8 @@ module_t *load_module_xm(FILE *fp)
 	for (unsigned i = 0; i < mod->channel_count; ++i)
 	{
 		mod->channel_states[i].default_pan = 127;
-		mod->channel_states[i].initial_channel_volume = 64;
-		mod->channel_states[i].channel_mute_state = CHANNEL_NOT_MUTED;
+		mod->channel_states[i].initial_volume = 64;
+		mod->channel_states[i].mute_state = CHANNEL_NOT_MUTED;
 	}
 	
 	mod->pattern_count = xm_header.patterns;
