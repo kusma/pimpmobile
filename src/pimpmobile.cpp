@@ -32,7 +32,9 @@ s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
 static pimp_channel_state_t channels[CHANNELS];
-u32 samples_per_tick = SOUND_BUFFER_SIZE;
+
+u32 tick_len = (SOUND_BUFFER_SIZE << 8);
+u32 curr_tick_len = 0;
 
 unsigned char *sample_bank;
 pimp_module_t *mod;
@@ -304,8 +306,13 @@ extern "C" void pimp_frame()
 		remainder -= samples_to_mix;
 		
 		if (!samples_left) break;
+		
 		update_tick();
-		remainder = samples_per_tick;
+		
+		// fixed point tick length
+		curr_tick_len += tick_len;
+		remainder = curr_tick_len >> 8;
+		curr_tick_len -= (curr_tick_len >> 8) << 8;
 	}
 	DEBUG_COLOR(0, 0, 0);
 }

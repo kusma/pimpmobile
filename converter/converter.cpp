@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 		printf("converting samples\n");
 		convert_samples(mod); // convert all samples to unsigned 8bit format
 		
-		print_patterns(mod);
+//		print_patterns(mod);
 //		exit(0);
 		
 		/* dumpeti dump */

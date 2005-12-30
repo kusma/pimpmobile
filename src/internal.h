@@ -106,6 +106,7 @@ typedef struct
 	u16 node_tick[25];
 	s16 node_magnitude[25];
 	s16 node_delta[25];
+
 	u8 node_count;
 	u8 flags; // bit 0: loop enable, bit 1: sustain loop enable
 	u8 loop_start, loop_end;
@@ -120,7 +121,9 @@ typedef struct
 	u32 pitch_envelope_ptr;
 
 	u16 volume_fadeout;
+	
 	u8 sample_count;                 /* number of samples tied to instrument */
+	u8 sample_map[120];
 
 #if 0
 	// IT ONLY (later)
@@ -132,7 +135,6 @@ typedef struct
 	s8 pitch_pan_separation; // no idea what this one does
 	u8 pitch_pan_center;     // not this on either; this one seems to be a note index
 #endif
-	u8 sample_map[120];
 } pimp_instrument_t;
 
 typedef struct
