@@ -7,6 +7,8 @@ typedef   signed short s16;
 typedef unsigned int   u32;
 typedef   signed int   s32;
 
+#include <vector>
+
 typedef struct
 {
 	u8 note;
@@ -25,7 +27,7 @@ typedef struct
 typedef struct
 {
 	u16 num_rows; /* 1 to 256 */
-	pattern_entry_t *pattern_data;
+	std::vector<pattern_entry_t> pattern_data;
 
 	/*
 		packed pattern data structure, and its size
@@ -266,9 +268,7 @@ typedef struct
 	s8 pitch_pan_separation; /* no idea what this one does */
 	u8 pitch_pan_center;     /* not this on either; this one seems to be a note index */
 
-
-	u8 sample_count;                 /* number of samples tied to instrument */
-	sample_header_t *sample_headers; /* pointer to an array of sample headers for the instrument */
+	std::vector<sample_header_t> samples;
 
 	/*
 		for each possible note of the instrument, we have a sample index
@@ -316,27 +316,13 @@ typedef struct
 		At end-of-order, the module either quits or jumps to the repeat-position
 		of the order.
 	*/
-	u16 play_order_length;
-	u8  play_order_repeat_position;
-	u8  *play_order;
 
-	/*
-		channel configuration
-	*/
-	u8 channel_count;                 /* number of channels in the pattern-data of the module. */
-	channel_state_t *channel_states; /* array of per-channel configuration data */
+	u8 repeat_pos;
 
-	/*
-		the patterns of the module.
-	*/
-	u8 pattern_count;
-	pattern_header_t *patterns; /* pointer to an array of pattern headers */
-
-	/*
-		the instruments of the module
-	*/
-	u8 instrument_count;
-	instrument_t *instruments;
+	std::vector<u8>               order;
+	std::vector<channel_state_t>  channels;
+	std::vector<pattern_header_t> patterns;
+	std::vector<instrument_t>     instruments;
 
 	/*
 		initial player settings for the module

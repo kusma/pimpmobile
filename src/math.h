@@ -38,13 +38,11 @@ static inline unsigned clz8(unsigned input)
 
 
 #ifndef NO_LINEAR_PERIODS
-// extern const unsigned short linear_freq_lut[12 * 64];
 unsigned get_linear_delta(unsigned period);
 unsigned get_linear_period(int note, int fine_tune);
 #endif
 
 #ifndef NO_AMIGA_PERIODS
-extern const unsigned short amiga_freq_lut[(AMIGA_DELTA_LUT_SIZE / 2) + 1];
 unsigned get_amiga_delta(unsigned period);
 unsigned get_amiga_period(int note, int fine_tune);
 #endif

@@ -181,37 +181,25 @@ module_t *load_module_xm(FILE *fp)
 	mod->tone_porta_share_memory      = false; // unsure, need to check
 	mod->remember_tone_porta_target   = true;
 	
-	mod->play_order_length = xm_header.len;
-	mod->play_order_repeat_position = xm_header.restart_pos;
+	mod->order.resize(xm_header.len);
+	fread(&mod->order[0], sizeof(u8), xm_header.len, fp);
+	mod->repeat_pos = xm_header.restart_pos;
 	
-	mod->play_order = (u8 *)malloc(sizeof(u8) * xm_header.len);
-	assert(mod->play_order != 0);
-	fread(mod->play_order, sizeof(u8), xm_header.len, fp);
+	mod->channels.resize(xm_header.channels);
 	
-	mod->channel_count = xm_header.channels;
-	
-	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->channel_count);
-	assert(mod->channel_states != 0);
-	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->channel_count);
-
 	// setup default pr channel settings.
-	for (unsigned i = 0; i < mod->channel_count; ++i)
+	for (unsigned i = 0; i < mod->channels.size(); ++i)
 	{
-		mod->channel_states[i].default_pan = 127;
-		mod->channel_states[i].initial_volume = 64;
-		mod->channel_states[i].mute_state = CHANNEL_NOT_MUTED;
+		mod->channels[i].default_pan = 127;
+		mod->channels[i].initial_volume = 64;
+		mod->channels[i].mute_state = CHANNEL_NOT_MUTED;
 	}
 	
-	mod->pattern_count = xm_header.patterns;
-	
-	mod->patterns = (pattern_header_t*) malloc(sizeof(pattern_header_t) * mod->pattern_count);
-	assert(mod->patterns != 0);
-	memset(mod->patterns, 0, sizeof(pattern_header_t) * mod->pattern_count);
-	
-	printf("dumping pattern-data...");
-
 	// seek to start of pattern
 	fseek(fp, 60 + xm_header.header_size, SEEK_SET);
+	
+	printf("dumping pattern-data...");
+	mod->patterns.resize(xm_header.patterns);
 	
 	// load patterns
 	for (unsigned p = 0; p < xm_header.patterns; ++p)
@@ -229,9 +217,10 @@ module_t *load_module_xm(FILE *fp)
 		pattern_header_t *pat = &mod->patterns[p];
 		pat->num_rows = pattern_header.rows;
 		
-		pat->pattern_data = (pattern_entry_t *)malloc(sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
-		assert(pat->pattern_data != 0);
-		memset(pat->pattern_data, 0, sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
+//		pat->pattern_data = (pattern_entry_t *)malloc(sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
+		pat->pattern_data.resize(xm_header.channels * pattern_header.rows);
+//		assert(pat->pattern_data != 0);
+//		memset(pat->pattern_data, 0, sizeof(pattern_entry_t) * xm_header.channels * pattern_header.rows);
 		
 #ifdef PRINT_PATTERNS
 		printf("pattern:              %u\n", p);
@@ -293,7 +282,7 @@ module_t *load_module_xm(FILE *fp)
 					
 					if (note == 0x61) dat->note = 121;
 					else if (note == 0) dat->note = 0;
-					else dat->note = note + 12;
+					else dat->note = note + 12 * 1;
 					
 					dat->instrument       = instr;
 					dat->volume_command   = vol;
@@ -327,13 +316,8 @@ module_t *load_module_xm(FILE *fp)
 	
 	printf("dumping instrument-data...\n");
 	
-	mod->instrument_count = xm_header.instruments;
-
-	mod->instruments = (instrument_t*) malloc(sizeof(instrument_t) * mod->instrument_count);
-	assert(mod->instruments != 0);
-	memset(mod->instruments, 0, sizeof(instrument_t) * mod->instrument_count);
-	
 	// load instruments
+	mod->instruments.resize(xm_header.instruments);
 	for (unsigned i = 0; i < xm_header.instruments; ++i)
 	{
 		unsigned last_pos = ftell(fp);
@@ -451,11 +435,7 @@ module_t *load_module_xm(FILE *fp)
 		instr.duplicate_check_type = DCT_OFF;
 		instr.duplicate_check_action = DCA_CUT;
 		
-		instr.sample_count = ih.samples;
-
-		instr.sample_headers = (sample_header_t*)malloc(sizeof(sample_header_t) * instr.sample_count);
-		assert(instr.sample_headers != NULL);
-		memset(instr.sample_headers, 0, sizeof(sample_header_t) * instr.sample_count);
+		instr.samples.resize(ih.samples);
 		
 		fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
 		
@@ -483,7 +463,7 @@ module_t *load_module_xm(FILE *fp)
 			sh.name[22] = '\0';
 
 			/* fill converter-struct */
-			sample_header_t &samp = instr.sample_headers[s];
+			sample_header_t &samp = instr.samples[s];
 			strcpy(samp.name, sh.name);
 			
 			samp.is_stereo = false; /* no stereo samples in XM */
@@ -563,7 +543,7 @@ module_t *load_module_xm(FILE *fp)
 		for (unsigned s = 0; s < ih.samples; ++s)
 		{
 			xm_sample_header_t &sh = sample_headers[s];
-			sample_header_t &samp = instr.sample_headers[s];
+			sample_header_t &samp = instr.samples[s];
 			
 			if (sh.type & (1 << 4))
 			{

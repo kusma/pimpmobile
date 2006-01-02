@@ -31,72 +31,110 @@
 s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
+/* should be part of a kind of player-context ? */
 static pimp_channel_state_t channels[CHANNELS];
-
 u32 tick_len = (SOUND_BUFFER_SIZE << 8);
+
 u32 curr_tick_len = 0;
+u32 curr_row = 0;
+u32 curr_order = 0;
+u32 curr_bpm = 125;
+u32 curr_tempo = 5;
+u32 curr_tick = 0;
+pimp_pattern_t *curr_pattern = 0;
 
-unsigned char *sample_bank;
-pimp_module_t *mod;
+const unsigned char *sample_bank;
+const pimp_module_t *mod;
 
-int get_order(pimp_module_t *mod, int i)
+
+void set_bpm(int bpm)
+{
+	assert(bpm > 0);
+	
+//	curr_tick_len = SAMPLERATE / (2 * bpm / 5);
+//	curr_tick_len <<= 8;
+	tick_len = ((SAMPLERATE * 5) << 8) / (bpm * 2);
+}
+
+int get_order(const pimp_module_t *mod, int i)
 {
 	return ((char*)mod + mod->order_ptr)[i];
 }
 
-pimp_pattern_t &get_pattern(pimp_module_t *mod, int i)
+pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
 {
-	return ((pimp_pattern_t*)((char*)mod + mod->pattern_ptr))[i];
+	return &((pimp_pattern_t*)((char*)mod + mod->pattern_ptr))[i];
 }
 
-pimp_pattern_entry_t *get_pattern_data(pimp_module_t *mod, pimp_pattern_t &pat)
+pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
 {
-	return (pimp_pattern_entry_t*)((char*)mod + pat.data_ptr);
+	return (pimp_pattern_entry_t*)((char*)mod + pat->data_ptr);
 }
 
-pimp_channel_t &get_channel(pimp_module_t *mod, int i)
+pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
 {
 	return ((pimp_channel_t*)((char*)mod + mod->channel_ptr))[i];
 }
 
-void print_pattern(pimp_module_t *mod, pimp_pattern_t &pat)
+void print_pattern_entry(const pimp_pattern_entry_t &pe)
+{
+	if (pe.note != 0)
+	{
+		const int o = (pe.note - 1) / 12;
+		const int n = (pe.note - 1) % 12;
+		/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
+		iprintf("%c%c%X ",
+			"CCDDEFFGGAAB"[n],
+			"-#-#--#-#-#-"[n], o);
+	}
+	else iprintf("--- ");
+	iprintf("%02X ", pe.instrument);
+//	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
+}
+
+void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 {
 	pimp_pattern_entry_t *pd = get_pattern_data(mod, pat);
 
-	iprintf("%02x\n", pat.row_count);
+	iprintf("%02x\n", pat->row_count);
 	
 	for (unsigned i = 0; i < 5; ++i)
 	{
 		for (unsigned j = 0; j < mod->channel_count; ++j)
 		{
 			pimp_pattern_entry_t &pe = pd[i * mod->channel_count + j];
-			
-			if (pe.note != 0)
-			{
-				const int o = (pe.note - 1) / 12;
-				const int n = (pe.note - 1) % 12;
-				/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
-				printf("%c%c%X ",
-					"CCDDEFFGGAAB"[n],
-					"-#-#--#-#-#-"[n], o);
-			}
-			else printf("--- ");
-			
-//			printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
+			print_pattern_entry(pe);
 		}
 		printf("\n");
 	}
 }
 
-extern "C" void pimp_init(void *module, void *sample_bank)
+extern "C" void pimp_init(const void *module, const void *sample_bank_in)
 {
-	mod = (pimp_module_t*)module;
+	mod = (const pimp_module_t*)module;
+	sample_bank = (const u8*)sample_bank_in;
 	
+	/* setup default player-state */
+	curr_row = 0;
+	curr_tick = 0;
+	curr_tick_len = 0;
+
+	curr_order = 0;
+	curr_pattern = get_pattern(mod, get_order(mod, curr_order));
+	
+	set_bpm(mod->bpm);
+	curr_tempo = mod->tempo;
+	
+	iprintf("\n\n\n%i\n", curr_tick_len);
+
+
 /*	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
 	iprintf("global volume: %d\ntempo: %d\nbpm: %d\n", mod->volume, mod->tempo, mod->bpm); */
+
 	iprintf("channels: %d\n", mod->channel_count);
 	iprintf("order ptr: %d\n", mod->order_ptr);
+	
 /*
 	for (unsigned i = 0; i < mod->order_count; ++i)
 	{
@@ -107,7 +145,7 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 	iprintf("pattern ptr: %d\n", mod->pattern_ptr);
 	for (unsigned i = 0; i < 1; ++i)
 	{
-		print_pattern(mod, get_pattern(mod, i));
+		print_pattern(mod, get_pattern(mod, get_order(mod, i)));
 	}
 
 	for (unsigned i = 0; i < mod->channel_count; ++i)
@@ -116,10 +154,8 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 		iprintf("%d %d %d\n", c.volume, c.pan, c.mute);
 	}
 
-
 	if (mod->flags & FLAG_LINEAR_PERIODS) iprintf("LINEAR\n");
-	
-	
+		
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
@@ -128,7 +164,7 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 	/* setup timer-shit */
 	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
-	
+/*	
 	for (u32 c = 0; c < 1; ++c)
 	{
 		pimp_channel_state_t &chan = channels[c];
@@ -138,6 +174,7 @@ extern "C" void pimp_init(void *module, void *sample_bank)
 		chan.effect      = EFF_PORTA_UP;
 		chan.porta_speed = 2;
 	}
+*/
 }
 
 extern "C" void pimp_close()
@@ -191,30 +228,41 @@ end for
 
 */
 
-pimp_pattern_entry_t *get_next_pattern_entry(unsigned chan)
-{
-	static int row = -1;
-	if (chan == 0) row++;
-	return 0;
-}
-
 void update_row()
 {
 	assert(mod != 0);
-	for (u32 c = 0; c < CHANNELS; ++c)
+	
+	for (u32 c = 0; c < mod->channel_count; ++c)
 	{
 		pimp_channel_state_t &chan = channels[c];
-		
-		pimp_pattern_entry_t *note = get_next_pattern_entry(c);
+		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
 //		unsigned instr = mod->curr_pattern[mod->row][c].sample;
+//		print_pattern_entry(*note);
+
+		chan.effect           = note->effect_byte;
 		
+//		NOTE ON !
 		if (note->instrument > 0)
 		{
-//			NOTE ON !
-//			unsigned note = mod->pattern_data[offs].note;
-//			unsigned effect = channels[i].effect = mod->pattern_data[offs].effect;
-//			unsigned effect_parameters = channels[i].effect_parameters = mod->pattern_data[offs].effect_parameters;
+			int period, delta;
+			if (mod->flags & FLAG_LINEAR_PERIODS)
+			{
+				period = get_linear_period(note->note, 0);
+				delta  = get_linear_delta(period);
+			}
+			else
+			{
+				period = get_amiga_period(note->note, 0);
+				delta  = get_amiga_delta(period);
+			}
+			
+			chan.period = chan.final_period = period;
+			
+			mixer::channels[c].sample_cursor = 0;
+			mixer::channels[c].sample_cursor_delta = delta;
+			mixer::channels[c].volume = 255;
+			mixer::channels[c].sample = mixer::channels[0].sample;
 		}
 		
 		switch (chan.effect)
@@ -232,13 +280,28 @@ void update_row()
 			default: assert(0);
 		}
 	}
+
+//	iprintf("\n");
+	curr_tick = 0;
+	curr_row++;
+	if (curr_row == curr_pattern->row_count)
+	{
+		curr_row = 0;
+		curr_order++;
+		curr_pattern = get_pattern(mod, get_order(mod, curr_order));
+	}
 }
 
 static void update_tick()
 {
 	if (mod == 0) return; // no module active (sound-effects can still be playing, though)
+
+	if (curr_tick == curr_tempo)
+	{
+		update_row();
+	}
 	
-	for (u32 c = 0; c < CHANNELS; ++c)
+	for (u32 c = 0; c < mod->channel_count; ++c)
 	{
 		pimp_channel_state_t &chan = channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
@@ -250,14 +313,14 @@ static void update_tick()
 			case EFF_NONE: break;
 			
 			case EFF_PORTA_UP:
-				chan.period -= chan.porta_speed;
-				if (chan.period < mod->period_low_clamp) chan.period = mod->period_low_clamp;
+				chan.final_period -= chan.porta_speed;
+				if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
 			
 			case EFF_PORTA_DOWN:
-				chan.period += chan.porta_speed;
-				if (chan.period > mod->period_high_clamp) chan.period = mod->period_high_clamp;
+				chan.final_period += chan.porta_speed;
+				if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
 				period_dirty = true;
 			break;
 			
@@ -271,12 +334,20 @@ static void update_tick()
 			default: assert(0);
 		}
 		
+		// period to delta-conversion
 		if (period_dirty)
 		{
-			// period to delta-conversion
-			mc.sample_cursor_delta = get_amiga_delta(chan.period);
+			if (mod->flags & FLAG_LINEAR_PERIODS)
+			{
+				mc.sample_cursor_delta = get_linear_delta(chan.final_period);
+			}
+			else
+			{
+				mc.sample_cursor_delta = get_amiga_delta(chan.final_period);
+			}
 		}
 	}
+	curr_tick++;
 }
 
 #ifndef MAX
@@ -308,6 +379,7 @@ extern "C" void pimp_frame()
 		if (!samples_left) break;
 		
 		update_tick();
+//		printf("%d %d %d %d\n", mod->bpm, curr_row, curr_order, curr_tick);
 		
 		// fixed point tick length
 		curr_tick_len += tick_len;

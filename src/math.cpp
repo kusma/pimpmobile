@@ -1,6 +1,9 @@
 #include <gba_base.h>
 #include <assert.h>
+#include <stdio.h>
 #include "math.h"
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 const u8 clz_lut[256] =
 {
@@ -29,15 +32,18 @@ unsigned get_linear_period(int note, int fine_tune)
 	assert(fine_tune >= -8);
 	assert(fine_tune <   8);
 	
-	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2;
+	int xm_note = note - (12 * 1); // we extended our note-range with one octave.
+	
+	return 10 * 12 * 16 * 4 - xm_note * 16 * 4 - fine_tune / 2;
+//	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2;
 }
 
 #include "linear_delta_lut.h"
 unsigned get_linear_delta(unsigned period)
 {
-	unsigned p = (12 * 64 * 14) - period;
-	unsigned octave        = p / (12 * 64);
-	unsigned octave_period = p % (12 * 64);
+	unsigned p = (12 * 16 * 4 * 14) - period;
+	unsigned octave        = p / (12 * 16 * 4);
+	unsigned octave_period = p % (12 * 16 * 4);
 	unsigned delta = linear_delta_lut[octave_period] << octave;
 
 	// BEHOLD: the expression of the devil
@@ -54,13 +60,24 @@ unsigned get_amiga_period(int note, int fine_tune)
 	assert(fine_tune >= -8);
 	assert(fine_tune <   8);
 	
-	int mod_note = note - (12 * 2); // we extended our note-range with two octaves.
-	int index = mod_note * 8 + fine_tune;
+	int mod_note = note - (12 * 5); // we extended our note-range with two octaves. (wtf is this 3 octave bias?)
+	int index = mod_note * 8 + fine_tune + 8;
 	
+	if (index < 0)
+	{
+		return 0;
+	}
+
+	if (index > ARRAY_SIZE(amiga_period_lut))
+	{
+		/* hack. */
+		return amiga_period_lut[ARRAY_SIZE(amiga_period_lut) - 1];
+	}
+
 	// TODO: handle entries outside of the mod-note range
 	// clamping will be handled on the period later anyway
 	
-	return amiga_period_lut[8 + index];
+	return amiga_period_lut[index];
 }
 
 #include "amiga_delta_lut.h"

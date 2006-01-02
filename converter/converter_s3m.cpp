@@ -69,9 +69,9 @@ module_t *load_module_s3m(FILE *fp)
 	printf("orders: %d\ninstruments: %d\npatterns: %d\nflags: %x\n", ordnum, insnum, patnum, flags);
 	fseek(fp, 0x1, SEEK_CUR); /* skip tracker version */
 	
-	mod->play_order_length = ordnum;
-	mod->pattern_count     = patnum;
-	mod->instrument_count  = insnum;
+	mod->order.resize(ordnum);
+	mod->patterns.resize(patnum);
+	mod->instruments.resize(insnum);
 	
 	mod->vol0_optimizations         = (flags & 8) != 0;
 	

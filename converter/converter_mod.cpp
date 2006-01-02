@@ -9,12 +9,12 @@
 
 int return_nearest_note(int p)
 {
-	if( p < 14 ) return 0; // this is not a note
+	if (p < 14) return 0; // this is not a note
 
-	double log2p = log(p)/log(2);
-	double note = (log2( 428 << 5) - log2p) * 12.0 + 1;
+	double log2p = log(p) / log(2);
+	double note = (log2(428 << 5) - log2p) * 12.0 + 1;
 	
-	int note_int = int(floor( note + .5 ));
+	int note_int = int(floor(note + 0.5));
 
 	if (note_int <= 0 || note_int > 120) return 0; // this is not a note
 	return note_int;
@@ -78,7 +78,6 @@ module_t *load_module_mod(FILE *fp)
 		default: return NULL; // not a mod as far as we can see.
 	}
 	printf("sig: %c%c%c%c\n", ((char*)&sig)[0], ((char*)&sig)[1], ((char*)&sig)[2], ((char*)&sig)[3]);
-	
 	printf("chans: %i\n", channels);
 	
 	module_t *mod = (module_t *)malloc(sizeof(module_t));
@@ -130,26 +129,20 @@ module_t *load_module_mod(FILE *fp)
 	printf("name : \"%s\"\n", name);
 
 	strcpy(mod->name, name);
-	mod->channel_count = channels;
-	mod->instruments = (instrument_t*) malloc(sizeof(instrument_t) * 31);
-	mod->instrument_count = 31;
-	assert(mod->instruments != 0);
-	memset(mod->instruments, 0, sizeof(instrument_t) * 31);
+	mod->channels.resize(channels);
+	mod->instruments.resize(31);
 	
 	static unsigned char buf[256];
 	for (int i = 0; i < 31; ++i)
 	{
 		instrument_t &instr = mod->instruments[i];
 		
-		instr.sample_headers = (sample_header_t*)malloc(sizeof(sample_header_t));
-		assert(instr.sample_headers != NULL);
-		memset(instr.sample_headers, 0, sizeof(sample_header_t));
-		
-		sample_header_t &samp = instr.sample_headers[0];
+		instr.samples.resize(1);
+		sample_header_t &samp = instr.samples[0];
 		
 		fread(buf, 1, 22, fp);
 		buf[22] = '\0';
-		printf("sample-name: '%s' ", buf);
+//		printf("sample-name: '%s' ", buf);
 		
 		
 		// fill out the instrument-data. this is not stored in the module at all.
@@ -163,7 +156,6 @@ module_t *load_module_mod(FILE *fp)
 		instr.duplicate_check_action = DCA_CUT;
 		instr.pitch_pan_separation   = 0;
 		instr.pitch_pan_center       = 0;
-		instr.sample_count           = 1;
 		memset(instr.sample_map, 1, 120);
 		
 		strcpy(samp.name, (const char*)buf);
@@ -184,24 +176,24 @@ module_t *load_module_mod(FILE *fp)
 		
 		fread(buf, 1, 2, fp);
 		samp.length = ((buf[0] << 8) | buf[1]) << 1;
-		printf("length: %i ", samp.length);
+//		printf("length: %i ", samp.length);
 		
 		fread(buf, 1, 1, fp);
 		if (buf[0] > 7) samp.finetune = (buf[0] - 16) << 4;
 		else samp.finetune = buf[0] << 4;
-		printf("finetune: %i ", samp.finetune);
+//		printf("finetune: %i ", samp.finetune);
 		
 		fread(&samp.default_volume, 1, 1, fp);
-		printf("vol: %i ", samp.default_volume);
+//		printf("vol: %i ", samp.default_volume);
 		
 		fread(buf, 1, 2, fp);
 		samp.loop_start = ((buf[0] << 8) | buf[1]) << 1;
-		printf("loop start: %i ", samp.loop_start);
+//		printf("loop start: %i ", samp.loop_start);
 		
 		fread(buf, 1, 2, fp);
 		unsigned loop_length = ((buf[0] << 8) | buf[1]) << 1;
 		samp.loop_end = samp.loop_start + loop_length;
-		printf("loop end: %i\n", samp.loop_end);
+//		printf("loop end: %i\n", samp.loop_end);
 		
 		if ((samp.loop_start == 0) && (loop_length < 4)) samp.loop_type = LOOP_NONE;
 		else samp.loop_type = LOOP_FORWARD;
@@ -209,39 +201,27 @@ module_t *load_module_mod(FILE *fp)
 	
 
 	fread(buf, 1, 1, fp);
-	mod->play_order_length = buf[0];
-	if (mod->play_order_length > 128) mod->play_order_length = 128;
+	mod->order.resize(buf[0]);
+	if (mod->order.size() > 128) mod->order.resize(128);
 	
-	printf("song length: %i\n", mod->play_order_length);
-
-	mod->play_order_repeat_position = 0;
+	mod->repeat_pos = 0;
 	fseek(fp, 1, SEEK_CUR); // discard unused byte (this may be repeat position, but that is impossible to tell)
 	
-	mod->play_order = (u8*)malloc(mod->play_order_length);
-	memset(mod->play_order, 0, mod->play_order_length);
-
-	mod->pattern_count = 0;
-	for (int i = 0; i < mod->play_order_length; ++i)
+	int pattern_count = 0;
+	for (int i = 0; i < mod->order.size(); ++i)
 	{
-		fread(&mod->play_order[i], 1, 1, fp);
-		if (mod->play_order[i] > mod->pattern_count) mod->pattern_count = mod->play_order[i];
+		fread(&mod->order[i], 1, 1, fp);
+		if (mod->order[i] > pattern_count) pattern_count = mod->order[i];
 	}
-	mod->pattern_count++;
+	mod->patterns.resize(pattern_count + 1);
 	
-	fseek(fp, 128 - mod->play_order_length, SEEK_CUR); // discard unused orders
+	fseek(fp, 128 - mod->order.size(), SEEK_CUR); // discard unused orders
 	fseek(fp, 4, SEEK_CUR); // discard mod-signature
 	
-	mod->patterns = (pattern_header_t*) malloc(sizeof(pattern_header_t) * mod->pattern_count);
-	assert(mod->patterns != 0);
-	memset(mod->patterns, 0, sizeof(pattern_header_t) * mod->pattern_count);
-	
-	for (unsigned p = 0; p < mod->pattern_count; ++p)
+	for (unsigned p = 0; p < mod->patterns.size(); ++p)
 	{
 		pattern_header_t &pat = mod->patterns[p];
-		pat.pattern_data = (pattern_entry_t *)malloc(sizeof(pattern_entry_t) * channels * 64);
-		assert(pat.pattern_data != NULL);
-		memset(pat.pattern_data, 0, sizeof(pattern_entry_t) * channels * 64);
-		
+		pat.pattern_data.resize(channels * 64);
 		pat.num_rows = 64;
 		
 		for (unsigned i = 0; i < 64; ++i)
@@ -251,32 +231,17 @@ module_t *load_module_mod(FILE *fp)
 				pattern_entry_t &pe = pat.pattern_data[i * channels + j];
 				fread(buf, 1, 4, fp);
 				pe.instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
-				pe.note             = return_nearest_note(((buf[0] & 0x0F) <<8 ) + buf[1]);
+				pe.note             = return_nearest_note(((buf[0] & 0x0F) << 8) + buf[1]) - 12;
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
-#if 0
-				if (pe.note != 0)
-				{
-					const int o = (pe.note - 1) / 12;
-					const int n = (pe.note - 1) % 12;
-					/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
-					printf("%c%c%X ",
-						"CCDDEFFGGAAB"[n],
-						"-#-#--#-#-#-"[n], o);
-				}
-				else printf("--- ");
-				
-				printf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
-#endif
 			}
-//			printf("\n");
 		}
 	}
 	
 	for (unsigned i = 0; i < 31; ++i)
 	{
 		instrument_t &instr = mod->instruments[i];
-		sample_header_t &samp = instr.sample_headers[0];
+		sample_header_t &samp = instr.samples[0];
 		
 		if (samp.length > 0)
 		{
@@ -286,16 +251,12 @@ module_t *load_module_mod(FILE *fp)
 		}
 	}
 	
-	mod->channel_states = (channel_state_t *)malloc(sizeof(channel_state_t) * mod->channel_count);
-	assert(mod->channel_states != 0);
-	memset(mod->channel_states, 0, sizeof(channel_state_t) * mod->channel_count);
-
 	// setup default pr channel settings.
-	for (unsigned i = 0; i < mod->channel_count; ++i)
+	for (unsigned i = 0; i < mod->channels.size(); ++i)
 	{
-		mod->channel_states[i].default_pan = 127; // NOT correct.
-		mod->channel_states[i].initial_volume = 64;
-		mod->channel_states[i].mute_state = CHANNEL_NOT_MUTED;
+		mod->channels[i].default_pan    = 127; // NOT correct.
+		mod->channels[i].initial_volume = 64;
+		mod->channels[i].mute_state     = CHANNEL_NOT_MUTED;
 	}
 	
 #if 0	

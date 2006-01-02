@@ -81,17 +81,16 @@ void convert_sample(sample_header_t *samp)
 void convert_samples(module_t *mod)
 {
 	assert(mod != 0);
-	assert(mod->instruments != 0);
-	for (unsigned i = 0; i < mod->instrument_count; ++i)
+	for (unsigned i = 0; i < mod->instruments.size(); ++i)
 	{
 		instrument_t &instr = mod->instruments[i];
 		
-		for (unsigned s = 0; s < instr.sample_count; ++s)
+		for (unsigned s = 0; s < instr.samples.size(); ++s)
 		{
-			sample_header_t &samp = instr.sample_headers[s];
+			sample_header_t &samp = instr.samples[s];
 			convert_sample(&samp);
 			
-			if (i == 16)
+			if (i == 0)
 			{
 				printf("converting sample: '%s'\n", samp.name);
 				FILE *fp = fopen("sample.raw", "wb");
@@ -107,9 +106,9 @@ void print_pattern(module_t *mod, pattern_header_t &pat)
 {
 	for (unsigned i = 0; i < pat.num_rows; ++i)
 	{
-		for (unsigned j = 0; j < mod->channel_count; ++j)
+		for (unsigned j = 0; j < mod->channels.size(); ++j)
 		{
-			pattern_entry_t &pe = pat.pattern_data[i * mod->channel_count + j];
+			pattern_entry_t &pe = pat.pattern_data[i * mod->channels.size() + j];
 			
 			if (pe.note != 0)
 			{
@@ -130,10 +129,10 @@ void print_pattern(module_t *mod, pattern_header_t &pat)
 
 void print_patterns(module_t *mod)
 {
-	for (unsigned p = 0; p < mod->pattern_count; ++p)
+	for (unsigned p = 0; p < mod->patterns.size(); ++p)
 	{
 		pattern_header_t &pat = mod->patterns[p];
-		assert(pat.pattern_data != NULL);
+//		assert(pat.pattern_data != NULL);
 		print_pattern(mod, pat);
 		printf("\n");
 	}

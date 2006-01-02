@@ -8,6 +8,48 @@
 #include "converter.h"
 #include "../src/internal.h"
 
+#include <vector>
+
+/* little endian, datatypes aligned to their size */
+class BinChunk
+{
+public:
+	bool align(int a)
+	{
+		if ((data.size() % a) != 0)
+		{
+			int b = a - (data.size() % a);
+			for (;b;--b) data.push_back(0);
+			return false;
+		}
+		return true;
+	}
+	
+	void dump(const unsigned char b)
+	{
+		data.push_back(b);
+	}
+
+	void dump(const unsigned short h)
+	{
+		align(2);
+		data.push_back((unsigned char)(h >> 0));
+		data.push_back((unsigned char)(h >> 8));
+	}
+
+	void dump(const unsigned int i)
+	{
+		align(4);
+		data.push_back((unsigned char)(i >>  0));
+		data.push_back((unsigned char)(i >>  8));
+		data.push_back((unsigned char)(i >> 16));
+		data.push_back((unsigned char)(i >> 24));
+	}
+
+private:
+	std::vector<unsigned char> data;
+};
+
 unsigned buffer_size = 0;
 unsigned char *data = 0;
 
@@ -145,6 +187,8 @@ using std::make_pair;
 
 void dump_module(module_t *mod)
 {
+	assert(mod != 0);
+
 	printf("\ndumping module \"%s\"\n\n", mod->name);
 	pos = 0;
 	buffer_size = 1024;
@@ -177,64 +221,65 @@ void dump_module(module_t *mod)
 	dump_word(0); // reserved for future flags
 	
 	// order_ptr
-	pointer_map.insert(make_pair(mod->play_order, pos));
-	dump_word((unsigned)mod->play_order);
+	pointer_map.insert(make_pair(&mod->order[0], pos));
+	dump_word((unsigned)&mod->order[0]);
 
 	// pattern_ptr
-	pointer_map.insert(make_pair(mod->patterns, pos));
-	dump_word((unsigned)mod->patterns);
+	pointer_map.insert(make_pair(&mod->patterns[0], pos));
+	dump_word((unsigned)&mod->patterns[0]);
 	
-	pointer_map.insert(make_pair(mod->channel_states, pos));
-	dump_word((unsigned)mod->channel_states); // channel_ptr
+	// channel_ptr
+	pointer_map.insert(make_pair(&mod->channels[0], pos));
+	dump_word((unsigned)&mod->channels[0]);
 	
-	dump_word(0); // instrument_ptr
+	// instrument_ptr
+	pointer_map.insert(make_pair(&mod->instruments[0], pos));
+	dump_word((unsigned)&mod->instruments[0]);
 	
 	dump_halfword(mod->period_low_clamp);
 	dump_halfword(mod->period_high_clamp);
-	dump_halfword(mod->play_order_length);
+	dump_halfword(mod->order.size());
 	
-	dump_byte(mod->play_order_repeat_position);
+	dump_byte(mod->repeat_pos);
 	dump_byte(mod->initial_global_volume);
 	dump_byte(mod->initial_tempo);
 	dump_byte(mod->initial_bpm);
 	
-	dump_byte(mod->instrument_count);
-	dump_byte(mod->pattern_count);
-	dump_byte(mod->channel_count);
+	dump_byte(mod->instruments.size());
+	dump_byte(mod->patterns.size());
+	dump_byte(mod->channels.size());
 	
 	// array of bytes, no need for alignment
-	pointer_back_map.insert(make_pair(mod->play_order, pos));
-	for (int i = 0; i < mod->play_order_length; ++i)
+	pointer_back_map.insert(make_pair(&mod->order[0], pos));
+	for (int i = 0; i < mod->order.size(); ++i)
 	{
-		dump_byte(mod->play_order[i]);
+		dump_byte(mod->order[i]);
 	}
 
 	// patterns
-	assert(mod->patterns != 0);
 	align(4);
-	pointer_back_map.insert(make_pair(mod->patterns, pos));
-	for (int i = 0; i < mod->pattern_count; ++i)
+	pointer_back_map.insert(make_pair(&mod->patterns[0], pos));
+	for (int i = 0; i < mod->patterns.size(); ++i)
 	{
 		align(4);
-		pointer_map.insert(make_pair(mod->patterns[i].pattern_data, pos));
-		dump_word((unsigned)mod->patterns[i].pattern_data); // data_ptr
+		pointer_map.insert(make_pair(&mod->patterns[i].pattern_data[0], pos));
+		dump_word((unsigned)&mod->patterns[i].pattern_data[0]); // data_ptr
 		dump_halfword(mod->patterns[i].num_rows);
 	}
 	
 	// pattern data
-	for (int i = 0; i < mod->pattern_count; ++i)
+	for (int i = 0; i < mod->patterns.size(); ++i)
 	{
 		pattern_header_t &pat = mod->patterns[i];
-		assert(pat.pattern_data != 0);
 		
-		pointer_back_map.insert(make_pair(pat.pattern_data, pos));
+		pointer_back_map.insert(make_pair(&pat.pattern_data[0], pos));
 		
 		// write the actual data
 		for (unsigned i = 0; i < pat.num_rows; ++i)
 		{
-			for (unsigned j = 0; j < mod->channel_count; ++j)
+			for (unsigned j = 0; j < mod->channels.size(); ++j)
 			{
-				pattern_entry_t &pe = pat.pattern_data[i * mod->channel_count + j];
+				pattern_entry_t &pe = pat.pattern_data[i * mod->channels.size() + j];
 				dump_byte(pe.note);
 				dump_byte(pe.instrument);
 				dump_byte(pe.volume_command);
@@ -245,14 +290,13 @@ void dump_module(module_t *mod)
 	}
 
 	// channel settings
-	assert(mod->channel_states != 0);
 	align(4);
-	pointer_back_map.insert(make_pair(mod->channel_states, pos));
-	for (int i = 0; i < mod->channel_count; ++i)
+	pointer_back_map.insert(make_pair(&mod->channels[0], pos));
+	for (int i = 0; i < mod->channels.size(); ++i)
 	{
-		dump_byte(mod->channel_states[i].default_pan);
-		dump_byte(mod->channel_states[i].initial_volume);
-		dump_byte(mod->channel_states[i].mute_state);
+		dump_byte(mod->channels[i].default_pan);
+		dump_byte(mod->channels[i].initial_volume);
+		dump_byte(mod->channels[i].mute_state);
 	}
 
 #if 0
@@ -270,15 +314,13 @@ void dump_module(module_t *mod)
 	u8 sample_map[120];
 #endif
 
-	// channel settings
-	assert(mod->instruments != 0);
+	// instruments
 	align(4);
-	pointer_back_map.insert(make_pair(mod->instruments, pos));
-	for (int i = 0; i < mod->instrument_count; ++i)
+	pointer_back_map.insert(make_pair(&mod->instruments[0], pos));
+	for (int i = 0; i < mod->instruments.size(); ++i)
 	{
-		printf("%s\n", mod->instruments[i].name);
+//		printf("%s\n", mod->instruments[i].name);
 	}
-
 	
 	// fixback pointers
 	for (multimap<void *, unsigned>::iterator it = pointer_map.begin(); it != pointer_map.end(); ++it)
@@ -299,11 +341,7 @@ void dump_module(module_t *mod)
 		}
 		
 		*target = pointer_back_map[it->first];
-//		printf("%i %d\n", pointer_back_map[it->first], it->second);
 	}
-	
-//	dump_datastruct("i", 0xFFFFFFFF);
-	printf("\n");
 	
 	FILE *fp = fopen("out.bin", "wb");
 	for (unsigned i = 0; i < pos; ++i)
