@@ -185,7 +185,7 @@ using std::map;
 using std::multimap;
 using std::make_pair;
 
-void dump_module(module_t *mod)
+void dump_module(module_t *mod, const char *filename)
 {
 	assert(mod != 0);
 
@@ -343,12 +343,10 @@ void dump_module(module_t *mod)
 		*target = pointer_back_map[it->first];
 	}
 	
-	FILE *fp = fopen("out.bin", "wb");
+	FILE *fp = fopen(filename, "wb");
 	for (unsigned i = 0; i < pos; ++i)
 	{
 		fwrite(&data[i], 1, 1, fp);
-//		printf("%02X ", data[i]);
-//		if ((i % 16) == 15) printf("\n");
 	}
 	fclose(fp);
 

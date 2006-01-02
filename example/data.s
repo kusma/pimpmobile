@@ -7,8 +7,8 @@
 .incbin "\filename"
 .endm
 
-datafile sample, example/sample.raw
+datafile sample, sample.raw
 .global sample_end
 sample_end:
 
-datafile module, out.bin
+datafile module, eye.bin

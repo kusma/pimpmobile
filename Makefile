@@ -4,7 +4,6 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
 
-GBAEMU   ?= vba
 DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
 
@@ -26,16 +25,10 @@ ASFLAGS  = -mthumb-interwork
 ARM   = -marm
 THUMB = -mthumb
 
-LIBS = $(LIBGBA)/lib/libgba.a
 OBJS = \
 	src/pimpmobile.o \
 	src/math.iwram.o \
 	src/mixer.iwram.o
-
-EXAMPLE_OBJS = \
-	example/example.o \
-	example/data.o
-	
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
@@ -50,44 +43,34 @@ else
 endif
 
 	
-.PHONY: all clean
+.PHONY: all clean run debug
 
 all: bin/example.gba
 
+bin/example.gba: lib/libpimpmobile.a
+	make -C example
+
 clean:
-	$(RM) bin/* $(EXAMPLE_OBJS) $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/* $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a *~ src/*~ include/*~
+	make -C example clean
+	make -C converter clean
 
-run: bin/example.gba
-	$(GBAEMU) bin/example.gba
-	
-debug: example.elf
-	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
-	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
+run:
+	make -C example run
 
-bin/converter: converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/dump_module.cpp converter/converter.h
-	g++ converter/converter.cpp converter/converter_xm.cpp converter/converter_s3m.cpp converter/converter_mod.cpp converter/dump_module.cpp -o bin/converter
+debug:
+	make -C example debug
+
+bin/converter:
+	make -C converter
 
 bin/lut_gen: lut_gen.cpp src/config.h
 	g++ lut_gen.cpp -o bin/lut_gen
 
-example/data.o: example/sample.raw out.bin
-
-bin/example.gba: 
-bin/example.elf: $(EXAMPLE_OBJS) lib/libpimpmobile.a
 lib/libpimpmobile.a: $(OBJS)
-
-%.bin: %.mod bin/converter
-	bin/converter $<
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $?
-
-%.elf:
-	$(LD) $(LDFLAGS) -specs=gba.specs $^ $(LIBS) -o $@
-
-%.gba: %.elf
-	$(OBJCOPY) -O binary $< $@
-	gbafix $@ -t$(basename $@)
 
 %.iwram.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
@@ -100,13 +83,5 @@ lib/libpimpmobile.a: $(OBJS)
 
 %.s: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(THUMB) -c $< -o $@
-
-%.o: %.raw
-	arm-elf-objcopy -I binary -O elf32-littlearm \
-	--rename-section .data=.rodata,readonly,data,contents,alloc \
-	--redefine-sym _binary_$*_raw_start=$* \
-	--redefine-sym _binary_$*_raw_end=$*_end \
-	--redefine-sym _binary_$*_raw_size=$*_size \
-	-B arm $< $@
 
 -include $(OBJS:.o=.d)

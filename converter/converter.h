@@ -338,4 +338,4 @@ module_t *load_module_mod(FILE *fp);
 module_t *load_module_s3m(FILE *fp);
 
 /* dumper */
-void dump_module(module_t *mod);
+void dump_module(module_t *mod, const char *filename);

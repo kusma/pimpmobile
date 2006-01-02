@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <string>
 
 #include "converter.h"
 
@@ -145,13 +146,13 @@ int main(int argc, char *argv[])
 	
 	for (int i = 1; i < argc; ++i)
 	{
-		module_t *mod = 0;
+		std::string filename = argv[1];
 		
-		printf("loading module: %s\n", argv[i]);
+		printf("loading module: %s\n", filename.c_str());
 		FILE *fp = fopen(argv[i], "rb");
 		if (!fp) print_usage();
 		
-		mod           = load_module_xm(fp);
+		module_t *mod = load_module_xm(fp);
 		if (!mod) mod = load_module_s3m(fp);
 		if (!mod) mod = load_module_mod(fp);
 		if (!mod)
@@ -168,9 +169,9 @@ int main(int argc, char *argv[])
 		
 //		print_patterns(mod);
 //		exit(0);
-		
-		/* dumpeti dump */
-		dump_module(mod);
+		size_t period_pos = filename.rfind(".") + 1;
+		filename.replace(period_pos, filename.size() - period_pos, "bin");
+		dump_module(mod, filename.c_str());
 	}
 	return 0;
 }
