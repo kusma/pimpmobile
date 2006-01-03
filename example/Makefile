@@ -67,11 +67,11 @@ $(CONVERTER)::
 $(PIMPMOBILE)/lib/libpimpmobile.a::
 	make -C .. lib/libpimpmobile.a
 
-data.o: sample.raw eye.bin
+data.o: sample_bank.bin eye.bin
 
 $(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimpmobile.a
 
-$(MODULES:.mod=.bin) samples.bin : $(MODULES) $(CONVERTER)
+$(MODULES:.mod=.bin) sample_bank.bin : $(MODULES) $(CONVERTER)
 	$(CONVERTER) $(MODULES)
 
 %.elf:

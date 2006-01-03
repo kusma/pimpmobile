@@ -271,7 +271,7 @@ void dump_module(module_t *mod, const char *filename)
 	for (int i = 0; i < mod->patterns.size(); ++i)
 	{
 		pattern_header_t &pat = mod->patterns[i];
-		
+		// no need for alignment as the struct only contains bytes
 		pointer_back_map.insert(make_pair(&pat.pattern_data[0], pos));
 		
 		// write the actual data
@@ -319,8 +319,76 @@ void dump_module(module_t *mod, const char *filename)
 	pointer_back_map.insert(make_pair(&mod->instruments[0], pos));
 	for (int i = 0; i < mod->instruments.size(); ++i)
 	{
-//		printf("%s\n", mod->instruments[i].name);
+		instrument_t &instr = mod->instruments[i];
+		printf("instrument: %s\n", instr.name);
+		
+		align(4);
+		if (&instr.samples[0] != 0) pointer_map.insert(make_pair(&instr.samples[0], pos));
+		dump_word((unsigned)&instr.samples[0]);
+		
+//		if (instr.volume_envelope != 0) pointer_map.insert(make_pair(instr.volume_envelope, pos));
+		dump_word((unsigned)instr.volume_envelope);
+		
+//		if (instr.panning_envelope != 0) pointer_map.insert(make_pair(instr.panning_envelope, pos));
+		dump_word((unsigned)instr.panning_envelope);
+#if 0
+		// IT ONLY 
+		if (instr.pitch_envelope != 0) pointer_map.insert(make_pair(instr.pitch_envelope, pos));
+		dump_word((unsigned)instr.pitch_envelope);
+#endif
+		dump_halfword(instr.fadeout_rate);
+		dump_halfword(instr.samples.size());
+		
+		for (int s = 0; s < 120; ++s)
+		{
+			dump_byte(instr.sample_map[s]);
+		}
+/*
+		for (int s = 0; s < instr.samples.size(); ++s)
+		{
+			sample_header_t &samp = instr.samples[s];
+			assert(samp.rel_ptr >= 0);
+			
+		}
+*/
 	}
+
+	// instrument data
+	for (int i = 0; i < mod->instruments.size(); ++i)
+	{
+		instrument_t &instr = mod->instruments[i];
+		
+		align(4);
+		pointer_back_map.insert(make_pair(&instr.samples[0], pos));
+		
+		for (int s = 0; s < instr.samples.size(); ++s)
+		{
+			sample_header_t &samp = instr.samples[s];
+			assert(samp.rel_ptr >= 0);
+			
+			align(4);
+			dump_word(samp.rel_ptr);
+			dump_word(samp.length);
+//			dump_word(10010);
+			dump_word(samp.loop_start);
+			dump_word(samp.loop_end - samp.loop_start);
+			
+			dump_halfword(samp.finetune);
+			dump_halfword(samp.sample_note_offset);
+			
+			dump_byte(samp.default_volume);
+			dump_byte(samp.loop_type);
+			dump_byte(samp.default_pan_position);
+			
+			dump_byte(samp.vibrato_speed);
+			dump_byte(samp.vibrato_depth);
+			dump_byte(samp.vibrato_sweep);
+			dump_byte(samp.vibrato_waveform);
+		}
+//		if (&instr.samples[0] != 0) pointer_map.insert(make_pair(&instr.samples[0], pos));
+//		dump_word((unsigned)&instr.samples[0]);
+	}
+	
 	
 	// fixback pointers
 	for (multimap<void *, unsigned>::iterator it = pointer_map.begin(); it != pointer_map.end(); ++it)
@@ -344,6 +412,12 @@ void dump_module(module_t *mod, const char *filename)
 	}
 	
 	FILE *fp = fopen(filename, "wb");
+	if (!fp)
+	{
+		printf("error: failed to open output-file\n");
+		exit(1);
+	}
+	
 	for (unsigned i = 0; i < pos; ++i)
 	{
 		fwrite(&data[i], 1, 1, fp);

@@ -120,9 +120,10 @@ typedef struct
 	/*
 		actual sample-data: NULL/zero length means that sample doesn't exist.
 	*/
+	
 	void *waveform; /* pointer to actual sample waveform data */
 	u32    length;
-
+	
 	/*
 		sample format
 	*/
@@ -178,6 +179,11 @@ typedef struct
 	u8 vibrato_depth;
 	u8 vibrato_sweep;
 	sample_vibrato_waveform_t vibrato_waveform;
+	
+	
+	
+	int rel_ptr; // relative to sample bank
+
 } sample_header_t;
 
 
@@ -337,5 +343,9 @@ module_t *load_module_xm(FILE *fp);
 module_t *load_module_mod(FILE *fp);
 module_t *load_module_s3m(FILE *fp);
 
-/* dumper */
+/* pattern/instrument dumper */
 void dump_module(module_t *mod, const char *filename);
+
+/* sample dumper */
+void dump_samples(module_t *mod);
+void write_sample_dump(const char *filename);

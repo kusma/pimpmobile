@@ -14,21 +14,16 @@ namespace mixer
 		LOOP_TYPE_PINGPONG
 	} loop_type_t;
 	
-	typedef struct sample_
+	typedef struct channel_state_
 	{
-		u32         len;
+		u32         sample_length;
 		u32         loop_start;
 		u32         loop_end;
 		loop_type_t loop_type;
-		const u8   *data;
-	} sample_t;
-	
-	typedef struct channel_state_
-	{
-		sample_t *sample;
-		u32       sample_cursor;
-		s32       sample_cursor_delta;
-		u32       volume;
+		const u8   *sample_data;
+		u32         sample_cursor;
+		s32         sample_cursor_delta;
+		u32         volume;
 	} channel_t;
 	
 	extern volatile channel_t channels[CHANNELS];

@@ -77,8 +77,6 @@ module_t *load_module_mod(FILE *fp)
 		
 		default: return NULL; // not a mod as far as we can see.
 	}
-	printf("sig: %c%c%c%c\n", ((char*)&sig)[0], ((char*)&sig)[1], ((char*)&sig)[2], ((char*)&sig)[3]);
-	printf("chans: %i\n", channels);
 	
 	module_t *mod = (module_t *)malloc(sizeof(module_t));
 	if (mod == 0)
@@ -126,7 +124,6 @@ module_t *load_module_mod(FILE *fp)
 	rewind(fp);
 	fread(name, 20, 1, fp);
 	name[20] = '\0';
-	printf("name : \"%s\"\n", name);
 
 	strcpy(mod->name, name);
 	mod->channels.resize(channels);
@@ -176,7 +173,6 @@ module_t *load_module_mod(FILE *fp)
 		
 		fread(buf, 1, 2, fp);
 		samp.length = ((buf[0] << 8) | buf[1]) << 1;
-//		printf("length: %i ", samp.length);
 		
 		fread(buf, 1, 1, fp);
 		if (buf[0] > 7) samp.finetune = (buf[0] - 16) << 4;
@@ -202,7 +198,11 @@ module_t *load_module_mod(FILE *fp)
 
 	fread(buf, 1, 1, fp);
 	mod->order.resize(buf[0]);
-	if (mod->order.size() > 128) mod->order.resize(128);
+	if (mod->order.size() > 128)
+	{
+		fprintf(stderr, "warning: excessive orders in module, discarding.");
+		mod->order.resize(128);
+	}
 	
 	mod->repeat_pos = 0;
 	fseek(fp, 1, SEEK_CUR); // discard unused byte (this may be repeat position, but that is impossible to tell)
@@ -231,7 +231,7 @@ module_t *load_module_mod(FILE *fp)
 				pattern_entry_t &pe = pat.pattern_data[i * channels + j];
 				fread(buf, 1, 4, fp);
 				pe.instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
-				pe.note             = return_nearest_note(((buf[0] & 0x0F) << 8) + buf[1]) - 12;
+				pe.note             = return_nearest_note(((buf[0] & 0x0F) << 8) + buf[1]); // - 12;
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
 			}
@@ -249,6 +249,14 @@ module_t *load_module_mod(FILE *fp)
 			assert(samp.waveform != NULL);
 			fread(samp.waveform, 1, samp.length, fp);
 		}
+		
+		if (samp.length <= 2)
+		{
+			free(samp.waveform);
+			samp.waveform = 0;
+			samp.length = 0;
+		}
+		samp.rel_ptr = -1;
 	}
 	
 	// setup default pr channel settings.

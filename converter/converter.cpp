@@ -24,7 +24,7 @@ float normal_noise()
 	return r;
 }
 
-/* converts all samples to u8-format. yes, this might be the clumsiest routine for this purpose ever written, who cares? */
+/* converts a sample to u8-format. yes, this might be the clumsiest routine for this purpose ever written, who cares? */
 void convert_sample(sample_header_t *samp)
 {
 	assert(samp != 0);
@@ -79,6 +79,7 @@ void convert_sample(sample_header_t *samp)
 	samp->format = SAMPLE_UNSIGNED_8BIT;
 }
 
+/* converts all samples to u8-format. */
 void convert_samples(module_t *mod)
 {
 	assert(mod != 0);
@@ -166,12 +167,16 @@ int main(int argc, char *argv[])
 		
 		printf("converting samples\n");
 		convert_samples(mod); // convert all samples to unsigned 8bit format
+
+		printf("dumping samples\n");
+		dump_samples(mod); // find any duplicate samples, and merge them
 		
 //		print_patterns(mod);
-//		exit(0);
+		
 		size_t period_pos = filename.rfind(".") + 1;
 		filename.replace(period_pos, filename.size() - period_pos, "bin");
 		dump_module(mod, filename.c_str());
 	}
+	write_sample_dump("sample_bank.bin"); // dump all samples to file
 	return 0;
 }

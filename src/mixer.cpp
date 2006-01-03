@@ -51,24 +51,24 @@ bool detect_loop_event(channel_t &chan, size_t samples)
 	s32 check_point;
 	s32 end_sample = chan.sample_cursor + chan.sample_cursor_delta * samples;
 	
-	switch (chan.sample->loop_type)
+	switch (chan.loop_type)
 	{
 	case LOOP_TYPE_NONE:
-		check_point = chan.sample->len;
+		check_point = chan.sample_length;
 	break;
 	case LOOP_TYPE_FORWARD:
-		check_point = chan.sample->loop_end;
+		check_point = chan.loop_end;
 	break;
 	case LOOP_TYPE_PINGPONG:
 		if (chan.sample_cursor_delta >= 0)
 		{
 			// moving forwards through the sample
-			check_point = chan.sample->loop_end;
+			check_point = chan.loop_end;
 		}
 		else
 		{
 			// moving backwards through the sample
-			check_point = chan.sample->loop_start;
+			check_point = chan.loop_start;
 			if (end_sample < (check_point << 12))
 			{
 				event_delta = -chan.sample_cursor_delta;
@@ -93,7 +93,7 @@ bool detect_loop_event(channel_t &chan, size_t samples)
 // returns false if we hit sample-end
 bool process_loop_event(channel_t &chan)
 {
-	switch (chan.sample->loop_type)
+	switch (chan.loop_type)
 	{
 	case LOOP_TYPE_NONE:
 		return false;
@@ -101,28 +101,28 @@ bool process_loop_event(channel_t &chan)
 	case LOOP_TYPE_FORWARD:
 		do
 		{
-			chan.sample_cursor -= (chan.sample->loop_end - chan.sample->loop_start) << 12;
+			chan.sample_cursor -= (chan.loop_end - chan.loop_start) << 12;
 		}
-		while (chan.sample_cursor >= (chan.sample->loop_end << 12));
+		while (chan.sample_cursor >= (chan.loop_end << 12));
 	break;
 	case LOOP_TYPE_PINGPONG:
 		do
 		{
 			if (chan.sample_cursor_delta >= 0)
 			{
-				chan.sample_cursor -= chan.sample->loop_end << 12;
+				chan.sample_cursor -= chan.loop_end << 12;
 				chan.sample_cursor = -chan.sample_cursor;
-				chan.sample_cursor += chan.sample->loop_end << 12;
+				chan.sample_cursor += chan.loop_end << 12;
 			}
 			else
 			{
-				chan.sample_cursor -= chan.sample->loop_start << 12;
+				chan.sample_cursor -= chan.loop_start << 12;
 				chan.sample_cursor = -chan.sample_cursor;
-				chan.sample_cursor += chan.sample->loop_start << 12;
+				chan.sample_cursor += chan.loop_start << 12;
 			}
 			chan.sample_cursor_delta = -chan.sample_cursor_delta;
 		}
-		while (chan.sample_cursor > (chan.sample->loop_end << 12) || chan.sample_cursor < (chan.sample->loop_start << 12));
+		while (chan.sample_cursor > (chan.loop_end << 12) || chan.sample_cursor < (chan.loop_start << 12));
 	break;
 	}
 
@@ -150,15 +150,14 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 
 	assert(samples > 0);
 
-	/*  */
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
-		DEBUG_COLOR(0, 31, 0);
+		DEBUG_COLOR(0, 0, 31);
 		do
 		{
-			assert((chan.sample_cursor >> 12) < chan.sample->len);
+			assert((chan.sample_cursor >> 12) < chan.sample_length);
 			
-			s32 samp = ((u8*)chan.sample->data)[chan.sample_cursor >> 12];
+			s32 samp = ((u8*)chan.sample_data)[chan.sample_cursor >> 12];
 			chan.sample_cursor += chan.sample_cursor_delta;
 			*target++ += samp * chan.volume;
 			
@@ -175,16 +174,16 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 				*target++ += chan.volume * 128;
 			}
 			
-			chan.sample = 0;
+			chan.sample_data = 0;
 			return;
 		}
 	}
 
-	DEBUG_COLOR(31, 31, 0);
+	DEBUG_COLOR(31, 0, 31);
 	timing_start();
 
-	assert(chan.sample->data != 0);
-	chan.sample_cursor = mix_samples(target, samples, chan.sample->data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
+	assert(chan.sample_data != 0);
+	chan.sample_cursor = mix_samples(target, samples, chan.sample_data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
 
 	timing_end();
 	DEBUG_COLOR(31, 0, 0);
@@ -194,7 +193,7 @@ void mixer::reset()
 {
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
-		channels[c].sample = 0;
+		channels[c].sample_data = 0;
 		channels[c].sample_cursor = 0;
 		channels[c].sample_cursor_delta = 0;
 	}
@@ -206,7 +205,7 @@ void mixer::mix(s8 *target, size_t samples)
 {
 	assert(samples > 0);
 	
-	DEBUG_COLOR(0, 31, 0);
+	DEBUG_COLOR(0, 31, 31);
 	
 	// zero out the sample-buffer
 	u32 zero = 0;
@@ -216,7 +215,7 @@ void mixer::mix(s8 *target, size_t samples)
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
 		channel_t &chan = (channel_t &)channels[c];
-		if (0 != chan.sample) mix_channel(chan, sound_mix_buffer, samples);
+		if (0 != chan.sample_data) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
 	DEBUG_COLOR(0, 31, 0);

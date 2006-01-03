@@ -483,6 +483,7 @@ module_t *load_module_xm(FILE *fp)
 			
 			samp.loop_start = sh.loop_start;
 			samp.loop_end   = sh.loop_start + sh.loop_length;
+			samp.rel_ptr = -1;
 			
 			/* IT only */
 			samp.sustain_loop_type = LOOP_NONE;

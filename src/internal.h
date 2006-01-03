@@ -17,12 +17,14 @@ typedef struct
 	u32 sustain_loop_start;
 	u32 sustain_loop_end;
 */
+	s16 finetune;
+	s16 rel_note;
 
 	u8  volume;
-	s8  finetune;
+//	s8  finetune;
 	u8  loop_type;
 	u8  pan;
-	s8  rel_note;
+//	s8  rel_note;
 	
 	u8 vibrato_speed;
 	u8 vibrato_depth;
@@ -119,7 +121,11 @@ typedef struct
 	u32 sample_ptr;
 	u32 volume_envelope_ptr;
 	u32 panning_envelope_ptr;
+
+#if 0
+	// IT ONLY (later)
 	u32 pitch_envelope_ptr;
+#endif
 
 	u16 volume_fadeout;
 	

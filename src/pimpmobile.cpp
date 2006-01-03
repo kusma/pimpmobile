@@ -43,7 +43,7 @@ u32 curr_tempo = 5;
 u32 curr_tick = 0;
 pimp_pattern_t *curr_pattern = 0;
 
-const unsigned char *sample_bank;
+const unsigned char *pimp_sample_bank;
 const pimp_module_t *mod;
 
 
@@ -75,6 +75,17 @@ pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
 {
 	return ((pimp_channel_t*)((char*)mod + mod->channel_ptr))[i];
 }
+
+pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
+{
+	return &((pimp_instrument_t*)((char*)mod + mod->instrument_ptr))[i];
+}
+
+pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
+{
+	return &((pimp_sample_t*)((char*)mod + instr->sample_ptr))[i];
+}
+
 
 void print_pattern_entry(const pimp_pattern_entry_t &pe)
 {
@@ -109,10 +120,10 @@ void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 	}
 }
 
-extern "C" void pimp_init(const void *module, const void *sample_bank_in)
+extern "C" void pimp_init(const void *module, const void *sample_bank)
 {
 	mod = (const pimp_module_t*)module;
-	sample_bank = (const u8*)sample_bank_in;
+	pimp_sample_bank = (const u8*)sample_bank;
 	
 	/* setup default player-state */
 	curr_row = 0;
@@ -125,16 +136,11 @@ extern "C" void pimp_init(const void *module, const void *sample_bank_in)
 	set_bpm(mod->bpm);
 	curr_tempo = mod->tempo;
 	
-	iprintf("\n\n\n%i\n", curr_tick_len);
-
-
 /*	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
 	iprintf("global volume: %d\ntempo: %d\nbpm: %d\n", mod->volume, mod->tempo, mod->bpm); */
+/*	iprintf("channels: %d\n", mod->channel_count); */
 
-	iprintf("channels: %d\n", mod->channel_count);
-	iprintf("order ptr: %d\n", mod->order_ptr);
-	
 /*
 	for (unsigned i = 0; i < mod->order_count; ++i)
 	{
@@ -155,7 +161,14 @@ extern "C" void pimp_init(const void *module, const void *sample_bank_in)
 	}
 
 	if (mod->flags & FLAG_LINEAR_PERIODS) iprintf("LINEAR\n");
-		
+	
+	for (unsigned i = 0; i < mod->instrument_count; ++i)
+	{
+		pimp_instrument_t *instr = get_instrument(mod, i);
+		iprintf("%d ",  instr->sample_count);
+		iprintf("%d\n", instr->sample_map[3]);
+	}
+	
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
@@ -237,14 +250,19 @@ void update_row()
 		pimp_channel_state_t &chan = channels[c];
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
-//		unsigned instr = mod->curr_pattern[mod->row][c].sample;
 //		print_pattern_entry(*note);
-
+		
 		chan.effect           = note->effect_byte;
 		
 //		NOTE ON !
 		if (note->instrument > 0)
 		{
+			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
+			int sample_index = instr->sample_map[note->note];
+			if (sample_index == 0) continue;
+			pimp_sample_t *samp = get_sample(mod, instr, sample_index - 1);
+//			iprintf("samp: %i\n", samp->data_ptr);
+			
 			int period, delta;
 			if (mod->flags & FLAG_LINEAR_PERIODS)
 			{
@@ -262,7 +280,8 @@ void update_row()
 			mixer::channels[c].sample_cursor = 0;
 			mixer::channels[c].sample_cursor_delta = delta;
 			mixer::channels[c].volume = 255;
-			mixer::channels[c].sample = mixer::channels[0].sample;
+			mixer::channels[c].sample_data = pimp_sample_bank + samp->data_ptr;
+			mixer::channels[c].sample_length = samp->length;
 		}
 		
 		switch (chan.effect)
@@ -378,7 +397,9 @@ extern "C" void pimp_frame()
 		
 		if (!samples_left) break;
 		
+		DEBUG_COLOR(0, 0, 31);
 		update_tick();
+		DEBUG_COLOR(31, 31, 31);
 //		printf("%d %d %d %d\n", mod->bpm, curr_row, curr_order, curr_tick);
 		
 		// fixed point tick length
