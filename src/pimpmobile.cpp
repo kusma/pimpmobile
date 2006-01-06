@@ -124,6 +124,8 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	mod = (const pimp_module_t*)module;
 	pimp_sample_bank = (const u8*)sample_bank;
 	
+	mixer::reset();
+	
 	/* setup default player-state */
 	curr_row = 0;
 	curr_tick = 0;
