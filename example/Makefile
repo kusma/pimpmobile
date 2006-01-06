@@ -65,7 +65,7 @@ debug: $(TARGET:.gba=.elf)
 	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 
-data.o: sample_bank.bin melkedemo2.bin
+data.o: sample_bank.bin $(BIN_MODULES)
 
 $(CONVERTER)::
 	make -C ../converter

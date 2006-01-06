@@ -15,8 +15,6 @@
 #include "../src/config.h"
 
 extern const u8  sample_bank[];
-extern const u8  sample_bank_end[];
-
 extern const u8  module[];
 
 
