@@ -61,6 +61,7 @@ void convert_sample(sample_header_t *samp)
 		// dither and downsample
 		if (samp->format == SAMPLE_UNSIGNED_16BIT || samp->format == SAMPLE_SIGNED_16BIT)
 		{
+			printf("doin' some wack converting\n");
 			new_sample = int(float(new_sample) + normal_noise() * (2.0 / 3) * (1 << 7)) >> 8;
 			if (new_sample >  127) new_sample =  127;
 			if (new_sample < -128) new_sample = -128;
@@ -172,9 +173,11 @@ int main(int argc, char *argv[])
 		dump_samples(mod); // find any duplicate samples, and merge them
 		
 //		print_patterns(mod);
-		
+#if 0
 		size_t period_pos = filename.rfind(".") + 1;
 		filename.replace(period_pos, filename.size() - period_pos, "bin");
+#endif
+		filename.append(".bin");
 		dump_module(mod, filename.c_str());
 	}
 	write_sample_dump("sample_bank.bin"); // dump all samples to file

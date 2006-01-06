@@ -23,7 +23,7 @@ namespace mixer
 		const u8   *sample_data;
 		u32         sample_cursor;
 		s32         sample_cursor_delta;
-		u32         volume;
+		s32         volume;
 	} channel_t;
 	
 	extern volatile channel_t channels[CHANNELS];

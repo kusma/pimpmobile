@@ -1,6 +1,13 @@
-#include <gba_base.h>
+// #include <gba_base.h>
 #include <assert.h>
 #include <stdio.h>
+
+typedef unsigned char  u8;
+typedef   signed char  s8;
+typedef unsigned short u16;
+typedef   signed short s16;
+typedef unsigned int   u32;
+typedef   signed int   s32;
 #include "math.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -57,27 +64,36 @@ unsigned get_linear_delta(unsigned period)
 #include "amiga_period_lut.h"
 unsigned get_amiga_period(int note, int fine_tune)
 {
+	fine_tune /= 8; // todo: interpolate instead?
 	assert(fine_tune >= -8);
-	assert(fine_tune <   8);
+	assert(fine_tune <=  8);
 	
-	int mod_note = note - (12 * 5); // we extended our note-range with two octaves. (wtf is this 3 octave bias?)
-	int index = mod_note * 8 + fine_tune + 8;
+	/* bias up one octave to prevent from negative values */
+	unsigned index = 12 * 8 + note * 8 + fine_tune;
+//	iprintf("%d\n", index);
+//	index -= 8; /* HUH?! */
 	
-	if (index < 0)
+	/* */
+	if (index < (12 * 8 * 5))
 	{
-		return 0;
+		iprintf("UNDA\n");
+		unsigned octave       = index / (12 * 8);
+		unsigned octave_index = index % (12 * 8);
+		return (((u32)amiga_period_lut[octave_index]) * 4) << (5 - octave);
 	}
 
-	if (index > ARRAY_SIZE(amiga_period_lut))
+	if (index > ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
 	{
-		/* hack. */
-		return amiga_period_lut[ARRAY_SIZE(amiga_period_lut) - 1];
+		iprintf("OVA\n");
+		unsigned octave       = index / (12 * 8);
+		unsigned octave_index = index % (12 * 8);
+		return (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5);
 	}
 
 	// TODO: handle entries outside of the mod-note range
 	// clamping will be handled on the period later anyway
 	
-	return amiga_period_lut[index];
+	return ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4;
 }
 
 #include "amiga_delta_lut.h"
@@ -99,6 +115,7 @@ unsigned get_amiga_delta(unsigned period)
 	// BEHOLD: the expression of the devil 2.0
 	// this compiles to one arm-instruction
 	delta = ((long long)delta * unsigned(((1.0 / SAMPLERATE) * (1 << 6)) * (1LL << 32)) + (1ULL << 31)) >> 32;
+	
 	return delta;
 }
 #endif /* NO_AMIGA_PERIODS */

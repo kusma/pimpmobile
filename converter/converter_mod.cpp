@@ -153,7 +153,7 @@ module_t *load_module_mod(FILE *fp)
 		instr.duplicate_check_action = DCA_CUT;
 		instr.pitch_pan_separation   = 0;
 		instr.pitch_pan_center       = 0;
-		memset(instr.sample_map, 1, 120);
+		memset(instr.sample_map, 0, 120);
 		
 		strcpy(samp.name, (const char*)buf);
 		samp.waveform = NULL;
@@ -218,6 +218,9 @@ module_t *load_module_mod(FILE *fp)
 	fseek(fp, 128 - mod->order.size(), SEEK_CUR); // discard unused orders
 	fseek(fp, 4, SEEK_CUR); // discard mod-signature
 	
+	/* load patterns and track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
+	int min_note =  99999;
+	int max_note = -99999;
 	for (unsigned p = 0; p < mod->patterns.size(); ++p)
 	{
 		pattern_header_t &pat = mod->patterns[p];
@@ -234,9 +237,16 @@ module_t *load_module_mod(FILE *fp)
 				pe.note             = return_nearest_note(((buf[0] & 0x0F) << 8) + buf[1]); // - 12;
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
+				if (pe.note > max_note) max_note = pe.note;
+				if (pe.note < min_note) min_note = pe.note;
 			}
 		}
 	}
+	
+	// whops: hardcode xm-range. 
+	mod->period_low_clamp = 1;
+	mod->period_high_clamp = 32767;
+
 	
 	for (unsigned i = 0; i < 31; ++i)
 	{

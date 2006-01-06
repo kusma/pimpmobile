@@ -52,8 +52,8 @@ bin/example.gba: lib/libpimpmobile.a
 
 clean:
 	$(RM) bin/* $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a *~ src/*~ include/*~
-	make -C example clean
 	make -C converter clean
+	make -C example clean
 
 run:
 	make -C example run
@@ -64,8 +64,8 @@ debug:
 bin/converter:
 	make -C converter
 
-bin/lut_gen: lut_gen.cpp src/config.h
-	g++ lut_gen.cpp -o bin/lut_gen
+bin/lut_gen: lut_gen.cpp src/math.cpp src/config.h
+	g++ lut_gen.cpp src/math.cpp -o bin/lut_gen
 
 lib/libpimpmobile.a: $(OBJS)
 

@@ -33,15 +33,14 @@ static u32 sound_buffer_index = 0;
 
 /* should be part of a kind of player-context ? */
 static pimp_channel_state_t channels[CHANNELS];
-u32 tick_len = (SOUND_BUFFER_SIZE << 8);
-
-u32 curr_tick_len = 0;
-u32 curr_row = 0;
-u32 curr_order = 0;
-u32 curr_bpm = 125;
-u32 curr_tempo = 5;
-u32 curr_tick = 0;
-pimp_pattern_t *curr_pattern = 0;
+static u32 tick_len = (SOUND_BUFFER_SIZE << 8);
+static u32 curr_tick_len = 0;
+static u32 curr_row = 0;
+static u32 curr_order = 0;
+static u32 curr_bpm = 125;
+static u32 curr_tempo = 5;
+static u32 curr_tick = 0;
+static pimp_pattern_t *curr_pattern = 0;
 
 const unsigned char *pimp_sample_bank;
 const pimp_module_t *mod;
@@ -99,7 +98,7 @@ void print_pattern_entry(const pimp_pattern_entry_t &pe)
 			"-#-#--#-#-#-"[n], o);
 	}
 	else iprintf("--- ");
-	iprintf("%02X ", pe.instrument);
+//	iprintf("%02X ", pe.instrument);
 //	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
 }
 
@@ -111,12 +110,12 @@ void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 	
 	for (unsigned i = 0; i < 5; ++i)
 	{
-		for (unsigned j = 0; j < mod->channel_count; ++j)
+		for (unsigned j = 0; j < 4; ++j)
 		{
 			pimp_pattern_entry_t &pe = pd[i * mod->channel_count + j];
 			print_pattern_entry(pe);
 		}
-		printf("\n");
+		iprintf("\n");
 	}
 }
 
@@ -135,7 +134,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	
 	set_bpm(mod->bpm);
 	curr_tempo = mod->tempo;
-	
+#if 0	
 /*	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
 	iprintf("global volume: %d\ntempo: %d\nbpm: %d\n", mod->volume, mod->tempo, mod->bpm); */
@@ -168,7 +167,8 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 		iprintf("%d ",  instr->sample_count);
 		iprintf("%d\n", instr->sample_map[3]);
 	}
-	
+#endif
+
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
@@ -177,17 +177,6 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	/* setup timer-shit */
 	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
-/*	
-	for (u32 c = 0; c < 1; ++c)
-	{
-		pimp_channel_state_t &chan = channels[c];
-		volatile mixer::channel_t &mc   = mixer::channels[c];
-		
-		chan.period      = 1000;
-		chan.effect      = EFF_PORTA_UP;
-		chan.porta_speed = 2;
-	}
-*/
 }
 
 extern "C" void pimp_close()
@@ -207,40 +196,6 @@ extern "C" void pimp_vblank()
 	sound_buffer_index ^= 1;
 }
 
-/*
-ideer:
-	- klipping av samples etter loop-end (kan feile med sample offset)
-	- ikke glissando i første omgang
-
-normal-looping:		if (sample_cursor >= loop_end) sample_cursor -= loop_len;
-pingpong-looping:	if (sample_cursor_delta < 0 && sample_cursor < loop_start) sample_cursor_delta -= sample_cursor_delta;
-					else if (sample_cursor >= loop_end) sample_cursor_delta -= sample_cursor_delta;
-
-miksing:
-for each chan
-	if looping && loop event (sample-stop is loop event)
-		event_cursor = event_point;
-		do {
-			do
-			{
-				mix sample
-				event_cursor -= event_delta
-			}
-			while (event_cursor > 0)
-			
-			handle event
-		}
-		while (not all samples rendered)
-		
-		mix all samples in tick with loop-check
-	else
-		if (volume == max) mix_megafast()
-		mix all samples (unroll, baby)
-	end if
-end for
-
-*/
-
 void update_row()
 {
 	assert(mod != 0);
@@ -250,38 +205,43 @@ void update_row()
 		pimp_channel_state_t &chan = channels[c];
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
-//		print_pattern_entry(*note);
+//		if (c < 5) print_pattern_entry(*note);
 		
 		chan.effect           = note->effect_byte;
+		chan.effect_param     = note->effect_parameter;
 		
 //		NOTE ON !
-		if (note->instrument > 0)
+		if (note->instrument > 0 && chan.effect != EFF_PORTA_NOTE)
 		{
 			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
-			int sample_index = instr->sample_map[note->note];
-			if (sample_index == 0) continue;
-			pimp_sample_t *samp = get_sample(mod, instr, sample_index - 1);
-//			iprintf("samp: %i\n", samp->data_ptr);
+			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
 			
 			int period, delta;
 			if (mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				period = get_linear_period(note->note, 0);
+				period = get_linear_period(note->note, samp->finetune);
 				delta  = get_linear_delta(period);
 			}
 			else
 			{
-				period = get_amiga_period(note->note, 0);
+				period = get_amiga_period(note->note, samp->finetune);
 				delta  = get_amiga_delta(period);
+//				iprintf("%d %d\n", period, delta);
 			}
 			
 			chan.period = chan.final_period = period;
 			
 			mixer::channels[c].sample_cursor = 0;
 			mixer::channels[c].sample_cursor_delta = delta;
-			mixer::channels[c].volume = 255;
+			mixer::channels[c].volume = samp->volume;
 			mixer::channels[c].sample_data = pimp_sample_bank + samp->data_ptr;
 			mixer::channels[c].sample_length = samp->length;
+			
+			mixer::channels[c].loop_type = (mixer::loop_type_t)samp->loop_type;
+			mixer::channels[c].loop_start = samp->loop_start;
+			mixer::channels[c].loop_end = samp->loop_start + samp->loop_length;
+			
+//			printf("%d %d\n", samp->loop_start, samp->loop_length);
 		}
 		
 		switch (chan.effect)
@@ -289,18 +249,75 @@ void update_row()
 			case EFF_NONE: break;
 			
 			case EFF_PORTA_UP:
-				chan.porta_speed = note->effect_parameter;
+				chan.porta_speed = chan.effect_param * 4;
 			break;
 			
 			case EFF_PORTA_DOWN:
-				chan.porta_speed = note->effect_parameter;
+				chan.porta_speed = chan.effect_param * 4;
 			break;
 			
-			default: assert(0);
+			case EFF_PORTA_NOTE:
+				if (note->note > 0)
+				{
+					if (mod->flags & FLAG_LINEAR_PERIODS) chan.porta_target = get_linear_period(note->note, 0);
+					else chan.porta_target = get_amiga_period(note->note, 0);
+					
+					/* clamp porta-target period (should not be done for S3M) */
+					if (chan.porta_target > mod->period_high_clamp) chan.porta_target = mod->period_high_clamp;
+					if (chan.porta_target < mod->period_low_clamp)  chan.porta_target = mod->period_low_clamp;
+				}
+				chan.porta_speed = chan.effect_param * 4;
+			break;
+			
+			case EFF_SAMPLE_OFFSET:
+				if (note->note > 0)
+				{
+					mixer::channels[c].sample_cursor = (chan.effect_param * 256) << 12;
+				}
+			break;
+			
+			case EFF_VOLUME_SLIDE: break;
+			
+			case EFF_MULTI_FX:
+				switch (chan.effect_param >> 4)
+				{
+					case EFF_FINE_VOLUME_SLIDE_UP:
+						mixer::channels[c].volume += chan.effect_param * 2;
+						if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
+					break;
+					
+					case EFF_FINE_VOLUME_SLIDE_DOWN:
+						mixer::channels[c].volume -= chan.effect_param * 2;
+						if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
+					break;
+/*					
+					case EFF_NOTE_DELAY:
+						
+					break;
+*/
+					default:
+						iprintf("eek E%X\n", chan.effect_param >> 4);
+				}
+			break;
+
+			case EFF_SET_VOLUME:
+				mixer::channels[c].volume = chan.effect_param * 2;
+				if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
+			break;
+			
+			case EFF_TEMPO:
+				if (note->effect_parameter < 0x20) curr_tempo = chan.effect_param;
+				else set_bpm(chan.effect_param);
+			break;
+			
+			default:
+				iprintf("eek %02X!\n", chan.effect);
+//			assert(0);
 		}
 	}
-
+	
 //	iprintf("\n");
+	
 	curr_tick = 0;
 	curr_row++;
 	if (curr_row == curr_pattern->row_count)
@@ -318,6 +335,8 @@ static void update_tick()
 	if (curr_tick == curr_tempo)
 	{
 		update_row();
+		curr_tick++;
+		return;
 	}
 	
 	for (u32 c = 0; c < mod->channel_count; ++c)
@@ -333,6 +352,7 @@ static void update_tick()
 			
 			case EFF_PORTA_UP:
 				chan.final_period -= chan.porta_speed;
+				if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
 				if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
@@ -340,17 +360,55 @@ static void update_tick()
 			case EFF_PORTA_DOWN:
 				chan.final_period += chan.porta_speed;
 				if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
+				if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
 			
 			case EFF_PORTA_NOTE:
+				if (chan.final_period > chan.porta_target)
+				{
+					chan.final_period -= chan.porta_speed;
+					if (chan.final_period < chan.porta_target) chan.final_period = chan.porta_target;
+				}
+				else if (chan.final_period < chan.porta_target)
+				{
+					chan.final_period += chan.porta_speed;
+					if (chan.final_period > chan.porta_target) chan.final_period = chan.porta_target;
+				}
 				period_dirty = true;
+			break;
+			
+			case EFF_VOLUME_SLIDE:
+				// should be removed in exporter
+				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
+				if (chan.effect_param & 0xF0)
+				{
+					mixer::channels[c].volume += (chan.effect_param >> 4) * 4;
+					if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 4;
+				}
+				else
+				{
+					mixer::channels[c].volume -= (chan.effect_param & 0xF) * 4;
+					if (mixer::channels[c].volume < 0) mixer::channels[c].volume = 0;
+				}
+			break;
+			
+			case EFF_MULTI_FX:
+				switch (chan.effect_param >> 4)
+				{
+					case EFF_FINE_VOLUME_SLIDE_UP:
+					case EFF_FINE_VOLUME_SLIDE_DOWN:
+					break;
+					
+//					default:
+//						iprintf("eek %x!\n", chan.effect_param >> 4);
+				}
 			break;
 			
 			case EFF_VIBRATO:
 			break;
 			
-			default: assert(0);
+//				default: assert(0);
 		}
 		
 		// period to delta-conversion

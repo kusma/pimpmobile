@@ -14,6 +14,14 @@
 
 #include "src/config.h" // get the current config
 
+typedef unsigned char  u8;
+typedef   signed char  s8;
+typedef unsigned short u16;
+typedef   signed short s16;
+typedef unsigned int   u32;
+typedef   signed int   s32;
+#include "src/math.h"
+
 void error(const char *reason)
 {
 	fprintf(stderr, "error %s\n", reason);
@@ -57,6 +65,21 @@ void print_lut(FILE *fp, T *lut, size_t size)
 
 int main(int argc, char *argv[])
 {
+
+	for (unsigned o = 0; o < 1; ++o)
+	{
+		for (unsigned n = 0; n < 2; ++n)
+		{
+			for (int fine_tune = -8; fine_tune < 8; ++fine_tune)
+			{
+				printf("%d, ", get_amiga_period(n + o * 12, fine_tune) / 4);
+	//			printf("%f\n", delta1);
+			}
+		}
+		printf("\n");
+	}
+	return 0;
+
 	/* todo: use some flags and stuff to decide what to dump and to what filename */
 	if (1)
 	{

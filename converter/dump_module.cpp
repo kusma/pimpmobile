@@ -320,7 +320,7 @@ void dump_module(module_t *mod, const char *filename)
 	for (int i = 0; i < mod->instruments.size(); ++i)
 	{
 		instrument_t &instr = mod->instruments[i];
-		printf("instrument: %s\n", instr.name);
+//		printf("instrument: %s\n", instr.name);
 		
 		align(4);
 		if (&instr.samples[0] != 0) pointer_map.insert(make_pair(&instr.samples[0], pos));

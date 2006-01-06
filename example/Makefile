@@ -32,7 +32,11 @@ OBJS = \
 	data.o
 
 MODULES = \
-	eye.mod
+	rhino.mod \
+	melkedemo2.mod
+#	eye.mod
+
+BIN_MODULES = $(MODULES:=.bin)
 
 TARGET = ../bin/example.gba
 CONVERTER = ../bin/converter
@@ -52,7 +56,7 @@ endif
 all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) $(MODULES:.mod=.bin) *~
+	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) $(BIN_MODULES) *~
 
 run: $(TARGET)
 	$(GBAEMU) $(TARGET)
@@ -61,17 +65,17 @@ debug: $(TARGET:.gba=.elf)
 	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 
+data.o: sample_bank.bin melkedemo2.bin
+
 $(CONVERTER)::
 	make -C ../converter
 
 $(PIMPMOBILE)/lib/libpimpmobile.a::
 	make -C .. lib/libpimpmobile.a
 
-data.o: sample_bank.bin eye.bin
-
 $(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimpmobile.a
 
-$(MODULES:.mod=.bin) sample_bank.bin : $(MODULES) $(CONVERTER)
+$(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	$(CONVERTER) $(MODULES)
 
 %.elf:

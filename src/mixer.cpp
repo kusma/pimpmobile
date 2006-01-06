@@ -163,7 +163,8 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 			
 			samples--;
 			event_cursor -= event_delta;
-		} while (event_cursor > 0);
+		}
+		while (event_cursor > 0);
 		
 		assert(samples >= 0);
 		
@@ -215,7 +216,7 @@ void mixer::mix(s8 *target, size_t samples)
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
 		channel_t &chan = (channel_t &)channels[c];
-		if (0 != chan.sample_data) mix_channel(chan, sound_mix_buffer, samples);
+		if (0 != chan.sample_data && 0 != chan.sample_cursor_delta) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
 	DEBUG_COLOR(0, 31, 0);

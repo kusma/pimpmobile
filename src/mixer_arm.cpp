@@ -151,7 +151,7 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "cc"
 	);
 	
-	return ((sample_data - old_sample_data) << 12) + (sample_cursor >> 20);
+	return ((sample_data - old_sample_data - 1) << 12) + (sample_cursor >> 20);
 }
 
 u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
@@ -169,6 +169,8 @@ u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol,
 	}
 
 	if (samples == 0) return sample_cursor;
+
+//	return mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 
 	/* decide what innerloop to take */
 	if (sample_cursor_delta > 0 && sample_cursor_delta < u32((1 << 12) * 0.95))

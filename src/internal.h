@@ -43,6 +43,7 @@ typedef struct
 	s32 period;
 	s32 final_period; /* signed so we can check for underfow */
 	s32 porta_speed;
+	s32 porta_target;
 	
 	u8  note;
 	u8  effect;
@@ -51,13 +52,27 @@ typedef struct
 
 typedef enum
 {
-	EFF_NONE       = 0x00,
-	EFF_PORTA_UP   = 0x01,
-	EFF_PORTA_DOWN = 0x02,
-	EFF_PORTA_NOTE = 0x03,
-	EFF_VIBRATO    = 0x04,
+	EFF_NONE          = 0x00,
+	EFF_PORTA_UP      = 0x01,
+	EFF_PORTA_DOWN    = 0x02,
+	EFF_PORTA_NOTE    = 0x03,
+	EFF_VIBRATO       = 0x04,
+	EFF_SAMPLE_OFFSET = 0x09,
+	EFF_VOLUME_SLIDE  = 0x0A,
+	EFF_SET_VOLUME    = 0x0C,
+	EFF_MULTI_FX      = 0x0E,
+	EFF_TEMPO         = 0x0F,
+
 	/* todo: fill in the rest */
 } pimp_effect_t;
+
+typedef enum
+{
+	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
+	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
+	EFF_NOTE_DELAY                   = 0xD,
+	/* todo: fill in the rest */
+} pimp_multi_effect_t;
 
 /* packed, because it's all bytes. no member-alignment or anything needed */
 typedef struct __attribute__((packed))
