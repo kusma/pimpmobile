@@ -13,6 +13,7 @@
 #include "../include/pimpmobile.h"
 #include "../src/mixer.h"
 #include "../src/config.h"
+#include "gbfs.h"
 
 extern const u8  sample_bank[];
 extern const u8  module[];
@@ -38,7 +39,12 @@ int main()
 	BG_COLORS[241] = RGB5(31, 31, 31);
 	REG_DISPCNT = MODE_0 | BG0_ON;
 	
-	pimp_init(module, sample_bank);
+	GBFS_FILE const* gbfs_file = find_first_gbfs_file((void*)0x08000000);
+	
+	const void *mod = gbfs_get_obj(gbfs_file, "rhino.mod.bin", 0);
+	const void *sb  = gbfs_get_obj(gbfs_file, "sample_bank.bin", 0);
+	iprintf("\n\n %i %i\n", mod, sb);
+	pimp_init(mod, sb);
 
 	SetInterrupt(IE_VBL, vblank);
 	EnableInterrupt(IE_VBL);

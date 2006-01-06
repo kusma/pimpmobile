@@ -29,7 +29,7 @@ THUMB = -mthumb
 
 OBJS = \
 	example.o \
-	data.o
+	libgbfs.o
 
 MODULES = \
 	rhino.mod \
@@ -56,7 +56,7 @@ endif
 all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) $(BIN_MODULES) *~
+	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) data.gbfs sample_bank.bin $(BIN_MODULES) *~
 
 run: $(TARGET)
 	$(GBAEMU) $(TARGET)
@@ -65,7 +65,7 @@ debug: $(TARGET:.gba=.elf)
 	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
 	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 
-data.o: sample_bank.bin $(BIN_MODULES)
+data.gbfs: sample_bank.bin $(BIN_MODULES)
 
 $(CONVERTER)::
 	make -C ../converter
@@ -78,17 +78,24 @@ $(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimpmobile.a
 $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	$(CONVERTER) $(MODULES)
 
+%.gbfs:
+	gbfs $@ $^
+
 %.elf:
 	$(LD) -specs=gba.specs $^ $(LDFLAGS) -o $@
 
-%.gba: %.elf
+%.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
+	padbin 256 $@
 	gbafix $@ -t$(basename $@)
 
-%.iwram.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
+%.gba: %.bin data.gbfs
+	cat $^ > $@
 
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
 -include $(OBJS:.o=.d)

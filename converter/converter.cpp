@@ -92,7 +92,7 @@ void convert_samples(module_t *mod)
 		{
 			sample_header_t &samp = instr.samples[s];
 			convert_sample(&samp);
-			
+#if 0
 			if (i == 0)
 			{
 				printf("converting sample: '%s'\n", samp.name);
@@ -101,6 +101,7 @@ void convert_samples(module_t *mod)
 				fwrite(samp.waveform, sizeof(u8), samp.length, fp);
 				fclose(fp);
 			}
+#endif
 		}
 	}
 }
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 	
 	for (int i = 1; i < argc; ++i)
 	{
-		std::string filename = argv[1];
+		std::string filename = argv[i];
 		
 		printf("loading module: %s\n", filename.c_str());
 		FILE *fp = fopen(argv[i], "rb");
