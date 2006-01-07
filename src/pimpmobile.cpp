@@ -136,7 +136,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	
 	set_bpm(mod->bpm);
 	curr_tempo = mod->tempo;
-#if 0	
+#if 0
 /*	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
 	iprintf("global volume: %d\ntempo: %d\nbpm: %d\n", mod->volume, mod->tempo, mod->bpm); */
@@ -221,14 +221,13 @@ void update_row()
 			int period, delta;
 			if (mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				period = get_linear_period(note->note, samp->finetune);
+				period = get_linear_period(note->note, samp->fine_tune);
 				delta  = get_linear_delta(period);
 			}
 			else
 			{
-				period = get_amiga_period(note->note, samp->finetune);
+				period = get_amiga_period(note->note, samp->fine_tune);
 				delta  = get_amiga_delta(period);
-//				iprintf("%d %d\n", period, delta);
 			}
 			
 			chan.period = chan.final_period = period;
@@ -242,8 +241,6 @@ void update_row()
 			mixer::channels[c].loop_type = (mixer::loop_type_t)samp->loop_type;
 			mixer::channels[c].loop_start = samp->loop_start;
 			mixer::channels[c].loop_end = samp->loop_start + samp->loop_length;
-			
-//			printf("%d %d\n", samp->loop_start, samp->loop_length);
 		}
 		
 		switch (chan.effect)
@@ -457,7 +454,7 @@ extern "C" void pimp_frame()
 		
 		if (!samples_left) break;
 		
-		DEBUG_COLOR(0, 0, 31);
+		DEBUG_COLOR(0, 0, 0);
 		update_tick();
 		DEBUG_COLOR(31, 31, 31);
 //		printf("%d %d %d %d\n", mod->bpm, curr_row, curr_order, curr_tick);

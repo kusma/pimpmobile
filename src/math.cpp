@@ -68,15 +68,12 @@ unsigned get_amiga_period(int note, int fine_tune)
 	assert(fine_tune >= -8);
 	assert(fine_tune <=  8);
 	
-	/* bias up one octave to prevent from negative values */
+	/* bias up one octave to prevent from negative values due to fine tune*/
 	unsigned index = 12 * 8 + note * 8 + fine_tune;
-//	iprintf("%d\n", index);
-//	index -= 8; /* HUH?! */
 	
-	/* */
+	/* handle notes outside of the mod-range by shifting up or down */
 	if (index < (12 * 8 * 5))
 	{
-		iprintf("UNDA\n");
 		unsigned octave       = index / (12 * 8);
 		unsigned octave_index = index % (12 * 8);
 		return (((u32)amiga_period_lut[octave_index]) * 4) << (5 - octave);
@@ -84,17 +81,11 @@ unsigned get_amiga_period(int note, int fine_tune)
 
 	if (index >= ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
 	{
-//		iprintf("OVA\n");
 		unsigned octave       = index / (12 * 8);
 		unsigned octave_index = index % (12 * 8);
-//		iprintf("period: %d", (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5));
 		return (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5);
 	}
 
-	// TODO: handle entries outside of the mod-note range
-	// clamping will be handled on the period later anyway
-	
-//	iprintf("period: %d", ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4);
 	return ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4;
 }
 

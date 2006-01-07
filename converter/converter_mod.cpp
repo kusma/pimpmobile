@@ -177,24 +177,27 @@ module_t *load_module_mod(FILE *fp)
 		fread(buf, 1, 1, fp);
 		if (buf[0] > 7) samp.finetune = (buf[0] - 16) << 4;
 		else samp.finetune = buf[0] << 4;
-//		printf("finetune: %i ", samp.finetune);
 		
 		fread(&samp.default_volume, 1, 1, fp);
-//		printf("vol: %i ", samp.default_volume);
 		
 		fread(buf, 1, 2, fp);
 		samp.loop_start = ((buf[0] << 8) | buf[1]) << 1;
 		if (samp.loop_start > samp.length) samp.loop_start = 0;
-		printf("loop start: %i ", samp.loop_start);
 		
 		fread(buf, 1, 2, fp);
 		unsigned loop_length = ((buf[0] << 8) | buf[1]) << 1;
 		samp.loop_end = samp.loop_start + loop_length;
 		if (samp.loop_end > samp.length) samp.loop_end = samp.length;
-		printf("loop end: %i\n", loop_length);
 		
-		if ((samp.loop_start == 0) && (loop_length < 4)) samp.loop_type = LOOP_NONE;
+		printf("sample: %02X - ", i + 1);
+		printf("loop start: %d ", samp.loop_start);
+		printf("loop end: %d ", samp.loop_end);
+		
+		if ((samp.loop_start <= 2) && (loop_length <= 4)) samp.loop_type = LOOP_NONE;
 		else samp.loop_type = LOOP_FORWARD;
+		
+//		samp.loop_type = LOOP_NONE;
+		printf("\n");
 	}
 	
 

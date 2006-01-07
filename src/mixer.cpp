@@ -152,7 +152,7 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
-		DEBUG_COLOR(0, 0, 31);
+		DEBUG_COLOR(31, 31, 31);
 		do
 		{
 			assert((chan.sample_cursor >> 12) < chan.sample_length);
