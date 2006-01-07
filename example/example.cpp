@@ -34,11 +34,12 @@ void play_next_file()
 	static char name[32];
 	const void *mod;
 
-	do {
+	do
+	{
 		mod = gbfs_get_nth_obj(fs, curr_file++, name, 0);
-		iprintf("'%s\n'", name);
 		if (curr_file > file_count - 1) curr_file = 0;
-	} while (strncmp(name, "sample_bank.bin", 32) == 0);
+	}
+	while (strncmp(name, "sample_bank.bin", 32) == 0);
 	
 	pimp_close();
 	pimp_init(mod, sample_bank);
@@ -59,7 +60,6 @@ int main()
 	
 	fs = find_first_gbfs_file((void*)0x08000000);
 	file_count = gbfs_count_objs(fs);
-
 	sample_bank  = gbfs_get_obj(fs, "sample_bank.bin", 0);
 	
 	play_next_file();

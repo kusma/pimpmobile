@@ -184,12 +184,14 @@ module_t *load_module_mod(FILE *fp)
 		
 		fread(buf, 1, 2, fp);
 		samp.loop_start = ((buf[0] << 8) | buf[1]) << 1;
-//		printf("loop start: %i ", samp.loop_start);
+		if (samp.loop_start > samp.length) samp.loop_start = 0;
+		printf("loop start: %i ", samp.loop_start);
 		
 		fread(buf, 1, 2, fp);
 		unsigned loop_length = ((buf[0] << 8) | buf[1]) << 1;
 		samp.loop_end = samp.loop_start + loop_length;
-//		printf("loop end: %i\n", samp.loop_end);
+		if (samp.loop_end > samp.length) samp.loop_end = samp.length;
+		printf("loop end: %i\n", loop_length);
 		
 		if ((samp.loop_start == 0) && (loop_length < 4)) samp.loop_type = LOOP_NONE;
 		else samp.loop_type = LOOP_FORWARD;

@@ -82,17 +82,19 @@ unsigned get_amiga_period(int note, int fine_tune)
 		return (((u32)amiga_period_lut[octave_index]) * 4) << (5 - octave);
 	}
 
-	if (index > ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
+	if (index >= ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
 	{
-		iprintf("OVA\n");
+//		iprintf("OVA\n");
 		unsigned octave       = index / (12 * 8);
 		unsigned octave_index = index % (12 * 8);
+//		iprintf("period: %d", (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5));
 		return (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5);
 	}
 
 	// TODO: handle entries outside of the mod-note range
 	// clamping will be handled on the period later anyway
 	
+//	iprintf("period: %d", ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4);
 	return ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4;
 }
 

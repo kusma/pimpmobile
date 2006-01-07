@@ -207,7 +207,7 @@ void update_row()
 		pimp_channel_state_t &chan = channels[c];
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
-//		if (c < 5) print_pattern_entry(*note);
+		if (c < 5) print_pattern_entry(*note);
 		
 		chan.effect           = note->effect_byte;
 		chan.effect_param     = note->effect_parameter;
@@ -318,7 +318,7 @@ void update_row()
 		}
 	}
 	
-//	iprintf("\n");
+	iprintf("\n");
 	
 	curr_tick = 0;
 	curr_row++;

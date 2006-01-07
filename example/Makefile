@@ -32,8 +32,9 @@ OBJS = \
 	libgbfs.o
 
 MODULES = \
-	rhino.mod \
-	melkedemo2.mod
+	porta.mod
+#	rhino.mod \
+#	melkedemo2.mod \
 #	eye.mod
 
 BIN_MODULES = $(MODULES:=.bin)
