@@ -42,6 +42,8 @@ typedef struct
 	s32 final_period; /* signed so we can check for underfow */
 	s32 porta_speed;
 	s32 porta_target;
+
+	s8 volume;
 	
 	u8  note;
 	u8  effect;

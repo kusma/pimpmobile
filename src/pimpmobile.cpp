@@ -205,6 +205,8 @@ void update_row()
 	for (u32 c = 0; c < mod->channel_count; ++c)
 	{
 		pimp_channel_state_t &chan = channels[c];
+		volatile mixer::channel_t &mc   = mixer::channels[c];
+
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
 		if (c < 5) print_pattern_entry(*note);
@@ -212,35 +214,37 @@ void update_row()
 		chan.effect           = note->effect_byte;
 		chan.effect_param     = note->effect_parameter;
 		
+		bool period_dirty = false;
+		bool volume_dirty = false;
+		
 //		NOTE ON !
 		if (note->instrument > 0 && chan.effect != EFF_PORTA_NOTE)
 		{
 			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
 			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
 			
-			int period, delta;
+			int period;
 			if (mod->flags & FLAG_LINEAR_PERIODS)
 			{
 				period = get_linear_period(note->note, samp->fine_tune);
-				delta  = get_linear_delta(period);
 			}
 			else
 			{
 				period = get_amiga_period(note->note, samp->fine_tune);
-				delta  = get_amiga_delta(period);
 			}
 			
 			chan.period = chan.final_period = period;
+			period_dirty = true;
+			chan.volume = samp->volume;
+			volume_dirty = true;
 			
-			mixer::channels[c].sample_cursor = 0;
-			mixer::channels[c].sample_cursor_delta = delta;
-			mixer::channels[c].volume = samp->volume;
-			mixer::channels[c].sample_data = pimp_sample_bank + samp->data_ptr;
-			mixer::channels[c].sample_length = samp->length;
+			mc.sample_cursor = 0;
+			mc.sample_data = pimp_sample_bank + samp->data_ptr;
+			mc.sample_length = samp->length;
 			
-			mixer::channels[c].loop_type = (mixer::loop_type_t)samp->loop_type;
-			mixer::channels[c].loop_start = samp->loop_start;
-			mixer::channels[c].loop_end = samp->loop_start + samp->loop_length;
+			mc.loop_type = (mixer::loop_type_t)samp->loop_type;
+			mc.loop_start = samp->loop_start;
+			mc.loop_end = samp->loop_start + samp->loop_length;
 		}
 		
 		switch (chan.effect)
@@ -281,13 +285,15 @@ void update_row()
 				switch (chan.effect_param >> 4)
 				{
 					case EFF_FINE_VOLUME_SLIDE_UP:
-						mixer::channels[c].volume += chan.effect_param * 2;
-						if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
-					break;
+						chan.volume += chan.effect_param;
+						if (chan.volume > 64) chan.volume = 64;
+						volume_dirty = true;
+				break;
 					
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
-						mixer::channels[c].volume -= chan.effect_param * 2;
-						if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
+						chan.volume -= chan.effect_param;
+						if (chan.volume > 64) chan.volume = 64;
+						volume_dirty = true;
 					break;
 /*					
 					case EFF_NOTE_DELAY:
@@ -300,8 +306,9 @@ void update_row()
 			break;
 
 			case EFF_SET_VOLUME:
-				mixer::channels[c].volume = chan.effect_param * 2;
-				if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 2;
+				chan.volume = chan.effect_param;
+				if (chan.volume > 64) chan.volume = 64;
+				volume_dirty = true;
 			break;
 			
 			case EFF_TEMPO:
@@ -312,6 +319,23 @@ void update_row()
 			default:
 				iprintf("eek %02X!\n", chan.effect);
 //			assert(0);
+		}
+		
+		if (period_dirty)
+		{
+			if (mod->flags & FLAG_LINEAR_PERIODS)
+			{
+				mc.sample_cursor_delta = get_linear_delta(chan.final_period);
+			}
+			else
+			{
+				mc.sample_cursor_delta = get_amiga_delta(chan.final_period);
+			}
+		}
+		
+		if (volume_dirty)
+		{
+			mc.volume = chan.volume * 2;
 		}
 	}
 	
@@ -344,6 +368,7 @@ static void update_tick()
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
 		bool period_dirty = false;
+		bool volume_dirty = false;
 		
 		switch (chan.effect)
 		{
@@ -382,13 +407,15 @@ static void update_tick()
 				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
 				if (chan.effect_param & 0xF0)
 				{
-					mixer::channels[c].volume += (chan.effect_param >> 4) * 4;
-					if (mixer::channels[c].volume > 64 * 2) mixer::channels[c].volume = 64 * 4;
+					chan.volume += chan.effect_param >> 4;
+					if (chan.volume > 64) chan.volume = 64;
+					volume_dirty = true;
 				}
 				else
 				{
-					mixer::channels[c].volume -= (chan.effect_param & 0xF) * 4;
-					if (mixer::channels[c].volume < 0) mixer::channels[c].volume = 0;
+					chan.volume -= (chan.effect_param & 0xF) * 4;
+					if (chan.volume < 0) chan.volume = 0;
+					volume_dirty = true;
 				}
 			break;
 			
@@ -421,6 +448,11 @@ static void update_tick()
 			{
 				mc.sample_cursor_delta = get_amiga_delta(chan.final_period);
 			}
+		}
+		
+		if (volume_dirty)
+		{
+			mc.volume = chan.volume * 2;
 		}
 	}
 	curr_tick++;
