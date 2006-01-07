@@ -138,9 +138,9 @@ int main(int argc, char *argv[])
 //		Period = 10*12*16*4 - Note*16*4 - FineTune/2;
 //		Frequency = 8363*2^((6*12*16*4 - Period) / (12*16*4));
 		
-		for (int finetune = -64; finetune < 64; finetune += 16)
+		for (int fine_tune = -64; fine_tune < 64; fine_tune += 16)
 		{
-			int period = (10 * 12 * 16 * 4) - i * (16 * 4) - finetune / 2;
+			int period = (10 * 12 * 16 * 4) - i * (16 * 4) - fine_tune / 2;
 			
 			float frequency1 = 8363 * pow(2.0, float(6 * 12 * 16 * 4 - period) / (12 * 16 * 4));
 			float delta1 = frequency1 / SAMPLERATE;

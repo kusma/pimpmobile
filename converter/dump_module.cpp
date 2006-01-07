@@ -373,7 +373,7 @@ void dump_module(module_t *mod, const char *filename)
 			dump_word(samp.loop_start);
 			dump_word(samp.loop_end - samp.loop_start);
 			
-			dump_halfword(samp.finetune);
+			dump_halfword(samp.fine_tune);
 			dump_halfword(samp.sample_note_offset);
 			
 			dump_byte(samp.default_volume);

@@ -160,7 +160,7 @@ typedef struct
 	*/
 	/* LIES! integer only note offset, 8.8 fine tune */
 	s16 sample_note_offset;
-	s16 finetune;
+	s16 fine_tune;
 
 	/*
 		for Amiga frequency tables, we want an additional index into

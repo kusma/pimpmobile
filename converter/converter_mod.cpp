@@ -175,8 +175,8 @@ module_t *load_module_mod(FILE *fp)
 		samp.length = ((buf[0] << 8) | buf[1]) << 1;
 		
 		fread(buf, 1, 1, fp);
-		if (buf[0] > 7) samp.finetune = (buf[0] - 16) << 4;
-		else samp.finetune = buf[0] << 4;
+		if (buf[0] > 7) samp.fine_tune = (buf[0] - 16) << 4;
+		else samp.fine_tune = buf[0] << 4;
 		
 		fread(&samp.default_volume, 1, 1, fp);
 		

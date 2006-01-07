@@ -62,7 +62,7 @@ typedef struct
 	unsigned int  loop_start;
 	unsigned int  loop_length;
 	unsigned char volume;
-	signed char   finetune;
+	signed char   fine_tune;
 	unsigned char type;
 	unsigned char pan;
 	signed char   rel_note;
@@ -454,7 +454,7 @@ module_t *load_module_xm(FILE *fp)
 			fread(&sh.loop_start,  4,  1, fp);
 			fread(&sh.loop_length, 4,  1, fp);
 			fread(&sh.volume,      1,  1, fp);
-			fread(&sh.finetune,    1,  1, fp);
+			fread(&sh.fine_tune,    1,  1, fp);
 			fread(&sh.type,        1,  1, fp);
 			fread(&sh.pan,         1,  1, fp);
 			fread(&sh.rel_note,    1,  1, fp);
@@ -495,7 +495,7 @@ module_t *load_module_xm(FILE *fp)
 			samp.ignore_default_pan_position = false; /* allways pan from instrument in XM */
 			
 			samp.sample_note_offset = sh.rel_note; /* + 12; */
-			samp.finetune = sh.finetune;
+			samp.fine_tune = sh.fine_tune;
 
 			samp.note_period_translation_map_index = 0;
 			
