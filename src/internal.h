@@ -70,7 +70,7 @@ typedef enum
 {
 	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
 	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
-	EFF_NOTE_DELAY                   = 0xD,
+	EFF_NOTE_DELAY             = 0xD,
 	/* todo: fill in the rest */
 } pimp_multi_effect_t;
 

@@ -33,7 +33,7 @@ static u32 sound_buffer_index = 0;
 
 /* should be part of a kind of player-context ? */
 static pimp_channel_state_t channels[CHANNELS];
-static u32 tick_len = (SOUND_BUFFER_SIZE << 8);
+static u32 tick_len = 0;
 static u32 curr_tick_len = 0;
 static u32 curr_row = 0;
 static u32 curr_order = 0;
@@ -49,9 +49,7 @@ const pimp_module_t *mod;
 void set_bpm(int bpm)
 {
 	assert(bpm > 0);
-	
-//	curr_tick_len = SAMPLERATE / (2 * bpm / 5);
-//	curr_tick_len <<= 8;
+	/* the shift is because we're using 8 fractional-bits for the tick-length */
 	tick_len = ((SAMPLERATE * 5) << 8) / (bpm * 2);
 }
 
@@ -241,7 +239,6 @@ void update_row()
 			mc.sample_cursor = 0;
 			mc.sample_data = pimp_sample_bank + samp->data_ptr;
 			mc.sample_length = samp->length;
-			
 			mc.loop_type = (mixer::loop_type_t)samp->loop_type;
 			mc.loop_start = samp->loop_start;
 			mc.loop_end = samp->loop_start + samp->loop_length;
@@ -285,14 +282,14 @@ void update_row()
 				switch (chan.effect_param >> 4)
 				{
 					case EFF_FINE_VOLUME_SLIDE_UP:
-						chan.volume += chan.effect_param;
+						chan.volume += chan.effect_param & 0xF;
 						if (chan.volume > 64) chan.volume = 64;
 						volume_dirty = true;
-				break;
+					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
-						chan.volume -= chan.effect_param;
-						if (chan.volume > 64) chan.volume = 64;
+						chan.volume -= chan.effect_param & 0xF;
+						if (chan.volume < 0) chan.volume = 0;
 						volume_dirty = true;
 					break;
 /*					
@@ -424,7 +421,7 @@ static void update_tick()
 				{
 					case EFF_FINE_VOLUME_SLIDE_UP:
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
-					break;
+					break; /* fine volume slide is only done on tick0 */
 					
 //					default:
 //						iprintf("eek %x!\n", chan.effect_param >> 4);

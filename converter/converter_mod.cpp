@@ -224,8 +224,8 @@ module_t *load_module_mod(FILE *fp)
 	fseek(fp, 4, SEEK_CUR); // discard mod-signature
 	
 	/* load patterns and track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
-	int min_note =  99999;
-	int max_note = -99999;
+	int min_period =  99999;
+	int max_period = -99999;
 	for (unsigned p = 0; p < mod->patterns.size(); ++p)
 	{
 		pattern_header_t &pat = mod->patterns[p];
@@ -238,19 +238,25 @@ module_t *load_module_mod(FILE *fp)
 			{
 				pattern_entry_t &pe = pat.pattern_data[i * channels + j];
 				fread(buf, 1, 4, fp);
+				int period = ((buf[0] & 0x0F) << 8) + buf[1];
+				
 				pe.instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
-				pe.note             = return_nearest_note(((buf[0] & 0x0F) << 8) + buf[1]); // - 12;
+				pe.note             = return_nearest_note(period); // - 12;
 				pe.effect_byte      = buf[2] & 0xF;
 				pe.effect_parameter = buf[3];
-				if (pe.note > max_note) max_note = pe.note;
-				if (pe.note < min_note) min_note = pe.note;
+				
+				if (period > max_period) max_period = period;
+				if (period < min_period) min_period = period;
 			}
 		}
 	}
 	
-	// whops: hardcode xm-range. 
-	mod->period_low_clamp = 1;
-	mod->period_high_clamp = 32767;
+	// if there are periods in the file outside the default pt2-range, assume ft2-range
+	if (min_period < mod->period_low_clamp || max_period > mod->period_high_clamp)
+	{
+		mod->period_low_clamp = 1;
+		mod->period_high_clamp = 32767;
+	}
 
 	
 	for (unsigned i = 0; i < 31; ++i)
