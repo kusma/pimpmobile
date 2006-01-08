@@ -97,7 +97,7 @@ void print_pattern_entry(const pimp_pattern_entry_t &pe)
 			"-#-#--#-#-#-"[n], o);
 	}
 	else iprintf("--- ");
-//	iprintf("%02X ", pe.instrument);
+//	iprintf("%02X ", pe.volume_command);
 //	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
 }
 
@@ -211,10 +211,10 @@ void update_row()
 	{
 		pimp_channel_state_t &chan = channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
-
+		
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
-		if (c < 5) print_pattern_entry(*note);
+		print_pattern_entry(*note);
 		
 		chan.effect           = note->effect_byte;
 		chan.effect_param     = note->effect_parameter;
@@ -254,6 +254,12 @@ void update_row()
 			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
 			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
 			chan.volume = samp->volume;
+			volume_dirty = true;
+		}
+
+		if (note->volume_command >= 0x10 && note->volume_command < 0x50)
+		{
+			chan.volume = note->volume_command - 0x10;
 			volume_dirty = true;
 		}
 		
