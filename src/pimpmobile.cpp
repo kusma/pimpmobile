@@ -23,12 +23,13 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "../include/pimpmobile.h"
 #include "internal.h"
 #include "mixer.h"
 #include "math.h"
 #include "debug.h"
 
-s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
 /* should be part of a kind of player-context ? */
@@ -42,43 +43,43 @@ static u32 curr_tempo = 5;
 static u32 curr_tick = 0;
 static pimp_pattern_t *curr_pattern = 0;
 
-const unsigned char *pimp_sample_bank;
-const pimp_module_t *mod;
+static const unsigned char *pimp_sample_bank;
+static const pimp_module_t *mod;
 
 
-void set_bpm(int bpm)
+static void set_bpm(int bpm)
 {
 	assert(bpm > 0);
 	/* the shift is because we're using 8 fractional-bits for the tick-length */
 	tick_len = ((SAMPLERATE * 5) << 8) / (bpm * 2);
 }
 
-int get_order(const pimp_module_t *mod, int i)
+static int get_order(const pimp_module_t *mod, int i)
 {
 	return ((char*)mod + mod->order_ptr)[i];
 }
 
-pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
+static pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
 {
 	return &((pimp_pattern_t*)((char*)mod + mod->pattern_ptr))[i];
 }
 
-pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
+static pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
 {
 	return (pimp_pattern_entry_t*)((char*)mod + pat->data_ptr);
 }
 
-pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
+static pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
 {
 	return ((pimp_channel_t*)((char*)mod + mod->channel_ptr))[i];
 }
 
-pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
+static pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
 {
 	return &((pimp_instrument_t*)((char*)mod + mod->instrument_ptr))[i];
 }
 
-pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
+static pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
 {
 	return &((pimp_sample_t*)((char*)mod + instr->sample_ptr))[i];
 }
@@ -115,6 +116,12 @@ void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 		}
 		iprintf("\n");
 	}
+}
+
+static pimp_callback callback = 0;
+extern "C" void pimp_set_callback(pimp_callback in_callback)
+{
+	callback = in_callback;
 }
 
 extern "C" void pimp_init(const void *module, const void *sample_bank)
@@ -233,8 +240,6 @@ void update_row()
 			
 			chan.period = chan.final_period = period;
 			period_dirty = true;
-			chan.volume = samp->volume;
-			volume_dirty = true;
 			
 			mc.sample_cursor = 0;
 			mc.sample_data = pimp_sample_bank + samp->data_ptr;
@@ -242,6 +247,14 @@ void update_row()
 			mc.loop_type = (mixer::loop_type_t)samp->loop_type;
 			mc.loop_start = samp->loop_start;
 			mc.loop_end = samp->loop_start + samp->loop_length;
+		}
+		
+		if (note->instrument > 0)
+		{
+			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
+			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
+			chan.volume = samp->volume;
+			volume_dirty = true;
 		}
 		
 		switch (chan.effect)
@@ -268,6 +281,13 @@ void update_row()
 				}
 				chan.porta_speed = chan.effect_param * 4;
 			break;
+/*
+			case EFF_VIBRATO: break;
+			case EFF_PORTA_NOTE_VOLUME_SLIDE: break;
+			case EFF_VIBRATO_VOLUME_SLIDE: break;
+			case EFF_TREMOLO: break;
+			case EFF_SET_PAN: break;
+*/
 			
 			case EFF_SAMPLE_OFFSET:
 				if (note->note > 0)
@@ -278,9 +298,25 @@ void update_row()
 			
 			case EFF_VOLUME_SLIDE: break;
 			
+/*			case EFF_JUMP_ORDER: break; */
+
+			case EFF_SET_VOLUME:
+				chan.volume = chan.effect_param;
+				if (chan.volume > 64) chan.volume = 64;
+				volume_dirty = true;
+			break;
+
+			case EFF_BREAK_ROW:
+				curr_order++;
+				curr_row = (chan.effect_param >> 4) * 10 + (chan.effect_param & 0xF) - 1;
+				curr_pattern = get_pattern(mod, get_order(mod, curr_order));
+			break;
+			
 			case EFF_MULTI_FX:
 				switch (chan.effect_param >> 4)
 				{
+					case EFF_AMIGA_FILTER: break;
+					
 					case EFF_FINE_VOLUME_SLIDE_UP:
 						chan.volume += chan.effect_param & 0xF;
 						if (chan.volume > 64) chan.volume = 64;
@@ -292,20 +328,14 @@ void update_row()
 						if (chan.volume < 0) chan.volume = 0;
 						volume_dirty = true;
 					break;
-/*					
+/*
 					case EFF_NOTE_DELAY:
-						
+						chan.note = note->note;
 					break;
 */
 					default:
 						iprintf("eek E%X\n", chan.effect_param >> 4);
 				}
-			break;
-
-			case EFF_SET_VOLUME:
-				chan.volume = chan.effect_param;
-				if (chan.volume > 64) chan.volume = 64;
-				volume_dirty = true;
 			break;
 			
 			case EFF_TEMPO:
@@ -313,9 +343,29 @@ void update_row()
 				else set_bpm(chan.effect_param);
 			break;
 			
+/*
+			case EFF_SET_GLOBAL_VOLUME: break;
+			case EFF_GLOBAL_VOLUME_SLIDE: break;
+			case EFF_KEY_OFF: break;
+			case EFF_SET_ENVELOPE_POSITION: break;
+			case EFF_PAN_SLIDE: break;
+			case EFF_MULTI_RETRIG: break;
+			case EFF_TREMOR: break;
+*/
+			
+			case EFF_SYNC_CALLBACK:
+				if (callback != 0) callback(0, chan.effect_param);
+			break;
+			
+/*
+			case EFF_ARPEGGIO: break;
+			case EFF_SET_TEMPO: break;
+			case EFF_SET_BPM: break;
+*/
+			
 			default:
 				iprintf("eek %02X!\n", chan.effect);
-//			assert(0);
+//				assert(0);
 		}
 		
 		if (period_dirty)
@@ -344,6 +394,7 @@ void update_row()
 	{
 		curr_row = 0;
 		curr_order++;
+		if (curr_order >= mod->order_count) curr_order = mod->order_repeat;
 		curr_pattern = get_pattern(mod, get_order(mod, curr_order));
 	}
 }
@@ -419,6 +470,7 @@ static void update_tick()
 			case EFF_MULTI_FX:
 				switch (chan.effect_param >> 4)
 				{
+					case EFF_AMIGA_FILTER: break;
 					case EFF_FINE_VOLUME_SLIDE_UP:
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
 					break; /* fine volume slide is only done on tick0 */

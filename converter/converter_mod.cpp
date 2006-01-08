@@ -210,7 +210,8 @@ module_t *load_module_mod(FILE *fp)
 	}
 	
 	mod->repeat_pos = 0;
-	fseek(fp, 1, SEEK_CUR); // discard unused byte (this may be repeat position, but that is impossible to tell)
+	fread(&mod->repeat_pos, 1, 1, fp);
+//	fseek(fp, 1, SEEK_CUR); // discard unused byte (this may be repeat position, but that is impossible to tell)
 	
 	int pattern_count = 0;
 	for (int i = 0; i < mod->order.size(); ++i)

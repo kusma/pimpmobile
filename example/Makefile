@@ -34,7 +34,8 @@ OBJS = \
 MODULES = \
 	eye.mod \
 	rhino.mod \
-	melkedemo2.mod
+	melkedemo2.mod \
+	hypermmx.xm
 
 BIN_MODULES = $(MODULES:=.bin)
 

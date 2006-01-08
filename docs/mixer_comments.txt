@@ -1,0 +1,96 @@
+
+
+do	{
+	int p1 = cursor >> 12;
+	cursor += delta;
+	int smp = sample[p1];
+	int buf_val = *Buf;
+	buf_val += smp * volume;	
+	*Buf++ = buf_val;
+	}
+	while( Buf < Buf_max ); //  8-2 = 6 instr
+
+	{ (p1^smp), cursor, delta, sample, volume, buf_val, Buf, Buf_max } 8 regs
+
+
+// innerloop: process 2 samples at the same time if volume is the same.
+do	{
+	p1 = cursor1 >> 12
+	p1 = sample1[p1]
+	p2 = *Buf
+	p2 += p1 * volume1
+	p1 = cursor2 >> 12
+	p1 = sample2[p1]
+	p2 += p1 * volume2
+	cursor1 += delta1
+	cursor2 += delta2
+	*Buf++ = p2;
+	}
+	while( Buf < Buf_max ); // 12-2 = 10 instr
+	
+	{ p1, p2, cursor1, cursor2, sample1, sample2, 
+	  delta1, delta2, Buf, Buf_max, volume1, volume2 } 12 regs
+	  
+
+// innerloop, with loop checking
+do	{
+	p1 = cursor >> 12
+	p1 = sample[p1]
+	p2 = *Buf
+	p2 += p1 * volume1
+	cursor += delta
+	*Buf++ = p2
+	countdown -= delta2
+	}
+	while( countdown > 0 ); // 8 instr
+	
+// bresenham innerloop
+// 5 + 10*prob
+
+V1: 
+ldrb smp, [int++]
+mul smp, smp, volume
+cmp sample_buf, ###
+bge ###
+
+REPEAT
+add frac, delta_frac
+bc V1
+ldr temp, [sample_buf]
+add temp, smp
+str temp, [sample_buf++]
+END REPEAT
+
+
+// bresenham inerloop too: 6+3*prob
+add frac, delta_frac
+ldrbc smp,[int++]
+mulc smp, smp, volume
+ldr temp, [sample_buf]
+add temp, smp
+str temp, [sample_buf++]
+
+
+// dual-channel bresenham-innerloop: (10+6*prob)/2 = about 6.2
+// If volume adjustment isn't needed, the mulc's can be removed
+// in which case you get (8+4*prob)/2 = about 4.8
+// Caching may additionally reduce the cycle count by approx 0.4
+// For 4-channel MOD, where you only need to mix 2 channels for each stereo chn,
+// it is possible to get rid of yet 1 more cycle by not loading
+// from the sample_buf, so that we can achieve ~3.4 cycles.
+
+add frac1, delta_frac1
+ldrbc smp1,[int1++]
+mulc smp1, smp1, volume1
+add frac2, delta_frac2
+ldrbc smp2,[int2++]
+mulc smp2, smp2, volume2
+ldr temp, [sample_buf]
+add temp, smp1
+add temp, smp2
+str temp, [sample_buf++]
+
+{ frac1, delta_frac1, frac2, delta_frac2, smp1, smp2, 
+  volume1, volume2, temp, sample_buf, int1, int2 }  12 regs
+
+

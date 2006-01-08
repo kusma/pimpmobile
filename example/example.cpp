@@ -17,12 +17,24 @@
 #include "../src/config.h"
 #include "gbfs.h"
 
+int fade = 0;
+void callback(int a, int b)
+{
+	fade = 255;
+}
+
 void vblank()
 {
 	pimp_vblank();
+	if (fade > 0) fade -= 8;
+	int f = (fade * fade) >> 8;
+
+	BG_COLORS[0] = RGB8(f, f, f);
+	
 	while (REG_VCOUNT != 0);
 	pimp_frame();
 }
+
 
 GBFS_FILE const* fs;
 const void *sample_bank = 0;
@@ -62,6 +74,7 @@ int main()
 	file_count = gbfs_count_objs(fs);
 	sample_bank  = gbfs_get_obj(fs, "sample_bank.bin", 0);
 	
+	pimp_set_callback(callback);
 	play_next_file();
 
 	SetInterrupt(IE_VBL, vblank);
