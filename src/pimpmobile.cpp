@@ -268,11 +268,11 @@ void update_row()
 			case EFF_NONE: break;
 			
 			case EFF_PORTA_UP:
-				chan.porta_speed = chan.effect_param * 4;
+				if (chan.effect_param != 0) chan.porta_speed = chan.effect_param * 4;
 			break;
 			
 			case EFF_PORTA_DOWN:
-				chan.porta_speed = chan.effect_param * 4;
+				if (chan.effect_param != 0) chan.porta_speed = chan.effect_param * 4;
 			break;
 			
 			case EFF_PORTA_NOTE:
@@ -285,7 +285,7 @@ void update_row()
 					if (chan.porta_target > mod->period_high_clamp) chan.porta_target = mod->period_high_clamp;
 					if (chan.porta_target < mod->period_low_clamp)  chan.porta_target = mod->period_low_clamp;
 				}
-				chan.porta_speed = chan.effect_param * 4;
+				if (chan.effect_param != 0) chan.porta_speed = chan.effect_param * 4;
 			break;
 /*
 			case EFF_VIBRATO: break;
@@ -458,6 +458,7 @@ static void update_tick()
 			
 			case EFF_VOLUME_SLIDE:
 				// should be removed in exporter
+				// zero should remember speed
 				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
 				if (chan.effect_param & 0xF0)
 				{
