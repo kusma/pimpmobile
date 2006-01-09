@@ -136,7 +136,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	curr_tick = 0;
 	curr_tick_len = 0;
 
-	curr_order = 4; //0;
+	curr_order = 0;
 	curr_pattern = get_pattern(mod, get_order(mod, curr_order));
 	
 	set_bpm(mod->bpm);
