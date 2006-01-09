@@ -136,7 +136,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	curr_tick = 0;
 	curr_tick_len = 0;
 
-	curr_order = 0;
+	curr_order = 4; //0;
 	curr_pattern = get_pattern(mod, get_order(mod, curr_order));
 	
 	set_bpm(mod->bpm);
@@ -256,7 +256,8 @@ void update_row()
 			chan.volume = samp->volume;
 			volume_dirty = true;
 		}
-
+		
+		/* todo: switch here instead */
 		if (note->volume_command >= 0x10 && note->volume_command < 0x50)
 		{
 			chan.volume = note->volume_command - 0x10;
