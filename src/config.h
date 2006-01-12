@@ -7,7 +7,7 @@
 #define CHANNELS   32
 
 /* check the sample-rate calculator at http://www.pineight.com/gba/samplerates/ for more glitch-free samplerates */
-#define SAMPLERATE (18157)
+#define SAMPLERATE (18157 * 2)
 
 /* only 130 bytes big, quite damn pleasing results */
 #define AMIGA_DELTA_LUT_LOG_SIZE 7

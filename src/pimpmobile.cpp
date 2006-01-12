@@ -29,6 +29,12 @@
 #include "math.h"
 #include "debug.h"
 
+
+
+#define PRINT_PATTERNS
+
+
+
 static s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
@@ -41,6 +47,9 @@ static u32 curr_order = 0;
 static u32 curr_bpm = 125;
 static u32 curr_tempo = 5;
 static u32 curr_tick = 0;
+
+static s32 global_volume = 2 << 8; /* 24.8 fixed point */
+
 static pimp_pattern_t *curr_pattern = 0;
 
 static const unsigned char *pimp_sample_bank;
@@ -85,6 +94,7 @@ static pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *in
 }
 
 
+#ifdef PRINT_PATTERNS
 void print_pattern_entry(const pimp_pattern_entry_t &pe)
 {
 	if (pe.note != 0)
@@ -98,6 +108,7 @@ void print_pattern_entry(const pimp_pattern_entry_t &pe)
 	}
 	else iprintf("--- ");
 //	iprintf("%02X ", pe.volume_command);
+	iprintf("%02X ", pe.effect_byte);
 //	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
 }
 
@@ -117,6 +128,7 @@ void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 		iprintf("\n");
 	}
 }
+#endif
 
 static pimp_callback callback = 0;
 extern "C" void pimp_set_callback(pimp_callback in_callback)
@@ -214,7 +226,9 @@ void update_row()
 		
 		const pimp_pattern_entry_t *note = &get_pattern_data(mod, curr_pattern)[curr_row * mod->channel_count + c];
 		
+#ifdef PRINT_PATTERNS	
 		print_pattern_entry(*note);
+#endif
 		
 		chan.effect           = note->effect_byte;
 		chan.effect_param     = note->effect_parameter;
@@ -222,41 +236,43 @@ void update_row()
 		bool period_dirty = false;
 		bool volume_dirty = false;
 		
-//		NOTE ON !
-		if (note->instrument > 0 && chan.effect != EFF_PORTA_NOTE)
+		if (note->instrument > 0)
 		{
-			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
-			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
+			chan.instrument = get_instrument(mod, note->instrument - 1);
+			chan.sample = get_sample(mod, chan.instrument, chan.instrument->sample_map[note->note]);
 			
-			int period;
+			chan.volume = chan.sample->volume;
+			volume_dirty = true;
+		}
+		
+		if (chan.instrument != 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE)
+		{
+			chan.sample = get_sample(mod, chan.instrument, chan.instrument->sample_map[note->note]);
+			mc.sample_cursor = 0;
+			mc.sample_data = pimp_sample_bank + chan.sample->data_ptr;
+			mc.sample_length = chan.sample->length;
+			mc.loop_type = (mixer::loop_type_t)chan.sample->loop_type;
+			mc.loop_start = chan.sample->loop_start;
+			mc.loop_end = chan.sample->loop_start + chan.sample->loop_length;
+			
 			if (mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				period = get_linear_period(note->note, samp->fine_tune);
+				chan.period = get_linear_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
 			}
 			else
 			{
-				period = get_amiga_period(note->note, samp->fine_tune);
+				chan.period = get_amiga_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
 			}
-			
-			chan.period = chan.final_period = period;
+			chan.final_period = chan.period;
 			period_dirty = true;
-			
-			mc.sample_cursor = 0;
-			mc.sample_data = pimp_sample_bank + samp->data_ptr;
-			mc.sample_length = samp->length;
-			mc.loop_type = (mixer::loop_type_t)samp->loop_type;
-			mc.loop_start = samp->loop_start;
-			mc.loop_end = samp->loop_start + samp->loop_length;
 		}
 		
 		if (note->instrument > 0)
 		{
-			pimp_instrument_t *instr = get_instrument(mod, note->instrument - 1);
-			pimp_sample_t *samp = get_sample(mod, instr, instr->sample_map[note->note]);
-			chan.volume = samp->volume;
+			chan.volume = chan.sample->volume;
 			volume_dirty = true;
 		}
-		
+
 		/* todo: switch here instead */
 		if (note->volume_command >= 0x10 && note->volume_command < 0x50)
 		{
@@ -279,7 +295,8 @@ void update_row()
 			case EFF_PORTA_NOTE:
 				if (note->note > 0)
 				{
-					if (mod->flags & FLAG_LINEAR_PERIODS) chan.porta_target = get_linear_period(note->note, 0);
+					// no fine tune or relative note here, boooy
+					if (mod->flags & FLAG_LINEAR_PERIODS) chan.porta_target = get_linear_period(note->note + chan.sample->rel_note, 0);
 					else chan.porta_target = get_amiga_period(note->note, 0);
 					
 					/* clamp porta-target period (should not be done for S3M) */
@@ -340,8 +357,8 @@ void update_row()
 						chan.note = note->note;
 					break;
 */
-					default:
-						iprintf("eek E%X\n", chan.effect_param >> 4);
+//					default:
+//						iprintf("eek E%X\n", chan.effect_param >> 4);
 				}
 			break;
 			
@@ -370,8 +387,8 @@ void update_row()
 			case EFF_SET_BPM: break;
 */
 			
-			default:
-				iprintf("eek %02X!\n", chan.effect);
+//			default:
+//				iprintf("eek %02X!\n", chan.effect);
 //				assert(0);
 		}
 		
@@ -389,12 +406,14 @@ void update_row()
 		
 		if (volume_dirty)
 		{
-			mc.volume = chan.volume * 2;
+			mc.volume = (chan.volume * global_volume) >> 8;
 		}
 	}
-	
+
+#ifdef PRINT_PATTERNS	
 	iprintf("\n");
-	
+#endif
+
 	curr_tick = 0;
 	curr_row++;
 	if (curr_row == curr_pattern->row_count)
@@ -509,7 +528,7 @@ static void update_tick()
 		
 		if (volume_dirty)
 		{
-			mc.volume = chan.volume * 2;
+			mc.volume = (chan.volume * global_volume) >> 8;
 		}
 	}
 	curr_tick++;
@@ -524,8 +543,6 @@ static void update_tick()
 
 extern "C" void pimp_frame()
 {
-	DEBUG_COLOR(31, 31, 31);
-	
 	u32 samples_left = SOUND_BUFFER_SIZE;
 	s8 *buf = sound_buffers[sound_buffer_index];
 	
@@ -533,25 +550,18 @@ extern "C" void pimp_frame()
 	while (true)
 	{
 		int samples_to_mix = MIN(remainder, samples_left);
-		
 		if (samples_to_mix != 0) mixer::mix(buf, samples_to_mix);
-		DEBUG_COLOR(31, 31, 31);
+
 		buf += samples_to_mix;
-		
 		samples_left -= samples_to_mix;
 		remainder -= samples_to_mix;
 		
 		if (!samples_left) break;
-		
-		DEBUG_COLOR(0, 0, 0);
 		update_tick();
-		DEBUG_COLOR(31, 31, 31);
-//		printf("%d %d %d %d\n", mod->bpm, curr_row, curr_order, curr_tick);
 		
 		// fixed point tick length
 		curr_tick_len += tick_len;
 		remainder = curr_tick_len >> 8;
 		curr_tick_len -= (curr_tick_len >> 8) << 8;
 	}
-	DEBUG_COLOR(0, 0, 0);
 }

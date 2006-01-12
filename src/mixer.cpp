@@ -152,7 +152,6 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
-		DEBUG_COLOR(31, 31, 31);
 		do
 		{
 			assert((chan.sample_cursor >> 12) < chan.sample_length);
@@ -176,18 +175,12 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 			}
 			
 			chan.sample_data = 0;
+			
 			return;
 		}
 	}
-
-	DEBUG_COLOR(31, 0, 31);
-	timing_start();
-
 	assert(chan.sample_data != 0);
 	chan.sample_cursor = mix_samples(target, samples, chan.sample_data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
-
-	timing_end();
-	DEBUG_COLOR(31, 0, 0);
 }
 
 void mixer::reset()
@@ -206,8 +199,6 @@ void mixer::mix(s8 *target, size_t samples)
 {
 	assert(samples > 0);
 	
-	DEBUG_COLOR(0, 31, 31);
-	
 	// zero out the sample-buffer
 	u32 zero = 0;
 	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
@@ -219,7 +210,6 @@ void mixer::mix(s8 *target, size_t samples)
 		if (0 != chan.sample_data && 0 != chan.sample_cursor_delta) mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
-	DEBUG_COLOR(0, 31, 0);
 	
 	register s32 *src = sound_mix_buffer;
 	register s8  *dst = target;
@@ -264,5 +254,4 @@ void mixer::mix(s8 *target, size_t samples)
 		while (s--);
 	}
 #undef ITERATION
-	DEBUG_COLOR(0, 0, 0);
 }

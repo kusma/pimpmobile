@@ -36,22 +36,6 @@ typedef struct
 
 } pimp_sample_t;
 
-typedef struct
-{
-	s32 period;
-	s32 final_period; /* signed so we can check for underfow */
-	s32 porta_target;
-	u16 porta_speed;
-	s8  volume_slide_speed;
-
-	s8  volume;
-	u8  pan;
-	
-	u8  note;
-	u8  effect;
-	u8  effect_param;
-} pimp_channel_state_t;
-
 typedef enum
 {
 	EFF_NONE                    = 0x00,
@@ -251,5 +235,25 @@ typedef struct
 	u8  pattern_count;
 	u8  channel_count;
 } pimp_module_t;
+
+typedef struct
+{
+	s32 period;
+	s32 final_period; /* signed so we can check for underfow */
+	s32 porta_target;
+	u16 porta_speed;
+	s8  volume_slide_speed;
+
+	s8  volume;
+	u8  pan;
+	
+	pimp_instrument_t *instrument;
+	pimp_sample_t *sample;
+	
+	u8  note;
+	u8  effect;
+	u8  effect_param;
+} pimp_channel_state_t;
+
 
 #endif /* INTERNAL_H */

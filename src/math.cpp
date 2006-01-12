@@ -39,9 +39,9 @@ unsigned get_linear_period(int note, int fine_tune)
 	assert(fine_tune >= -8);
 	assert(fine_tune <   8);
 	
-	int xm_note = note - (12 * 1); // we extended our note-range with one octave.
+	int xm_note = note - (12 * 1) - 1; // we extended our note-range with one octave.
 	
-	return 10 * 12 * 16 * 4 - xm_note * 16 * 4 - fine_tune / 2;
+	return (10 * 12 * 16 * 4 - xm_note * 16 * 4 - fine_tune / 2);
 //	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2;
 }
 
