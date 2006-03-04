@@ -30,8 +30,9 @@ namespace mixer
 	
 	void reset();
 	void mix(s8 *target, size_t samples);
-	u32 mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);
 
+	u32  mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);
+	void clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs);
 }
 
 #endif /* MIXER_H */

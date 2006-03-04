@@ -31,7 +31,7 @@
 
 
 
-#define PRINT_PATTERNS
+// #define PRINT_PATTERNS
 
 
 
@@ -48,7 +48,19 @@ static u32 curr_bpm = 125;
 static u32 curr_tempo = 5;
 static u32 curr_tick = 0;
 
-static s32 global_volume = 2 << 8; /* 24.8 fixed point */
+
+int pimp_get_row()
+{
+	return curr_row;
+}
+
+int pimp_get_order()
+{
+	return curr_order;
+}
+
+
+static s32 global_volume = 1 << 10; /* 24.8 fixed point */
 
 static pimp_pattern_t *curr_pattern = 0;
 
@@ -60,7 +72,7 @@ static void set_bpm(int bpm)
 {
 	assert(bpm > 0);
 	/* the shift is because we're using 8 fractional-bits for the tick-length */
-	tick_len = ((SAMPLERATE * 5) << 8) / (bpm * 2);
+	tick_len = int((SAMPLERATE * 5) * 256) / (bpm * 2);
 }
 
 static int get_order(const pimp_module_t *mod, int i)
@@ -194,7 +206,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	REG_SOUNDCNT_X = SOUND_ENABLE;
 	
 	/* setup timer-shit */
-	REG_TM0CNT_L = (1 << 16) - ((1 << 24) / SAMPLERATE);
+	REG_TM0CNT_L = (1 << 16) - int((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
 }
 
@@ -245,7 +257,7 @@ void update_row()
 			volume_dirty = true;
 		}
 		
-		if (chan.instrument != 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE)
+		if (chan.instrument != 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE && !(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
 		{
 			chan.sample = get_sample(mod, chan.instrument, chan.instrument->sample_map[note->note]);
 			mc.sample_cursor = 0;
@@ -272,12 +284,28 @@ void update_row()
 			chan.volume = chan.sample->volume;
 			volume_dirty = true;
 		}
-
-		/* todo: switch here instead */
-		if (note->volume_command >= 0x10 && note->volume_command < 0x50)
+		
+		switch (note->volume_command >> 4)
 		{
-			chan.volume = note->volume_command - 0x10;
-			volume_dirty = true;
+			case 0x0: break;
+			case 0x1:
+			case 0x2:
+			case 0x3:
+			case 0x4:
+			case 0x5:
+				if (note->volume_command > 0x50)
+				{
+					/* something else */
+				}
+				else
+				{
+					chan.volume = note->volume_command - 0x10;
+					volume_dirty = true;
+				}
+			break;
+			
+			default:
+				iprintf("unsupported volume-command %02X\n", chan.effect_param);
 		}
 		
 		switch (chan.effect)
@@ -316,7 +344,14 @@ void update_row()
 			case EFF_SAMPLE_OFFSET:
 				if (note->note > 0)
 				{
-					mixer::channels[c].sample_cursor = (chan.effect_param * 256) << 12;
+					mc.sample_cursor = (chan.effect_param * 256) << 12;
+/*
+					if (mc.sample_cursor > mc.sample_length)
+					{
+						if (mod->flags & FLAG_SAMPLE_OFFSET_CLAMP) mc.sample_cursor = 0; //mc.sample_length;
+//						else mc.sample_data = NULL; // kill sample
+					}
+*/
 				}
 			break;
 			
@@ -340,6 +375,18 @@ void update_row()
 				switch (chan.effect_param >> 4)
 				{
 					case EFF_AMIGA_FILTER: break;
+
+					case EFF_FINE_PORTA_UP:
+						chan.final_period -= chan.effect_param & 0xF;
+						if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
+						period_dirty = true;
+					break;
+					
+					case EFF_FINE_PORTA_DOWN:
+						chan.final_period += chan.effect_param & 0xF;
+						if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
+						period_dirty = true;
+					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_UP:
 						chan.volume += chan.effect_param & 0xF;
@@ -352,13 +399,14 @@ void update_row()
 						if (chan.volume < 0) chan.volume = 0;
 						volume_dirty = true;
 					break;
-/*
+					
 					case EFF_NOTE_DELAY:
+						chan.note_delay = chan.effect_param & 0xF;
 						chan.note = note->note;
 					break;
-*/
-//					default:
-//						iprintf("eek E%X\n", chan.effect_param >> 4);
+					
+					default:
+						iprintf("unsupported effect E%X\n", chan.effect_param >> 4);
 				}
 			break;
 			
@@ -387,9 +435,9 @@ void update_row()
 			case EFF_SET_BPM: break;
 */
 			
-//			default:
-//				iprintf("eek %02X!\n", chan.effect);
-//				assert(0);
+			default:
+				iprintf("unsupported effect %02X\n", chan.effect);
+				assert(0);
 		}
 		
 		if (period_dirty)
@@ -450,7 +498,6 @@ static void update_tick()
 			
 			case EFF_PORTA_UP:
 				chan.final_period -= chan.porta_speed;
-				if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
 				if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
@@ -458,7 +505,6 @@ static void update_tick()
 			case EFF_PORTA_DOWN:
 				chan.final_period += chan.porta_speed;
 				if (chan.final_period > mod->period_high_clamp) chan.final_period = mod->period_high_clamp;
-				if (chan.final_period < mod->period_low_clamp) chan.final_period = mod->period_low_clamp;
 				period_dirty = true;
 			break;
 			
@@ -502,6 +548,35 @@ static void update_tick()
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
 					break; /* fine volume slide is only done on tick0 */
 					
+					case EFF_NOTE_DELAY:
+						// note on
+						if (--chan.note_delay == 0)
+						{
+							// TODO: replace with a note_on-function
+							if (chan.instrument != 0)
+							{
+								chan.sample = get_sample(mod, chan.instrument, chan.instrument->sample_map[chan.note]);
+								mc.sample_cursor = 0;
+								mc.sample_data = pimp_sample_bank + chan.sample->data_ptr;
+								mc.sample_length = chan.sample->length;
+								mc.loop_type = (mixer::loop_type_t)chan.sample->loop_type;
+								mc.loop_start = chan.sample->loop_start;
+								mc.loop_end = chan.sample->loop_start + chan.sample->loop_length;
+								
+								if (mod->flags & FLAG_LINEAR_PERIODS)
+								{
+									chan.period = get_linear_period(((s32)chan.note) + chan.sample->rel_note, chan.sample->fine_tune);
+								}
+								else
+								{
+									chan.period = get_amiga_period(((s32)chan.note) + chan.sample->rel_note, chan.sample->fine_tune);
+								}
+								chan.final_period = chan.period;
+								period_dirty = true;
+							}
+						}
+					break;
+
 //					default:
 //						iprintf("eek %x!\n", chan.effect_param >> 4);
 				}
@@ -551,13 +626,16 @@ extern "C" void pimp_frame()
 	{
 		int samples_to_mix = MIN(remainder, samples_left);
 		if (samples_to_mix != 0) mixer::mix(buf, samples_to_mix);
-
+		
 		buf += samples_to_mix;
 		samples_left -= samples_to_mix;
 		remainder -= samples_to_mix;
 		
 		if (!samples_left) break;
+
+		PROFILE_COLOR(31, 31, 31);
 		update_tick();
+		PROFILE_COLOR(31, 0, 0);
 		
 		// fixed point tick length
 		curr_tick_len += tick_len;

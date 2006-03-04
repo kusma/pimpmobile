@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-extern const unsigned char clz_lut[256];
+extern const unsigned char __pimp_clz_lut[256];
 
 static inline unsigned clz(unsigned input)
 {
@@ -16,7 +16,7 @@ static inline unsigned clz(unsigned input)
 	else c += 8;
 
 	/* a 256 entries lut ain't too bad... */
-	return clz_lut[input] + c;
+	return __pimp_clz_lut[input] + c;
 }
 
 static inline unsigned clz16(unsigned input)
@@ -28,12 +28,12 @@ static inline unsigned clz16(unsigned input)
 	else c += 8;
 
 	/* a 256 entries lut ain't too bad... */
-	return clz_lut[input] + c;
+	return __pimp_clz_lut[input] + c;
 }
 
 static inline unsigned clz8(unsigned input)
 {
-	return clz_lut[input];
+	return __pimp_clz_lut[input];
 }
 
 

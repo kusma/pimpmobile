@@ -96,6 +96,8 @@ typedef enum
 typedef enum
 {
 	EFF_AMIGA_FILTER           = 0x0,
+	EFF_FINE_PORTA_UP          = 0x1,
+	EFF_FINE_PORTA_DOWN        = 0x2,
 	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
 	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
 	EFF_NOTE_DELAY             = 0xD,
@@ -243,6 +245,7 @@ typedef struct
 	s32 porta_target;
 	u16 porta_speed;
 	s8  volume_slide_speed;
+	u8  note_delay;
 
 	s8  volume;
 	u8  pan;
