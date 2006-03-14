@@ -21,6 +21,7 @@ float normal_noise()
 	}
 	r /= RAND_MAX;
 	r -= 6;
+	return 0.f;
 	return r;
 }
 
