@@ -257,7 +257,7 @@ void update_row()
 			volume_dirty = true;
 		}
 		
-		if (chan.instrument != 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE && !(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
+		if (chan.instrument != 0 && chan.instrument->sample_count > 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE && !(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
 		{
 			chan.sample = get_sample(mod, chan.instrument, chan.instrument->sample_map[note->note]);
 			mc.sample_cursor = 0;
@@ -296,6 +296,7 @@ void update_row()
 				if (note->volume_command > 0x50)
 				{
 					/* something else */
+					iprintf("unsupported volume-command %02X\n", note->volume_command);
 				}
 				else
 				{
@@ -305,7 +306,7 @@ void update_row()
 			break;
 			
 			default:
-				iprintf("unsupported volume-command %02X\n", chan.effect_param);
+				iprintf("unsupported volume-command %02X\n", note->volume_command);
 		}
 		
 		switch (chan.effect)
@@ -355,7 +356,17 @@ void update_row()
 				}
 			break;
 			
-			case EFF_VOLUME_SLIDE: break;
+			case EFF_VOLUME_SLIDE:
+				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
+				if (chan.effect_param & 0xF0)
+				{
+					chan.volume_slide_speed = chan.effect_param >> 4;
+				}
+				else if (chan.effect_param & 0x0F)
+				{
+					chan.volume_slide_speed = -(chan.effect_param & 0xF);
+				}
+			break;
 			
 /*			case EFF_JUMP_ORDER: break; */
 
@@ -522,22 +533,14 @@ static void update_tick()
 				period_dirty = true;
 			break;
 			
+			case EFF_VIBRATO:
+			break;
+			
 			case EFF_VOLUME_SLIDE:
-				// should be removed in exporter
-				// zero should remember speed
-				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
-				if (chan.effect_param & 0xF0)
-				{
-					chan.volume += chan.effect_param >> 4;
-					if (chan.volume > 64) chan.volume = 64;
-					volume_dirty = true;
-				}
-				else
-				{
-					chan.volume -= (chan.effect_param & 0xF) * 4;
-					if (chan.volume < 0) chan.volume = 0;
-					volume_dirty = true;
-				}
+				chan.volume += chan.volume_slide_speed;
+				if (chan.volume > 64) chan.volume = 64;
+				if (chan.volume < 0) chan.volume = 0;
+				volume_dirty = true;
 			break;
 			
 			case EFF_MULTI_FX:
@@ -580,9 +583,6 @@ static void update_tick()
 //					default:
 //						iprintf("eek %x!\n", chan.effect_param >> 4);
 				}
-			break;
-			
-			case EFF_VIBRATO:
 			break;
 			
 //				default: assert(0);
