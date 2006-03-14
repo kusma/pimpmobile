@@ -25,6 +25,7 @@ ASFLAGS  = -mthumb-interwork
 ARM   = -marm
 THUMB = -mthumb
 
+# TODO: profile what code to put where
 OBJS = \
 	src/pimpmobile.o \
 	src/math.iwram.o \
@@ -34,12 +35,13 @@ ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g3 -ggdb
 	CFLAGS   += -g3 -ggdb
-	OBJS     += src/mixer_portable.iwram.o
+	OBJS     += src/mixer_portable.o
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
 	OBJS     += src/mixer_arm.iwram.o
+#	OBJS     += src/mixer_portable.iwram.o
 endif
 
 	
