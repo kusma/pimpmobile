@@ -621,6 +621,10 @@ extern "C" void pimp_frame()
 	u32 samples_left = SOUND_BUFFER_SIZE;
 	s8 *buf = sound_buffers[sound_buffer_index];
 	
+	static volatile bool locked = false;
+	if (true == locked) return; // whops, we're in the middle of filling. sorry.
+	locked = true;
+	
 	static int remainder = 0;
 	while (true)
 	{
@@ -642,4 +646,5 @@ extern "C" void pimp_frame()
 		remainder = curr_tick_len >> 8;
 		curr_tick_len -= (curr_tick_len >> 8) << 8;
 	}
+	locked = false;
 }
