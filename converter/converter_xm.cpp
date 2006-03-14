@@ -461,7 +461,7 @@ module_t *load_module_xm(FILE *fp)
 			fseek(fp, 1, SEEK_CUR);
 			fread(&sh.name,        1, 22, fp);
 			sh.name[22] = '\0';
-
+			
 			/* fill converter-struct */
 			sample_header_t &samp = instr.samples[s];
 			strcpy(samp.name, sh.name);
@@ -532,6 +532,8 @@ module_t *load_module_xm(FILE *fp)
 			{
 				samp.format = SAMPLE_SIGNED_16BIT;
 				samp.length = sh.length / 2;
+				samp.loop_start /= 2;
+				samp.loop_end   /= 2;
 			}
 			else
 			{
