@@ -35,6 +35,7 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	assert((samples & 7) == 0);
 	assert(samples != 0);
 	
+	/* disable interrupts */
 	u32 ime = REG_IME;
 	REG_IME = 0;
 	
@@ -103,8 +104,10 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 		[vol]     "r"(vol)
 	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "1", "2", "4", "cc"
 	);
+
+	/* restore interrupt state */
 	REG_IME = ime;
-//	iprintf("ok\n");
+	
 	return sample_cursor;
 }
 
@@ -119,6 +122,7 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 	assert((samples & 7) == 0);
 	assert(samples != 0);
 
+	/* disable interrupts */
 	u32 ime = REG_IME;
 	REG_IME = 0;
 
@@ -126,7 +130,7 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 "\
 	b .Ldataskip%=                          \n\
 .Lstack_store%=:                            \n\
-.word                                       \n\
+.word 0                                     \n\
 .Ldataskip%=:                               \n\
 	str sp, .Lstack_store%=                 \n\
 	ldrb  sp, [%[data]], #1                 \n\
@@ -189,7 +193,10 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 		[vol]     "r"(vol)
 	: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "sp", "cc"
 	);
+
+	/* restore interrupt state */
 	REG_IME = ime;
+	
 	return ((sample_data - old_sample_data - 1) << 12) + (sample_cursor >> 20);
 }
 
@@ -199,8 +206,6 @@ u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol,
 	assert(target != 0);
 	assert(sample_data != 0);
 	
-//	iprintf("-%d-", samples);
-
 	/* mix heading 0-7 samples (the innerloops are unrolled 8 times) */
 	for (unsigned i = samples & 7; i; --i)
 	{
@@ -212,16 +217,8 @@ u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol,
 
 	if (samples == 0) return sample_cursor;
 
-#if 1
-	{
-//		if (samples < 32) samples = 32;
-		u32 ret = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-		return ret;
-	}
-#endif
-
 	/* decide what innerloop to take */
-	if (sample_cursor_delta > 0 && sample_cursor_delta < (1 << 12))
+	if (sample_cursor_delta > 0 && sample_cursor_delta < (1UL << 12))
 	{
 		u32 ret = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
 //		PROFILE_COLOR(31, 0, 0);
