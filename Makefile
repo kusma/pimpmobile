@@ -27,8 +27,9 @@ THUMB = -mthumb
 
 # TODO: profile what code to put where
 OBJS = \
-	src/pimpmobile.o \
-	src/math.iwram.o \
+	src/pimp_gba.o    \
+	src/pimp_render.o \
+	src/math.iwram.o  \
 	src/mixer.iwram.o
 
 ifeq ($(DEBUG), 1)
