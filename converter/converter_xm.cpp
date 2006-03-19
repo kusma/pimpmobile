@@ -314,7 +314,7 @@ module_t *load_module_xm(FILE *fp)
 	}
 	printf("done!\n");
 	
-	printf("dumping instrument-data...\n");
+	printf("loading instrument-data...\n");
 	
 	// load instruments
 	mod->instruments.resize(xm_header.instruments);
@@ -380,10 +380,8 @@ module_t *load_module_xm(FILE *fp)
 					int diff_mag  = env->node_magnitude[i] - env->node_magnitude[i - 1];
 					int diff_tick = env->node_tick[i] - env->node_tick[i - 1];
 					
-					env->node_delta[i - 1] = (diff_mag << 9) / diff_tick; // 7.9 fixedpoint. should this be auto-calculated somewhere for all mod-types instead?
-					
-//					printf("vol delta: %i (%i %i)\n", env->node_delta[i - 1], env->node_magnitude[i - 1], env->node_magnitude[i]);
-//					printf("vol %i hitpoint: %i\n", i, env->node_magnitude[i - 1] + ((env->node_delta[i - 1] * diff_tick + (1 << 8)) >> 9));
+					env->node_delta[i - 1] = (diff_mag << 9) / diff_tick;
+					// 7.9 fixedpoint. should this be auto-calculated somewhere for all mod-types instead?
 				}
 			}
 			env->sustain_loop_start = env->sustain_loop_end = ih.vol_sustain;

@@ -326,8 +326,15 @@ void dump_module(module_t *mod, const char *filename)
 		if (&instr.samples[0] != 0) pointer_map.insert(make_pair(&instr.samples[0], pos));
 		dump_word((unsigned)&instr.samples[0]);
 		
-//		if (instr.volume_envelope != 0) pointer_map.insert(make_pair(instr.volume_envelope, pos));
-		dump_word((unsigned)instr.volume_envelope);
+		if (instr.volume_envelope != 0)
+		{
+			pointer_map.insert(make_pair(instr.volume_envelope, pos));
+			dump_word((unsigned)instr.volume_envelope);
+		}
+		else
+		{
+			dump_word(0);
+		}
 		
 //		if (instr.panning_envelope != 0) pointer_map.insert(make_pair(instr.panning_envelope, pos));
 		dump_word((unsigned)instr.panning_envelope);
@@ -385,8 +392,38 @@ void dump_module(module_t *mod, const char *filename)
 			dump_byte(samp.vibrato_sweep);
 			dump_byte(samp.vibrato_waveform);
 		}
-//		if (&instr.samples[0] != 0) pointer_map.insert(make_pair(&instr.samples[0], pos));
-//		dump_word((unsigned)&instr.samples[0]);
+		
+		if (instr.volume_envelope != 0)
+		{
+			envelope_t &env = *instr.volume_envelope;
+
+			align(4);
+			pointer_back_map.insert(make_pair(&env, pos));
+			
+			for (int i = 0; i < 25; ++i)
+			{
+				dump_halfword(env.node_tick[i]);
+			}
+			
+			for (int i = 0; i < 25; ++i)
+			{
+				dump_halfword(env.node_magnitude[i]);
+			}
+			
+			for (int i = 0; i < 25; ++i)
+			{
+				dump_halfword(env.node_delta[i]);
+			}
+			
+			dump_byte(env.node_count);
+			dump_byte(((int)env.loop_enable) | (((int)env.sustain_loop_enable) << 1));
+			
+			dump_byte(env.loop_start);
+			dump_byte(env.loop_end);
+			
+			dump_byte(env.sustain_loop_start);
+			dump_byte(env.sustain_loop_end);
+		}
 	}
 	
 	
