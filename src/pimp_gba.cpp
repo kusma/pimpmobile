@@ -5,6 +5,8 @@
 
 #include "pimp_render.h"
 
+#include <stdio.h>
+
 pimp_mod_context __pimp_ctx;
 static s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;

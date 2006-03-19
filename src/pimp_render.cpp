@@ -33,37 +33,55 @@
 // #define PRINT_PATTERNS
 
 
-static int get_order(const pimp_module_t *mod, int i)
+inline void *get_ptr(const pimp_module_t *mod, unsigned int offset)
 {
-	return ((char*)mod + mod->order_ptr)[i];
+	assert(mod != NULL);
+	return (void*)((char*)mod + offset);
 }
 
-static pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
+inline int get_order(const pimp_module_t *mod, int i)
 {
-	return &((pimp_pattern_t*)((char*)mod + mod->pattern_ptr))[i];
+	assert(mod != NULL);
+	return ((char*)get_ptr(mod, mod->order_ptr))[i];
 }
 
-static pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
+inline pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
 {
-	return (pimp_pattern_entry_t*)((char*)mod + pat->data_ptr);
+	assert(mod != NULL);
+	return &((pimp_pattern_t*)get_ptr(mod, mod->pattern_ptr))[i];
 }
 
-static pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
+inline pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
 {
-	return ((pimp_channel_t*)((char*)mod + mod->channel_ptr))[i];
+	assert(pat != NULL);
+	return (pimp_pattern_entry_t*)get_ptr(mod, pat->data_ptr);
 }
 
-static pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
+inline pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
 {
-	return &((pimp_instrument_t*)((char*)mod + mod->instrument_ptr))[i];
+	assert(mod != NULL);
+	return ((pimp_channel_t*)get_ptr(mod, mod->channel_ptr))[i];
 }
 
-static pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
+inline pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
 {
-	return &((pimp_sample_t*)((char*)mod + instr->sample_ptr))[i];
+	assert(mod != NULL);
+	return &((pimp_instrument_t*)get_ptr(mod, mod->instrument_ptr))[i];
 }
 
-static void set_bpm(pimp_mod_context *ctx, int bpm)
+inline pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
+{
+	assert(instr != NULL);
+	return &((pimp_sample_t*)get_ptr(mod, instr->sample_ptr))[i];
+}
+
+inline pimp_envelope_t *get_vol_env(const pimp_module_t *mod, pimp_instrument_t *instr)
+{
+	assert(instr != NULL);
+	return (pimp_envelope_t*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
+}
+
+inline void set_bpm(pimp_mod_context *ctx, int bpm)
 {
 	assert(ctx != NULL);
 	assert(bpm > 0);
@@ -94,6 +112,13 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 	set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
+	for (unsigned i = 0; i < CHANNELS; ++i)
+	{
+		ctx->channels[i].instrument = NULL;
+		ctx->channels[i].sample  = NULL;
+		ctx->channels[i].vol_env = NULL;
+	}
+	
 #if 0
 	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
@@ -119,13 +144,27 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 
 	if (mod->flags & FLAG_LINEAR_PERIODS) iprintf("LINEAR\n");
 	
+#endif
+
+//	iprintf("%d ",  instr->sample_count);
 	for (unsigned i = 0; i < mod->instrument_count; ++i)
 	{
+		if (i != 0x15) continue;
 		pimp_instrument_t *instr = get_instrument(mod, i);
-		iprintf("%d ",  instr->sample_count);
-		iprintf("%d\n", instr->sample_map[3]);
+		pimp_envelope_t *env = get_vol_env(mod, instr);
+//		iprintf("%p ", env);
+		if (env)
+		{
+			iprintf("env:\n");
+			for (int i = 0; i < env->node_count; ++i)
+			{
+				iprintf("%d %d\n", env->node_tick[i], env->node_magnitude[i]);
+			}
+			iprintf(".\n");
+		}
+//		iprintf("%p ", get_vol_env(mod, instr));
+//		iprintf("%d ", ((int)mod) + (instr->volume_envelope_ptr));
 	}
-#endif
 
 	/* todo: move ? */
 	mixer::reset();
@@ -200,6 +239,48 @@ void porta_note(pimp_channel_state_t &chan)
 	}
 }
 
+unsigned eval_vol_env(pimp_channel_state_t &chan)
+{
+	assert(NULL != chan.vol_env);
+
+#if 0
+	/* find the current volume envelope node */
+	if (chan.vol_env_node = -1)
+	{
+		for (int i = 0; i < chan.vol_env->node_count - 1; ++i)
+		{
+			if (chan.vol_env->node_tick[i] <= chan.vol_env_tick)
+			{
+				chan.vol_env_node = i;
+				break;
+			}
+		}
+	}
+#endif
+	
+	// the magnitude of the envelope at tick N:
+	// first, find the last node at or before tick N - its position is M
+	// then, the magnitude of the envelope at tick N is given by
+	// magnitude = node_magnitude[M] + ((node_delta[M] * (N-M)) >> 8)
+	
+	s32 delta = chan.vol_env->node_delta[chan.vol_env_node];
+	u32 internal_tick = chan.vol_env_tick - chan.vol_env->node_tick[chan.vol_env_node];
+	
+	int val = chan.vol_env->node_magnitude[chan.vol_env_node];
+	val += ((long long)delta * internal_tick) >> 9;
+	
+	chan.vol_env_tick++;
+	if (chan.vol_env_node < chan.vol_env->node_count)
+	{
+		if (chan.vol_env_tick >= chan.vol_env->node_tick[chan.vol_env_node + 1])
+		{
+			chan.vol_env_node++;
+		}
+	}
+	
+	return val << 2;
+}
+
 void update_row(pimp_mod_context &ctx)
 {
 	assert(mod != 0);
@@ -217,6 +298,7 @@ void update_row(pimp_mod_context &ctx)
 		
 		chan.effect           = note->effect_byte;
 		chan.effect_param     = note->effect_parameter;
+		chan.volume_command   = note->volume_command;
 		
 		bool period_dirty = false;
 		bool volume_dirty = false;
@@ -224,13 +306,22 @@ void update_row(pimp_mod_context &ctx)
 		if (note->instrument > 0)
 		{
 			chan.instrument = get_instrument(ctx.mod, note->instrument - 1);
-			chan.sample = get_sample(ctx.mod, chan.instrument, chan.instrument->sample_map[note->note]);
+			chan.sample  = get_sample(ctx.mod, chan.instrument, chan.instrument->sample_map[note->note]);
+			chan.vol_env = get_vol_env(ctx.mod, chan.instrument);
 			
+			chan.vol_env_node = 0;
+			chan.vol_env_tick = 0;
 			chan.volume = chan.sample->volume;
 			volume_dirty = true;
 		}
 		
-		if (chan.instrument != 0 && chan.instrument->sample_count > 0 && note->note > 0 && chan.effect != EFF_PORTA_NOTE && !(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
+		if (
+			chan.instrument != 0 &&
+			chan.instrument->sample_count > 0 &&
+			note->note > 0 &&
+			chan.effect != EFF_PORTA_NOTE &&
+			chan.effect != EFF_PORTA_NOTE_VOLUME_SLIDE &&
+			!(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
 		{
 			chan.sample = get_sample(ctx.mod, chan.instrument, chan.instrument->sample_map[note->note]);
 			mc.sample_cursor = 0;
@@ -260,6 +351,22 @@ void update_row(pimp_mod_context &ctx)
 		
 		switch (note->volume_command >> 4)
 		{
+/*
+  0       Do nothing
+$10-$50   Set volume Value-$10
+  :          :        :
+  :          :        :
+$60-$6f   Volume slide down
+$70-$7f   Volume slide up
+$80-$8f   Fine volume slide down
+$90-$9f   Fine volume slide up
+$a0-$af   Set vibrato speed
+$b0-$bf   Vibrato
+$c0-$cf   Set panning
+$d0-$df   Panning slide left
+$e0-$ef   Panning slide right
+$f0-$ff   Tone porta
+*/
 			case 0x0: break;
 			case 0x1:
 			case 0x2:
@@ -277,6 +384,7 @@ void update_row(pimp_mod_context &ctx)
 					volume_dirty = true;
 				}
 			break;
+			case 0x6: break;
 			
 			default:
 				iprintf("unsupported volume-command %02X\n", note->volume_command);
@@ -308,8 +416,31 @@ void update_row(pimp_mod_context &ctx)
 				if (chan.effect_param != 0) chan.porta_speed = chan.effect_param * 4;
 			break;
 /*
-			case EFF_VIBRATO: break;
-			case EFF_PORTA_NOTE_VOLUME_SLIDE: break;
+			case EFF_VIBRATO: break; */
+			
+			case EFF_PORTA_NOTE_VOLUME_SLIDE:
+				/* TODO: move to a separate function ? */
+				if (note->note > 0)
+				{
+					// no fine tune or relative note here, boooy
+					if (ctx.mod->flags & FLAG_LINEAR_PERIODS) chan.porta_target = get_linear_period(note->note + chan.sample->rel_note, 0);
+					else chan.porta_target = get_amiga_period(note->note, 0);
+					
+					/* clamp porta-target period (should not be done for S3M) */
+					if (chan.porta_target > ctx.mod->period_high_clamp) chan.porta_target = ctx.mod->period_high_clamp;
+					if (chan.porta_target < ctx.mod->period_low_clamp)  chan.porta_target = ctx.mod->period_low_clamp;
+				}
+				
+				if (chan.effect_param & 0xF0)
+				{
+					chan.volume_slide_speed = chan.effect_param >> 4;
+				}
+				else if (chan.effect_param & 0x0F)
+				{
+					chan.volume_slide_speed = -(chan.effect_param & 0xF);
+				}
+			break;
+/*
 			case EFF_VIBRATO_VOLUME_SLIDE: break;
 			case EFF_TREMOLO: break;
 			case EFF_SET_PAN: break;
@@ -330,7 +461,6 @@ void update_row(pimp_mod_context &ctx)
 			break;
 			
 			case EFF_VOLUME_SLIDE:
-				if ((chan.effect_param & 0xF) && (chan.effect_param & 0xF0)) break;
 				if (chan.effect_param & 0xF0)
 				{
 					chan.volume_slide_speed = chan.effect_param >> 4;
@@ -370,6 +500,10 @@ void update_row(pimp_mod_context &ctx)
 						period_dirty = true;
 					break;
 					
+					case EFF_RETRIG_NOTE:
+						if ((note->effect_parameter & 0xF) != 0) chan.note_retrig = note->effect_parameter & 0xF;
+					break;
+					
 					case EFF_FINE_VOLUME_SLIDE_UP:
 						chan.volume += chan.effect_param & 0xF;
 						if (chan.volume > 64) chan.volume = 64;
@@ -403,9 +537,13 @@ void update_row(pimp_mod_context &ctx)
 			case EFF_KEY_OFF: break;
 			case EFF_SET_ENVELOPE_POSITION: break;
 			case EFF_PAN_SLIDE: break;
-			case EFF_MULTI_RETRIG: break;
-			case EFF_TREMOR: break;
 */
+			case EFF_MULTI_RETRIG:
+				if ((note->effect_parameter & 0xF0) != 0) iprintf("multi retrig x-parameter != 0 not supported\n");
+				if ((note->effect_parameter & 0xF) != 0) chan.note_retrig = note->effect_parameter & 0xF;
+			break;
+			
+/*			case EFF_TREMOR: break; */
 			
 			case EFF_SYNC_CALLBACK:
 				if (callback != 0) callback(0, chan.effect_param);
@@ -434,9 +572,10 @@ void update_row(pimp_mod_context &ctx)
 			}
 		}
 		
-		if (volume_dirty)
+		if (volume_dirty || chan.vol_env != 0)
 		{
 			mc.volume = (chan.volume * ctx.global_volume) >> 8;
+			if (chan.vol_env != 0) mc.volume = (mc.volume * eval_vol_env(chan)) >> 8;
 		}
 	}
 
@@ -473,6 +612,47 @@ static void update_tick(pimp_mod_context &ctx)
 		
 		bool period_dirty = false;
 		bool volume_dirty = false;
+
+		switch (chan.volume_command >> 4)
+		{
+/*
+  0       Do nothing
+$10-$50   Set volume Value-$10
+  :          :        :
+  :          :        :
+$60-$6f   Volume slide down
+$70-$7f   Volume slide up
+$80-$8f   Fine volume slide down
+$90-$9f   Fine volume slide up
+$a0-$af   Set vibrato speed
+$b0-$bf   Vibrato
+$c0-$cf   Set panning
+$d0-$df   Panning slide left
+$e0-$ef   Panning slide right
+$f0-$ff   Tone porta
+*/
+			case 0x0:
+			case 0x1:
+			case 0x2:
+			case 0x3:
+			case 0x4:
+			case 0x5: break;
+	
+			case 0x6:
+				chan.volume -= chan.volume_command & 0xF;
+				if (chan.volume < 0) chan.volume = 0;
+				volume_dirty = true;
+			break;
+			
+			case 0x7:
+				chan.volume += chan.volume_command & 0xF;
+				if (chan.volume > 64) chan.volume = 64;
+				volume_dirty = true;
+			break;
+			
+			default:
+				iprintf("unsupported volume-command %02X\n", chan.volume_command);
+		}
 		
 		switch (chan.effect)
 		{
@@ -496,6 +676,17 @@ static void update_tick(pimp_mod_context &ctx)
 			case EFF_VIBRATO:
 			break;
 			
+			case EFF_PORTA_NOTE_VOLUME_SLIDE:
+				porta_note(chan);
+				period_dirty = true;
+				
+				/* todo: move to a separate function */
+				chan.volume += chan.volume_slide_speed;
+				if (chan.volume > 64) chan.volume = 64;
+				if (chan.volume < 0) chan.volume = 0;
+				volume_dirty = true;
+			break;
+			
 			case EFF_VOLUME_SLIDE:
 				chan.volume += chan.volume_slide_speed;
 				if (chan.volume > 64) chan.volume = 64;
@@ -507,6 +698,16 @@ static void update_tick(pimp_mod_context &ctx)
 				switch (chan.effect_param >> 4)
 				{
 					case EFF_AMIGA_FILTER: break;
+					
+					case EFF_RETRIG_NOTE:
+						chan.retrig_tick++;
+						if (chan.retrig_tick == chan.note_retrig)
+						{
+							mc.sample_cursor = 0;
+							chan.retrig_tick = 0;
+						}
+					break;
+
 					case EFF_FINE_VOLUME_SLIDE_UP:
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
 					break; /* fine volume slide is only done on tick0 */
@@ -545,6 +746,15 @@ static void update_tick(pimp_mod_context &ctx)
 				}
 			break;
 			
+			case EFF_MULTI_RETRIG:
+				chan.retrig_tick++;
+				if (chan.retrig_tick == chan.note_retrig)
+				{
+					mc.sample_cursor = 0;
+					chan.retrig_tick = 0;
+				}
+			break;
+			
 //				default: assert(0);
 		}
 		
@@ -561,9 +771,10 @@ static void update_tick(pimp_mod_context &ctx)
 			}
 		}
 		
-		if (volume_dirty)
+		if (volume_dirty || chan.vol_env != 0)
 		{
 			mc.volume = (chan.volume * ctx.global_volume) >> 8;
+			if (chan.vol_env != 0) mc.volume = (mc.volume * eval_vol_env(chan)) >> 8;
 		}
 	}
 	ctx.curr_tick++;

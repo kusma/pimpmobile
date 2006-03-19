@@ -187,12 +187,12 @@ typedef struct
 typedef struct
 {
 	u32 sample_ptr;
-	u32 volume_envelope_ptr;
-	u32 panning_envelope_ptr;
+	u32 vol_env_ptr;
+	u32 pan_env_ptr;
 
 #if 0
 	// IT ONLY (later)
-	u32 pitch_envelope_ptr;
+	u32 pitch_env_ptr;
 #endif
 
 	u16 volume_fadeout;
@@ -241,22 +241,28 @@ typedef struct
 
 typedef struct
 {
+	pimp_instrument_t *instrument;
+	pimp_sample_t *sample;
+	pimp_envelope_t *vol_env;
+
 	s32 period;
-	s32 final_period; /* signed so we can check for underfow */
+	s32 final_period;
 	s32 porta_target;
+	u32 vol_env_tick;
 	u16 porta_speed;
 	s8  volume_slide_speed;
 	u8  note_delay;
-
 	s8  volume;
 	u8  pan;
-	
-	pimp_instrument_t *instrument;
-	pimp_sample_t *sample;
-	
+
 	u8  note;
 	u8  effect;
 	u8  effect_param;
+	u8  volume_command;
+	
+	s8  vol_env_node;
+	u8  note_retrig;
+	u8  retrig_tick;
 } pimp_channel_state_t;
 
 
