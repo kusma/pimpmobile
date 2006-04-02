@@ -9,4 +9,10 @@
 #define PROFILE_COLOR(r, g, b)
 #endif
 
+#ifdef ENABLE_DEBUG_PRINTING
+#define DEBUG_PRINT(x) iprintf x
+#else
+#define DEBUG_PRINT(x)
+#endif
+
 #endif /* DEBUG_H */

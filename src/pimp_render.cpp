@@ -118,7 +118,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 		ctx->channels[i].sample  = NULL;
 		ctx->channels[i].vol_env = NULL;
 	}
-	
+
 #if 0
 	iprintf("\n\nperiod range: %d - %d\n", mod->period_low_clamp, mod->period_high_clamp);
 	iprintf("orders: %d\nrepeat position: %d\n", mod->order_count, mod->order_repeat);
@@ -146,6 +146,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 	
 #endif
 
+#if 0
 //	iprintf("%d ",  instr->sample_count);
 	for (unsigned i = 0; i < mod->instrument_count; ++i)
 	{
@@ -165,6 +166,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 //		iprintf("%p ", get_vol_env(mod, instr));
 //		iprintf("%d ", ((int)mod) + (instr->volume_envelope_ptr));
 	}
+#endif
 
 	/* todo: move ? */
 	mixer::reset();
@@ -257,6 +259,8 @@ unsigned eval_vol_env(pimp_channel_state_t &chan)
 		}
 	}
 #endif
+
+	// TODO: sustain
 	
 	// the magnitude of the envelope at tick N:
 	// first, find the last node at or before tick N - its position is M
@@ -270,8 +274,17 @@ unsigned eval_vol_env(pimp_channel_state_t &chan)
 	val += ((long long)delta * internal_tick) >> 9;
 	
 	chan.vol_env_tick++;
-	if (chan.vol_env_node < chan.vol_env->node_count)
+
+	if (chan.vol_env_node < (chan.vol_env->node_count - 1))
 	{
+#if 1
+		if (chan.vol_env->flags & (1 << 1))
+		{
+			/* sustain loop */
+			chan.vol_env_tick = 0; // HACK: just used to make the BP06 demo tune play correctly
+		}
+		else 
+#endif
 		if (chan.vol_env_tick >= chan.vol_env->node_tick[chan.vol_env_node + 1])
 		{
 			chan.vol_env_node++;
@@ -317,30 +330,39 @@ void update_row(pimp_mod_context &ctx)
 		
 		if (
 			chan.instrument != 0 &&
-			chan.instrument->sample_count > 0 &&
 			note->note > 0 &&
 			chan.effect != EFF_PORTA_NOTE &&
 			chan.effect != EFF_PORTA_NOTE_VOLUME_SLIDE &&
 			!(chan.effect == EFF_MULTI_FX && chan.effect_param ==  EFF_NOTE_DELAY))
 		{
-			chan.sample = get_sample(ctx.mod, chan.instrument, chan.instrument->sample_map[note->note]);
-			mc.sample_cursor = 0;
-			mc.sample_data = ctx.sample_bank + chan.sample->data_ptr;
-			mc.sample_length = chan.sample->length;
-			mc.loop_type = (mixer::loop_type_t)chan.sample->loop_type;
-			mc.loop_start = chan.sample->loop_start;
-			mc.loop_end = chan.sample->loop_start + chan.sample->loop_length;
-			
-			if (ctx.mod->flags & FLAG_LINEAR_PERIODS)
+			if (chan.instrument->sample_count == 0)
 			{
-				chan.period = get_linear_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
+				// stupid musician, tried to play an empty instrument...
+				mc.sample_data = NULL;
+				mc.sample_cursor = 0;
+				mc.sample_cursor_delta = 0;
 			}
 			else
 			{
-				chan.period = get_amiga_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
+				chan.sample = get_sample(ctx.mod, chan.instrument, chan.instrument->sample_map[note->note]);
+				mc.sample_cursor = 0;
+				mc.sample_data = ctx.sample_bank + chan.sample->data_ptr;
+				mc.sample_length = chan.sample->length;
+				mc.loop_type = (mixer::loop_type_t)chan.sample->loop_type;
+				mc.loop_start = chan.sample->loop_start;
+				mc.loop_end = chan.sample->loop_start + chan.sample->loop_length;
+				
+				if (ctx.mod->flags & FLAG_LINEAR_PERIODS)
+				{
+					chan.period = get_linear_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
+				}
+				else
+				{
+					chan.period = get_amiga_period(((s32)note->note) + chan.sample->rel_note, chan.sample->fine_tune);
+				}
+				chan.final_period = chan.period;
+				period_dirty = true;
 			}
-			chan.final_period = chan.period;
-			period_dirty = true;
 		}
 		
 		if (note->instrument > 0)
@@ -376,7 +398,7 @@ $f0-$ff   Tone porta
 				if (note->volume_command > 0x50)
 				{
 					/* something else */
-					iprintf("unsupported volume-command %02X\n", note->volume_command);
+					DEBUG_PRINT(("unsupported volume-command %02X\n", note->volume_command));
 				}
 				else
 				{
@@ -387,7 +409,7 @@ $f0-$ff   Tone porta
 			case 0x6: break;
 			
 			default:
-				iprintf("unsupported volume-command %02X\n", note->volume_command);
+				DEBUG_PRINT(("unsupported volume-command %02X\n", note->volume_command));
 		}
 		
 		switch (chan.effect)
@@ -522,7 +544,7 @@ $f0-$ff   Tone porta
 					break;
 					
 					default:
-						iprintf("unsupported effect E%X\n", chan.effect_param >> 4);
+						DEBUG_PRINT(("unsupported effect E%X\n", chan.effect_param >> 4));
 				}
 			break;
 			
@@ -539,7 +561,7 @@ $f0-$ff   Tone porta
 			case EFF_PAN_SLIDE: break;
 */
 			case EFF_MULTI_RETRIG:
-				if ((note->effect_parameter & 0xF0) != 0) iprintf("multi retrig x-parameter != 0 not supported\n");
+				if ((note->effect_parameter & 0xF0) != 0) DEBUG_PRINT(("multi retrig x-parameter != 0 not supported\n"));
 				if ((note->effect_parameter & 0xF) != 0) chan.note_retrig = note->effect_parameter & 0xF;
 			break;
 			
@@ -556,7 +578,7 @@ $f0-$ff   Tone porta
 */
 			
 			default:
-				iprintf("unsupported effect %02X\n", chan.effect);
+				DEBUG_PRINT(("unsupported effect %02X\n", chan.effect));
 				assert(0);
 		}
 		
@@ -612,7 +634,7 @@ static void update_tick(pimp_mod_context &ctx)
 		
 		bool period_dirty = false;
 		bool volume_dirty = false;
-
+		
 		switch (chan.volume_command >> 4)
 		{
 /*
@@ -651,7 +673,7 @@ $f0-$ff   Tone porta
 			break;
 			
 			default:
-				iprintf("unsupported volume-command %02X\n", chan.volume_command);
+				DEBUG_PRINT(("unsupported volume-command %02X\n", chan.volume_command));
 		}
 		
 		switch (chan.effect)
@@ -740,9 +762,6 @@ $f0-$ff   Tone porta
 							}
 						}
 					break;
-
-//					default:
-//						iprintf("eek %x!\n", chan.effect_param >> 4);
 				}
 			break;
 			
