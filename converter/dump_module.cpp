@@ -416,7 +416,10 @@ void dump_module(module_t *mod, const char *filename)
 			}
 			
 			dump_byte(env.node_count);
-			dump_byte(((int)env.loop_enable) | (((int)env.sustain_loop_enable) << 1));
+			dump_byte(
+				((env.loop_enable == true) ? 1 : 0) |
+				((env.sustain_loop_enable == true) ? (1 << 1) : 0)
+			);
 			
 			dump_byte(env.loop_start);
 			dump_byte(env.loop_end);

@@ -384,12 +384,16 @@ module_t *load_module_xm(FILE *fp)
 					// 7.9 fixedpoint. should this be auto-calculated somewhere for all mod-types instead?
 				}
 			}
+			
+			env->loop_enable = false;
+			env->sustain_loop_enable = false;
+			
 			env->sustain_loop_start = env->sustain_loop_end = ih.vol_sustain;
 			env->loop_start  = ih.vol_loop_start;
 			env->loop_end    = ih.vol_loop_end;
 			
-			env->sustain_loop_enable = (ih.vol_type & (1 << 1)) == 1;
-			env->loop_enable         = (ih.vol_type & (1 << 2)) == 1;
+			env->sustain_loop_enable = ((ih.vol_type >> 1) & 1) == 1;
+			env->loop_enable         = ((ih.vol_type >> 2) & 1) == 1;
 		}
 		
 //		if (ih.pan_env_points > 0)
