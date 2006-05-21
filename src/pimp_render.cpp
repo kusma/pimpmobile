@@ -305,7 +305,7 @@ void update_row(pimp_mod_context &ctx)
 		
 		const pimp_pattern_entry_t *note = &get_pattern_data(ctx.mod, ctx.curr_pattern)[ctx.curr_row * ctx.mod->channel_count + c];
 		
-#ifdef PRINT_PATTERNS	
+#ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);
 #endif
 		
@@ -370,7 +370,7 @@ void update_row(pimp_mod_context &ctx)
 			chan.volume = chan.sample->volume;
 			volume_dirty = true;
 		}
-		
+
 		switch (note->volume_command >> 4)
 		{
 /*
@@ -389,7 +389,8 @@ $d0-$df   Panning slide left
 $e0-$ef   Panning slide right
 $f0-$ff   Tone porta
 */
-			case 0x0: break;
+			case 0x0:
+			break;
 			case 0x1:
 			case 0x2:
 			case 0x3:
@@ -403,6 +404,7 @@ $f0-$ff   Tone porta
 				else
 				{
 					chan.volume = note->volume_command - 0x10;
+					DEBUG_PRINT(("setting volume to: %02X\n", chan.volume));
 					volume_dirty = true;
 				}
 			break;
@@ -792,6 +794,7 @@ $f0-$ff   Tone porta
 		
 		if (volume_dirty || chan.vol_env != 0)
 		{
+			DEBUG_PRINT(("setting volume to: %02X\n", chan.volume));
 			mc.volume = (chan.volume * ctx.global_volume) >> 8;
 			if (chan.vol_env != 0) mc.volume = (mc.volume * eval_vol_env(chan)) >> 8;
 		}
