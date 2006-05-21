@@ -32,7 +32,6 @@
 
 // #define PRINT_PATTERNS
 
-
 inline void *get_ptr(const pimp_module_t *mod, unsigned int offset)
 {
 	assert(mod != NULL);
