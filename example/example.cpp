@@ -3,6 +3,7 @@
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 #include <gba_input.h>
+#include <gba_timers.h>
 
 #ifndef REG_WAITCNT
 #define REG_WAITCNT (*(vu16*)(REG_BASE + 0x0204))
@@ -17,22 +18,100 @@
 #include "../src/config.h"
 #include "gbfs.h"
 
+// #define USE_AAS
+
+#ifdef USE_AAS
+#include "aas.h"
+#include "AAS_Data.h"
+#endif
+
+#define CYCLES_PR_FRAME 280896
+
+void profile_start()
+{
+	REG_TM3CNT_H = 0;
+	REG_TM3CNT_L = 0;
+	REG_TM3CNT_H = TIMER_START;
+}
+
+int profile_stop()
+{
+	return REG_TM3CNT_L;
+}
+
+void timer1()
+{
+#ifdef USE_AAS
+	BG_COLORS[0] = RGB5(31, 0, 0);
+	profile_start();
+	asm volatile ("MOV R11,R11");
+	AAS_Timer1InterruptHandler();
+	AAS_DoWork();
+	int stop = profile_stop();
+	BG_COLORS[0] = RGB5(0, 0, 0);
+//	printf("cycles: %i\n", stop);
+//	printf("cycles: %f\n", float(stop * 100) / CYCLES_PR_FRAME);
+#endif
+}
+
+
+
 int fade = 0;
 void callback(int a, int b)
 {
 	fade = 255;
 }
 
+#define BYTES 256 * 128
+char test[(BYTES)] EWRAM_DATA;
+
 void vblank()
 {
+#ifndef USE_AAS
 	pimp_vblank();
+#endif
+
+#ifdef USE_AAS
+	BG_COLORS[0] = RGB5(31, 0, 0);
+//	AAS_DoWork();
+	BG_COLORS[0] = RGB5(0, 0, 0);
+#else
+//	while (REG_VCOUNT != 0);
+	BG_COLORS[0] = RGB5(31, 0, 0);
+	profile_start();
+	pimp_frame();
+	int stop = profile_stop();
+	BG_COLORS[0] = RGB5(0, 0, 0);
+//	printf("cycles: %i\n", stop);
+	if (false)
+	{
+		static float percent = 0.f;
+		percent += ((float(stop * 100) / CYCLES_PR_FRAME) - percent) * 0.5f;
+		printf("cycles: %2.2f\n", percent);
+	}
+#endif
+
+	static int frame = 0;
 	if (fade > 0) fade -= 8;
 	int f = (fade * fade) >> 8;
 
 	BG_COLORS[0] = RGB8(f, f, f);
 	
-	while (REG_VCOUNT != 0);
-	pimp_frame();
+//	memset(test, 0, BYTES);
+//	printf("%d\n", pimp_get_row());
+	
+//	while (REG_VCOUNT != 150);
+//	while (REG_VCOUNT != 0);
+	
+/*
+	frame++;
+	if (frame == 60)
+	{
+		printf("%f %% cpu used\n", profile_counter * ((1.f / 60) * (1.f / CYCLES_PR_FRAME) * 100));
+		profile_counter = 0;
+		frame = 0;
+	}
+*/
 }
 
 
@@ -60,7 +139,8 @@ void play_next_file()
 int main()
 {
 //	REG_WAITCNT = 0x46d6; // lets set some cool waitstates...
-	REG_WAITCNT = 0x46da; // lets set some cool waitstates...
+//	REG_WAITCNT = 0x46da; // lets set some cool waitstates... (helps only on multi-byte reads (no... ldrb is 5 cycles instead of 6 from rom))
+	REG_WAITCNT = (2 << 2) | (0 << 4) | (1 << 14);
 
 	InitInterrupt();
 	EnableInterrupt(IE_VBL);
@@ -74,8 +154,15 @@ int main()
 	file_count = gbfs_count_objs(fs);
 	sample_bank  = gbfs_get_obj(fs, "sample_bank.bin", 0);
 	
+#ifdef USE_AAS
+	AAS_SetConfig(AAS_CONFIG_MIX_16KHZ, AAS_CONFIG_CHANS_4, AAS_CONFIG_SPATIAL_MONO, AAS_CONFIG_DYNAMIC_OFF);
+	AAS_MOD_Play(AAS_DATA_MOD_eye);
+	SetInterrupt(IE_TIMER1, timer1);
+//	EnableInterrupt(IE_TIMER1);
+#else
 	pimp_set_callback(callback);
 	play_next_file();
+#endif	
 
 	SetInterrupt(IE_VBL, vblank);
 	EnableInterrupt(IE_VBL);

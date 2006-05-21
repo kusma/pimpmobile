@@ -10,6 +10,9 @@
 /* 0x4000100 = 0xFFFF, 0x4000102 = 0x0083 */
 #define SAMPLERATE (18157.16)
 
+/* add debug prints */
+#define ENABLE_DEBUG_PRINTING
+
 /* only 130 bytes big, quite damn pleasing results */
 #define AMIGA_DELTA_LUT_LOG_SIZE 7
 

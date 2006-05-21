@@ -21,7 +21,8 @@ AR      = $(PREFIX)ar
 CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -I$(PIMPMOBILE)/include
 CFLAGS   = -mthumb-interwork -mlong-calls
 CXXFLAGS = -mthumb-interwork -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
-LDFLAGS  = -mthumb-interwork -Wl,--gc-section -Wl,-Map,$(basename $@).map -L$(LIBGBA)/lib -lgba
+LDFLAGS  = -mthumb-interwork -Wl,--gc-section -Wl,-Map,$(basename $@).map -L$(LIBGBA)/lib -lgba libaas.a
+
 ASFLAGS  = -mthumb-interwork
 
 ARM   = -marm
@@ -29,13 +30,17 @@ THUMB = -mthumb
 
 OBJS = \
 	example.o \
-	libgbfs.o
+	libgbfs.o \
+	AAS_Data.o
 
 MODULES = \
-	eye.mod \
-	rhino.mod \
-	melkedemo2.mod \
-	hypermmx.xm
+	loop1.xm
+
+#	melkedemo2.mod \
+#	swallow-sanovat_etta.xm \
+#	eye.mod \
+#	rhino.mod \
+#	porta2.xm
 
 BIN_MODULES = $(MODULES:=.bin)
 
@@ -88,7 +93,7 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 	padbin 256 $@
-	gbafix $@ -t$(basename $@)
+	gbafix $@ -t$(notdir $(basename $@))
 
 %.gba: %.bin data.gbfs
 	cat $^ > $@
