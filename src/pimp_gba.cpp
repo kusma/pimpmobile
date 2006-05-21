@@ -18,7 +18,7 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
-	REG_SOUNDCNT_X = SOUND_ENABLE;
+	REG_SOUNDCNT_X = (1 << 7);
 	
 	/* setup timer-shit */
 	REG_TM0CNT_L = (1 << 16) - int((1 << 24) / SAMPLERATE);
@@ -43,12 +43,12 @@ extern "C" void pimp_vblank()
 }
 
 
-int pimp_get_row()
+extern "C" int pimp_get_row()
 {
 	return __pimp_ctx.curr_row;
 }
 
-int pimp_get_order()
+extern "C" int pimp_get_order()
 {
 	return __pimp_ctx.curr_order;
 }
