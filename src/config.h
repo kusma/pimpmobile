@@ -18,4 +18,10 @@
 #define AMIGA_DELTA_LUT_SIZE (1 << AMIGA_DELTA_LUT_LOG_SIZE)
 #define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG_SIZE)
 
+/* enable / disable assert */
+#ifndef NDEBUG
+#define DEBUG_PRINTF_ENABLED
+#define ASSERT_ENABLED
+#endif
+
 #endif /* CONFIG_H */

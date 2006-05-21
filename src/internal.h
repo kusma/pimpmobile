@@ -2,7 +2,7 @@
 #define INTERNAL_H
 
 #include "config.h"
-	
+
 typedef struct
 {
 	/* offset relative to sample-bank */
