@@ -26,7 +26,7 @@ namespace mixer
 		s32         volume;
 	} channel_t;
 	
-	extern volatile channel_t channels[CHANNELS];
+//	extern volatile channel_t channels[CHANNELS];
 	
 	void reset();
 	void mix(s8 *target, size_t samples);
