@@ -2,7 +2,7 @@
 #define PIMP_RENDER
 
 #include <gba_base.h>
-#include "internal.h"
+#include "pimp_internal.h"
 
 #include "pimp_module.h"
 

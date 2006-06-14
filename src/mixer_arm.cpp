@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "mixer.h"
-#include "debug.h"
+#include "pimp_debug.h"
 
 #include <gba_base.h>
 #include <gba_video.h>
@@ -202,7 +202,6 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 
 u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
-//	PROFILE_COLOR(31, 0, 31);
 	assert(target != 0);
 	assert(sample_data != 0);
 	
@@ -221,13 +220,11 @@ u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol,
 	if (sample_cursor_delta > 0 && sample_cursor_delta < (1UL << 12))
 	{
 		u32 ret = mix_bresenham(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-//		PROFILE_COLOR(31, 0, 0);
 		return ret;
 	}
 	else
 	{
 		u32 ret = mix_simple(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
-//		PROFILE_COLOR(31, 0, 0);
 		return ret;
 	}
 }
@@ -256,7 +253,6 @@ void mixer::clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 		samp -= dc_offs_local;                    \
 		*dst++ = samp;                            \
 	}
-	PROFILE_COLOR(0, 0, 31);
 	
 	register u32 s = samples / 16;
 	switch (samples & 15)
@@ -284,5 +280,4 @@ void mixer::clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 		while (s--);
 	}
 #undef ITERATION
-	PROFILE_COLOR(31, 0, 0);
 }

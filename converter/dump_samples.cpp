@@ -6,7 +6,7 @@
 #include <map>
 
 #include "converter.h"
-#include "../src/internal.h"
+#include "../src/pimp_internal.h"
 
 #include <vector>
 

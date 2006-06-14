@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "mixer.h"
-#include "debug.h"
+#include "pimp_debug.h"
 
 #include <gba_systemcalls.h>
 #include <gba_dma.h>
@@ -150,7 +150,6 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 
 	assert(samples > 0);
 	
-	PROFILE_COLOR(0, 31, 0);
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
 		do
@@ -178,14 +177,11 @@ static inline void mix_channel(channel_t &chan, s32 *target, size_t samples)
 			}
 			// terminate sample
 			chan.sample_data = 0;
-			PROFILE_COLOR(31, 0, 0);
 			return;
 		}
 	}
-	PROFILE_COLOR(31, 0, 31);
 	assert(chan.sample_data != 0);
 	chan.sample_cursor = mix_samples(target, samples, chan.sample_data, chan.volume, chan.sample_cursor, chan.sample_cursor_delta);
-	PROFILE_COLOR(31, 0, 0);
 }
 
 void mixer::reset()

@@ -24,64 +24,13 @@
 #include <assert.h>
 
 #include "../include/pimpmobile.h"
-#include "internal.h"
+#include "pimp_internal.h"
 #include "pimp_render.h"
+#include "pimp_debug.h"
 #include "mixer.h"
 #include "math.h"
-#include "debug.h"
 
 // #define PRINT_PATTERNS
-
-#define STATIC static
-#define INLINE inline
-
-STATIC INLINE void *get_ptr(const pimp_module *mod, unsigned int offset)
-{
-	assert(mod != NULL);
-	return (void*)((char*)mod + offset);
-}
-
-STATIC INLINE int get_order(const pimp_module *mod, int i)
-{
-	assert(mod != NULL);
-	return ((char*)get_ptr(mod, mod->order_ptr))[i];
-}
-
-STATIC INLINE pimp_pattern *get_pattern(const pimp_module *mod, int i)
-{
-	assert(mod != NULL);
-	return &((pimp_pattern*)get_ptr(mod, mod->pattern_ptr))[i];
-}
-
-STATIC INLINE pimp_pattern_entry *get_pattern_data(const pimp_module *mod, pimp_pattern *pat)
-{
-	assert(pat != NULL);
-	return (pimp_pattern_entry*)get_ptr(mod, pat->data_ptr);
-}
-
-STATIC INLINE pimp_channel &get_channel(const pimp_module *mod, int i)
-{
-	assert(mod != NULL);
-	return ((pimp_channel*)get_ptr(mod, mod->channel_ptr))[i];
-}
-
-STATIC INLINE pimp_instrument *get_instrument(const pimp_module *mod, int i)
-{
-	assert(mod != NULL);
-	return &((pimp_instrument*)get_ptr(mod, mod->instrument_ptr))[i];
-}
-
-STATIC INLINE pimp_sample *get_sample(const pimp_module *mod, pimp_instrument *instr, int i)
-{
-	assert(instr != NULL);
-	return &((pimp_sample*)get_ptr(mod, instr->sample_ptr))[i];
-}
-
-STATIC INLINE pimp_envelope *get_vol_env(const pimp_module *mod, pimp_instrument *instr)
-{
-	assert(instr != NULL);
-	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
-}
 
 STATIC INLINE void set_bpm(pimp_mod_context *ctx, int bpm)
 {
@@ -170,45 +119,8 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module *mod, const 
 	}
 #endif
 
-	/* todo: move ? */
 	mixer::reset();
 }
-
-#ifdef PRINT_PATTERNS
-void print_pattern_entry(const pimp_pattern_entry &pe)
-{
-	if (pe.note != 0)
-	{
-		const int o = (pe.note - 1) / 12;
-		const int n = (pe.note - 1) % 12;
-		/* C, C#, D, D#, E, F, F#, G, G, A, A#, B */
-		iprintf("%c%c%X ",
-			"CCDDEFFGGAAB"[n],
-			"-#-#--#-#-#-"[n], o);
-	}
-	else iprintf("--- ");
-//	iprintf("%02X ", pe.volume_command);
-	iprintf("%02X ", pe.effect_byte);
-//	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
-}
-
-void print_pattern(const pimp_module *mod, pimp_pattern *pat)
-{
-	pimp_pattern_entry *pd = get_pattern_data(mod, pat);
-
-	iprintf("%02x\n", pat->row_count);
-	
-	for (unsigned i = 0; i < 5; ++i)
-	{
-		for (unsigned j = 0; j < 4; ++j)
-		{
-			pimp_pattern_entry &pe = pd[i * mod->channel_count + j];
-			print_pattern_entry(pe);
-		}
-		iprintf("\n");
-	}
-}
-#endif
 
 static pimp_callback callback = 0;
 extern "C" void pimp_set_callback(pimp_callback in_callback)
@@ -825,9 +737,7 @@ void pimp_render(pimp_mod_context &ctx, s8 *buf, u32 samples)
 		
 		if (samples == 0) break;
 		
-		PROFILE_COLOR(31, 31, 31);
 		update_tick(ctx);
-		PROFILE_COLOR(31, 0, 0);
 		
 		// fixed point tick length
 		ctx.curr_tick_len += ctx.tick_len;

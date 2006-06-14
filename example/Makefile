@@ -9,7 +9,7 @@ DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
 PIMPMOBILE = ..
 
-PREFIX ?= arm-elf-
+PREFIX ?= arm-eabi-
 CC      = $(PREFIX)gcc
 CXX     = $(PREFIX)g++
 OBJCOPY = $(PREFIX)objcopy

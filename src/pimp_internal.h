@@ -1,6 +1,7 @@
-#ifndef INTERNAL_H
-#define INTERNAL_H
+#ifndef PIMP_INTERNAL_H
+#define PIMP_INTERNAL_H
 
+#include "pimp_types.h"
 #include "config.h"
 
 typedef struct
@@ -202,5 +203,55 @@ typedef struct
 	u8  retrig_tick;
 } pimp_channel_state;
 
+#include "pimp_module.h"
+#include "pimp_debug.h"
 
-#endif /* INTERNAL_H */
+STATIC INLINE void *get_ptr(const pimp_module *mod, unsigned int offset)
+{
+	ASSERT(mod != NULL);
+	return (void*)((char*)mod + offset);
+}
+
+STATIC INLINE int get_order(const pimp_module *mod, int i)
+{
+	ASSERT(mod != NULL);
+	return ((char*)get_ptr(mod, mod->order_ptr))[i];
+}
+
+STATIC INLINE pimp_pattern *get_pattern(const pimp_module *mod, int i)
+{
+	ASSERT(mod != NULL);
+	return &((pimp_pattern*)get_ptr(mod, mod->pattern_ptr))[i];
+}
+
+STATIC INLINE pimp_pattern_entry *get_pattern_data(const pimp_module *mod, pimp_pattern *pat)
+{
+	ASSERT(pat != NULL);
+	return (pimp_pattern_entry*)get_ptr(mod, pat->data_ptr);
+}
+
+STATIC INLINE pimp_channel &get_channel(const pimp_module *mod, int i)
+{
+	ASSERT(mod != NULL);
+	return ((pimp_channel*)get_ptr(mod, mod->channel_ptr))[i];
+}
+
+STATIC INLINE pimp_instrument *get_instrument(const pimp_module *mod, int i)
+{
+	ASSERT(mod != NULL);
+	return &((pimp_instrument*)get_ptr(mod, mod->instrument_ptr))[i];
+}
+
+STATIC INLINE pimp_sample *get_sample(const pimp_module *mod, pimp_instrument *instr, int i)
+{
+	ASSERT(instr != NULL);
+	return &((pimp_sample*)get_ptr(mod, instr->sample_ptr))[i];
+}
+
+STATIC INLINE pimp_envelope *get_vol_env(const pimp_module *mod, pimp_instrument *instr)
+{
+	ASSERT(instr != NULL);
+	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
+}
+
+#endif /* PIMP_INTERNAL_H */

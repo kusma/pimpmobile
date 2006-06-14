@@ -7,7 +7,7 @@ endif
 DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
 
-PREFIX ?= arm-elf-
+PREFIX ?= arm-eabi-
 CC      = $(PREFIX)gcc
 CXX     = $(PREFIX)g++
 OBJCOPY = $(PREFIX)objcopy
@@ -29,6 +29,7 @@ THUMB = -mthumb
 OBJS = \
 	src/pimp_gba.o    \
 	src/pimp_render.o \
+	src/pimp_debug.o  \
 	src/math.iwram.o  \
 	src/mixer.iwram.o
 

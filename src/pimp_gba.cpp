@@ -1,9 +1,9 @@
+#include "pimp_render.h"
+
 #include <gba_dma.h>
 #include <gba_sound.h>
 #include <gba_timers.h>
 #include <gba_systemcalls.h>
-
-#include "pimp_render.h"
 
 #include <stdio.h>
 
