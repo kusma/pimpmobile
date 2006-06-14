@@ -34,7 +34,7 @@ typedef struct
 	u8  sustain_loop_type;
 */
 
-} pimp_sample_t;
+} pimp_sample;
 
 typedef enum
 {
@@ -91,7 +91,7 @@ typedef enum
 		91: "set surround sound" ???
 	
 */
-} pimp_effect_t;
+} pimp_effect;
 
 typedef enum
 {
@@ -125,7 +125,7 @@ typedef enum
 		Ex: pattern delay by x frames
 		Fx: FunkInvert (does anyone actually have an idea what this does?)
 */
-} pimp_multi_effect_t;
+} pimp_multi_effect;
 
 /* packed, because it's all bytes. no member-alignment or anything needed */
 typedef struct __attribute__((packed))
@@ -135,7 +135,7 @@ typedef struct __attribute__((packed))
 	u8 volume_command;
 	u8 effect_byte;
 	u8 effect_parameter;
-} pimp_pattern_entry_t;
+} pimp_pattern_entry;
 
 enum
 {
@@ -158,11 +158,11 @@ enum
 
 typedef struct
 {
-	// this is an offset relative to the begining of the pimp_module_t-structure
+	// this is a offset relative to the begining of the pimp_module_t-structure
 	u32 data_ptr;
 	
 	u16 row_count;
-} pimp_pattern_t;
+} pimp_pattern;
 
 /* packed, because it's all bytes. no member-alignment or anything needed */
 typedef struct __attribute__((packed))
@@ -170,80 +170,17 @@ typedef struct __attribute__((packed))
 	u8 pan;
 	u8 volume;
 	u8 mute;
-} pimp_channel_t;
+} pimp_channel;
+
+#include "pimp_instrument.h"
+#include "pimp_envelope.h"
 
 typedef struct
 {
-	u16 node_tick[25];
-	s16 node_magnitude[25];
-	s16 node_delta[25];
-
-	u8 node_count;
-	u8 flags; // bit 0: loop enable, bit 1: sustain loop enable
-	u8 loop_start, loop_end;
-	u8 sustain_loop_start, sustain_loop_end;
-} pimp_envelope_t;
-
-typedef struct
-{
-	u32 sample_ptr;
-	u32 vol_env_ptr;
-	u32 pan_env_ptr;
-
-#if 0
-	// IT ONLY (later)
-	u32 pitch_env_ptr;
-#endif
-
-	u16 volume_fadeout;
-	
-	u8 sample_count;                 /* number of samples tied to instrument */
-	u8 sample_map[120];
-
-#if 0
-	// IT ONLY (later)
-	new_note_action_t        new_note_action;
-	duplicate_check_type_t   duplicate_check_type;
-	duplicate_check_action_t duplicate_check_action;
-	
-	// UNKNOWN
-	s8 pitch_pan_separation; // no idea what this one does
-	u8 pitch_pan_center;     // not this on either; this one seems to be a note index
-#endif
-} pimp_instrument_t;
-
-typedef struct
-{
-	char name[32];
-	
-	u32 flags;
-	u32 reserved; /* for future flags */
-
-	// these are offsets relative to the begining of the pimp_module_t-structure
-	u32 order_ptr;
-	u32 pattern_ptr;
-	u32 channel_ptr;
-	u32 instrument_ptr;
-	
-	u16 period_low_clamp;
-	u16 period_high_clamp;
-	u16 order_count;
-	
-	u8  order_repeat;
-	u8  volume;
-	u8  tempo;
-	u8  bpm;
-	
-	u8  instrument_count;
-	u8  pattern_count;
-	u8  channel_count;
-} pimp_module_t;
-
-typedef struct
-{
-	pimp_instrument_t *instrument;
-	pimp_sample_t *sample;
-	pimp_envelope_t *vol_env;
+	/* some current-states */
+	pimp_instrument *instrument;
+	pimp_sample     *sample;
+	pimp_envelope   *vol_env;
 
 	s32 period;
 	s32 final_period;
@@ -263,7 +200,7 @@ typedef struct
 	s8  vol_env_node;
 	u8  note_retrig;
 	u8  retrig_tick;
-} pimp_channel_state_t;
+} pimp_channel_state;
 
 
 #endif /* INTERNAL_H */

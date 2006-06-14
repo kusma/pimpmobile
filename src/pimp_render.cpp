@@ -32,55 +32,58 @@
 
 // #define PRINT_PATTERNS
 
-inline void *get_ptr(const pimp_module_t *mod, unsigned int offset)
+#define STATIC static
+#define INLINE inline
+
+STATIC INLINE void *get_ptr(const pimp_module *mod, unsigned int offset)
 {
 	assert(mod != NULL);
 	return (void*)((char*)mod + offset);
 }
 
-inline int get_order(const pimp_module_t *mod, int i)
+STATIC INLINE int get_order(const pimp_module *mod, int i)
 {
 	assert(mod != NULL);
 	return ((char*)get_ptr(mod, mod->order_ptr))[i];
 }
 
-inline pimp_pattern_t *get_pattern(const pimp_module_t *mod, int i)
+STATIC INLINE pimp_pattern *get_pattern(const pimp_module *mod, int i)
 {
 	assert(mod != NULL);
-	return &((pimp_pattern_t*)get_ptr(mod, mod->pattern_ptr))[i];
+	return &((pimp_pattern*)get_ptr(mod, mod->pattern_ptr))[i];
 }
 
-inline pimp_pattern_entry_t *get_pattern_data(const pimp_module_t *mod, pimp_pattern_t *pat)
+STATIC INLINE pimp_pattern_entry *get_pattern_data(const pimp_module *mod, pimp_pattern *pat)
 {
 	assert(pat != NULL);
-	return (pimp_pattern_entry_t*)get_ptr(mod, pat->data_ptr);
+	return (pimp_pattern_entry*)get_ptr(mod, pat->data_ptr);
 }
 
-inline pimp_channel_t &get_channel(const pimp_module_t *mod, int i)
+STATIC INLINE pimp_channel &get_channel(const pimp_module *mod, int i)
 {
 	assert(mod != NULL);
-	return ((pimp_channel_t*)get_ptr(mod, mod->channel_ptr))[i];
+	return ((pimp_channel*)get_ptr(mod, mod->channel_ptr))[i];
 }
 
-inline pimp_instrument_t *get_instrument(const pimp_module_t *mod, int i)
+STATIC INLINE pimp_instrument *get_instrument(const pimp_module *mod, int i)
 {
 	assert(mod != NULL);
-	return &((pimp_instrument_t*)get_ptr(mod, mod->instrument_ptr))[i];
+	return &((pimp_instrument*)get_ptr(mod, mod->instrument_ptr))[i];
 }
 
-inline pimp_sample_t *get_sample(const pimp_module_t *mod, pimp_instrument_t *instr, int i)
+STATIC INLINE pimp_sample *get_sample(const pimp_module *mod, pimp_instrument *instr, int i)
 {
 	assert(instr != NULL);
-	return &((pimp_sample_t*)get_ptr(mod, instr->sample_ptr))[i];
+	return &((pimp_sample*)get_ptr(mod, instr->sample_ptr))[i];
 }
 
-inline pimp_envelope_t *get_vol_env(const pimp_module_t *mod, pimp_instrument_t *instr)
+STATIC INLINE pimp_envelope *get_vol_env(const pimp_module *mod, pimp_instrument *instr)
 {
 	assert(instr != NULL);
-	return (pimp_envelope_t*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
+	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
 }
 
-inline void set_bpm(pimp_mod_context *ctx, int bpm)
+STATIC INLINE void set_bpm(pimp_mod_context *ctx, int bpm)
 {
 	assert(ctx != NULL);
 	assert(bpm > 0);
@@ -89,7 +92,7 @@ inline void set_bpm(pimp_mod_context *ctx, int bpm)
 	ctx->tick_len = int((SAMPLERATE * 5) * (1 << 8)) / (bpm * 2);
 }
 
-void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, const u8 *sample_bank)
+void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank)
 {
 	assert(ctx != NULL);
 	
@@ -137,7 +140,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 
 	for (unsigned i = 0; i < mod->channel_count; ++i)
 	{
-		pimp_channel_t &c = get_channel(mod, i);
+		pimp_channel &c = get_channel(mod, i);
 		iprintf("%d %d %d\n", c.volume, c.pan, c.mute);
 	}
 
@@ -150,7 +153,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 	for (unsigned i = 0; i < mod->instrument_count; ++i)
 	{
 		if (i != 0x15) continue;
-		pimp_instrument_t *instr = get_instrument(mod, i);
+		pimp_instrument *instr = get_instrument(mod, i);
 		pimp_envelope_t *env = get_vol_env(mod, instr);
 //		iprintf("%p ", env);
 		if (env)
@@ -172,7 +175,7 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module_t *mod, cons
 }
 
 #ifdef PRINT_PATTERNS
-void print_pattern_entry(const pimp_pattern_entry_t &pe)
+void print_pattern_entry(const pimp_pattern_entry &pe)
 {
 	if (pe.note != 0)
 	{
@@ -189,9 +192,9 @@ void print_pattern_entry(const pimp_pattern_entry_t &pe)
 //	iprintf("%02X %02X %X%02X\t", pe.instrument, pe.volume_command, pe.effect_byte, pe.effect_parameter);
 }
 
-void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
+void print_pattern(const pimp_module *mod, pimp_pattern *pat)
 {
-	pimp_pattern_entry_t *pd = get_pattern_data(mod, pat);
+	pimp_pattern_entry *pd = get_pattern_data(mod, pat);
 
 	iprintf("%02x\n", pat->row_count);
 	
@@ -199,7 +202,7 @@ void print_pattern(const pimp_module_t *mod, pimp_pattern_t *pat)
 	{
 		for (unsigned j = 0; j < 4; ++j)
 		{
-			pimp_pattern_entry_t &pe = pd[i * mod->channel_count + j];
+			pimp_pattern_entry &pe = pd[i * mod->channel_count + j];
 			print_pattern_entry(pe);
 		}
 		iprintf("\n");
@@ -214,19 +217,19 @@ extern "C" void pimp_set_callback(pimp_callback in_callback)
 }
 
 
-void porta_up(pimp_channel_state_t &chan, s32 period_low_clamp)
+void porta_up(pimp_channel_state &chan, s32 period_low_clamp)
 {
 	chan.final_period -= chan.porta_speed;
 	if (chan.final_period < period_low_clamp) chan.final_period = period_low_clamp;
 }
 
-void porta_down(pimp_channel_state_t &chan, s32 period_high_clamp)
+void porta_down(pimp_channel_state &chan, s32 period_high_clamp)
 {
 	chan.final_period += chan.porta_speed;
 	if (chan.final_period > period_high_clamp) chan.final_period = period_high_clamp;
 }
 
-void porta_note(pimp_channel_state_t &chan)
+void porta_note(pimp_channel_state &chan)
 {
 	if (chan.final_period > chan.porta_target)
 	{
@@ -240,7 +243,7 @@ void porta_note(pimp_channel_state_t &chan)
 	}
 }
 
-unsigned eval_vol_env(pimp_channel_state_t &chan)
+unsigned eval_vol_env(pimp_channel_state &chan)
 {
 	assert(NULL != chan.vol_env);
 
@@ -299,10 +302,10 @@ void update_row(pimp_mod_context &ctx)
 	
 	for (u32 c = 0; c < ctx.mod->channel_count; ++c)
 	{
-		pimp_channel_state_t      &chan = ctx.channels[c];
+		pimp_channel_state      &chan = ctx.channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
-		const pimp_pattern_entry_t *note = &get_pattern_data(ctx.mod, ctx.curr_pattern)[ctx.curr_row * ctx.mod->channel_count + c];
+		const pimp_pattern_entry *note = &get_pattern_data(ctx.mod, ctx.curr_pattern)[ctx.curr_row * ctx.mod->channel_count + c];
 		
 #ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);
@@ -630,7 +633,7 @@ static void update_tick(pimp_mod_context &ctx)
 	
 	for (u32 c = 0; c < ctx.mod->channel_count; ++c)
 	{
-		pimp_channel_state_t &chan = ctx.channels[c];
+		pimp_channel_state &chan = ctx.channels[c];
 		volatile mixer::channel_t &mc   = mixer::channels[c];
 		
 		bool period_dirty = false;
@@ -816,8 +819,8 @@ void pimp_render(pimp_mod_context &ctx, s8 *buf, u32 samples)
 		int samples_to_mix = MIN(remainder, samples);
 		if (samples_to_mix != 0) mixer::mix(buf, samples_to_mix);
 		
-		buf += samples_to_mix;
-		samples -= samples_to_mix;
+		buf       += samples_to_mix;
+		samples   -= samples_to_mix;
 		remainder -= samples_to_mix;
 		
 		if (samples == 0) break;
