@@ -1,25 +1,3 @@
-#include <gba_console.h>
-#include <gba_dma.h>
-#include <gba_timers.h>
-#include <gba_video.h>
-#include <gba_interrupt.h>
-#include <gba_systemcalls.h>
-#include <gba_sound.h>
-
-#ifndef SNDA_L_ENABLE
-#define SNDA_VOL_50     (0<<2)
-#define SNDA_VOL_100    (1<<2)
-#define SNDB_VOL_50     (0<<3)
-#define SNDB_VOL_100    (1<<3)
-#define SNDA_R_ENABLE   (1<<8)
-#define SNDA_L_ENABLE   (1<<9)
-#define SNDA_RESET_FIFO (1<<11)
-#define SNDB_R_ENABLE   (1<<12)
-#define SNDB_L_ENABLE   (1<<13)
-#define SNDB_RESET_FIFO (1<<15)
-#define SOUND_ENABLE    (1<<7)
-#endif
-
 #include <stdio.h>
 #include <assert.h>
 

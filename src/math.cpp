@@ -1,14 +1,8 @@
-// #include <gba_base.h>
+#include "math.h"
+#include "pimp_types.h"
+
 #include <assert.h>
 #include <stdio.h>
-
-typedef unsigned char  u8;
-typedef   signed char  s8;
-typedef unsigned short u16;
-typedef   signed short s16;
-typedef unsigned int   u32;
-typedef   signed int   s32;
-#include "math.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

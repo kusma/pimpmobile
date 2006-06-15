@@ -1,7 +1,7 @@
 #ifndef MIXER_H
 #define MIXER_H
 
-#include <gba_base.h>
+#include "pimp_types.h"
 #include "config.h"
 
 namespace mixer

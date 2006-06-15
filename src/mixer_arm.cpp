@@ -4,8 +4,6 @@
 #include "mixer.h"
 #include "pimp_debug.h"
 
-#include <gba_base.h>
-#include <gba_video.h>
 #include <gba_interrupt.h>
 
 /*
