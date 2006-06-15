@@ -14,6 +14,18 @@ typedef unsigned long long u64;
 #define NULL ((void*)0)
 #endif
 
+#ifndef BOOL
+#define BOOL int
+#endif
+
+#ifndef TRUE
+#define TRUE ((BOOL)1)
+#endif
+
+#ifndef FALSE
+#define FALSE ((BOOL)0)
+#endif
+
 #ifndef STATIC
 #define STATIC static
 #endif

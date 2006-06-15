@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "../include/pimpmobile.h"
-#include "../src/mixer.h"
+#include "../src/pimp_mixer.h"
 #include "../src/config.h"
 #include "gbfs.h"
 
