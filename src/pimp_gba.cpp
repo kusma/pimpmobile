@@ -66,11 +66,11 @@ extern "C" int pimp_get_order()
 
 extern "C" void pimp_frame()
 {
-	static volatile bool locked = false;
-	if (true == locked) return; // whops, we're in the middle of filling. sorry.
-	locked = true;
+	static volatile BOOL locked = FALSE;
+	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
+	locked = TRUE;
 
 	__pimp_render(&__pimp_ctx, sound_buffers[sound_buffer_index], SOUND_BUFFER_SIZE);
 	
-	locked = false;
+	locked = FALSE;
 }

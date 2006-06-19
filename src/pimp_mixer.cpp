@@ -4,10 +4,10 @@
 #include <gba_systemcalls.h>
 #include <gba_dma.h>
 
-static s32 event_delta = 0;
-static s32 event_cursor = 0;
+STATIC s32 event_delta = 0;
+STATIC s32 event_cursor = 0;
 
-static BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
+STATIC BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 {
 	ASSERT(samples != 0);
 	
@@ -96,7 +96,7 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 	return TRUE;
 }
 
-u32 dc_offs = 0;
+STATIC u32 dc_offs = 0;
 
 void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
 {
@@ -151,7 +151,7 @@ void __pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
-static s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
+STATIC s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {

@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 #include "pimp_mixer.h"
 #include "pimp_debug.h"
 
+/* only needed to disable interrupts */
 #include <gba_interrupt.h>
 
 /*
@@ -18,20 +18,12 @@
 	the advantage over having separate loops is less iwram-usage.
 */
 
-/*
-
-the magic bug: is it caused by interrupting while not having a stack-pointer set up? if so, try to disable interrupts while mixing...
-
-helped on something, but not on all...
-
-*/
-
-static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+STATIC u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
-	assert(target != NULL);
-	assert(sample_data != NULL);
-	assert((samples & 7) == 0);
-	assert(samples != 0);
+	ASSERT(target != NULL);
+	ASSERT(sample_data != NULL);
+	ASSERT((samples & 7) == 0);
+	ASSERT(samples != 0);
 	
 	/* disable interrupts */
 	u32 ime = REG_IME;
@@ -44,7 +36,6 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 	MUL              1S+mI
 	MLA              1S+(m+1)I
 */
-//	iprintf("%d...", samples);
 	asm(
 "\
 	b .Ldataskip%=                          \n\
@@ -110,15 +101,15 @@ static u32 mix_simple(s32 *target, u32 samples, const u8 *sample_data, u32 vol, 
 }
 
 /* bugs here sometimes for some strange reason... ?? (magic bug2k?) */
-static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+STATIC u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	const u8 *old_sample_data = sample_data;
 	sample_data += (sample_cursor >> 12);
 
-	assert(target != NULL);
-	assert(sample_data != NULL);
-	assert((samples & 7) == 0);
-	assert(samples != 0);
+	ASSERT(target != NULL);
+	ASSERT(sample_data != NULL);
+	ASSERT((samples & 7) == 0);
+	ASSERT(samples != 0);
 
 	/* disable interrupts */
 	u32 ime = REG_IME;
@@ -200,8 +191,8 @@ static u32 mix_bresenham(s32 *target, u32 samples, const u8 *sample_data, u32 vo
 
 u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
-	assert(target != 0);
-	assert(sample_data != 0);
+	ASSERT(target != NULL);
+	ASSERT(sample_data != NULL);
 	
 	/* mix heading 0-7 samples (the innerloops are unrolled 8 times) */
 	for (unsigned i = samples & 7; i; --i)
@@ -229,8 +220,8 @@ u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u3
 
 void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 {
-	assert(target != NULL);
-	assert(source != NULL);
+	ASSERT(target != NULL);
+	ASSERT(source != NULL);
 	
 	register s32 *src = source;
 	register s8  *dst = target;

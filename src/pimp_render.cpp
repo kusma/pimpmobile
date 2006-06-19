@@ -9,6 +9,7 @@
 
 // #define PRINT_PATTERNS
 
+/* need to move these to a separate channel state header (?) */
 void porta_up(pimp_channel_state &chan, s32 period_low_clamp)
 {
 	chan.final_period -= chan.porta_speed;

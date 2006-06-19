@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
-#include "mixer.h"
-
-#include <gba_base.h>
+#include "pimp_mixer.h"
 
 u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
