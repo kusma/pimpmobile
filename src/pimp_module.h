@@ -55,8 +55,6 @@ STATIC INLINE pimp_pattern_entry *get_pattern_data(pimp_pattern *pat)
 	return (pimp_pattern_entry*)get_ptr(&pat->data_ptr);
 }
 
-void __pimp_module_set_pos(int row, int order);
-
 STATIC INLINE int __pimp_module_get_order(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);

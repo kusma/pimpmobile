@@ -10,7 +10,7 @@
 pimp_mod_context __pimp_ctx;
 pimp_mixer __pimp_mixer;
 
-static s8 sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s8  sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
 
 extern "C" void pimp_init(const void *module, const void *sample_bank)

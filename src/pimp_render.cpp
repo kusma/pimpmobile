@@ -10,10 +10,10 @@
 
 // #define PRINT_PATTERNS
 
-STATIC INLINE void set_bpm(pimp_mod_context *ctx, int bpm)
+void __pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
 {
-	assert(ctx != NULL);
-	assert(bpm > 0);
+	ASSERT(ctx != NULL);
+	ASSERT(bpm > 0);
 	
 	/* we're using 8 fractional-bits for the tick-length */
 	ctx->tick_len = int((SAMPLERATE * 5) * (1 << 8)) / (bpm * 2);
@@ -42,7 +42,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	
 	ctx->curr_pattern = __pimp_module_get_pattern(mod, __pimp_module_get_order(mod, ctx->curr_order));
-	set_bpm(ctx, ctx->mod->bpm);
+	__pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
 	for (unsigned i = 0; i < CHANNELS; ++i)
@@ -448,7 +448,7 @@ $f0-$ff   Tone porta
 			
 			case EFF_TEMPO:
 				if (note->effect_parameter < 0x20) ctx->curr_tempo = chan.effect_param;
-				else set_bpm(ctx, chan.effect_param);
+				else __pimp_mod_context_set_bpm(ctx, chan.effect_param);
 			break;
 			
 /*
