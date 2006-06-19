@@ -19,7 +19,7 @@ STATIC INLINE void set_bpm(pimp_mod_context *ctx, int bpm)
 	ctx->tick_len = int((SAMPLERATE * 5) * (1 << 8)) / (bpm * 2);
 }
 
-void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
+void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
 {
 	assert(ctx != NULL);
 	
@@ -41,7 +41,7 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 	
 	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	
-	ctx->curr_pattern = get_pattern(mod, get_order(mod, ctx->curr_order));
+	ctx->curr_pattern = __pimp_module_get_pattern(mod, __pimp_module_get_order(mod, ctx->curr_order));
 	set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
@@ -214,7 +214,7 @@ void update_row(pimp_mod_context *ctx)
 		
 		if (note->instrument > 0)
 		{
-			chan.instrument = get_instrument(ctx->mod, note->instrument - 1);
+			chan.instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
 			chan.sample  = get_sample(chan.instrument, chan.instrument->sample_map[note->note]);
 			chan.vol_env = get_vol_env(chan.instrument);
 			
@@ -402,7 +402,7 @@ $f0-$ff   Tone porta
 			case EFF_BREAK_ROW:
 				ctx->curr_order++;
 				ctx->curr_row = (chan.effect_param >> 4) * 10 + (chan.effect_param & 0xF) - 1;
-				ctx->curr_pattern = get_pattern(ctx->mod, get_order(ctx->mod, ctx->curr_order));
+				ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
 			break;
 			
 			case EFF_MULTI_FX:
@@ -510,7 +510,7 @@ $f0-$ff   Tone porta
 		ctx->curr_row = 0;
 		ctx->curr_order++;
 		if (ctx->curr_order >= ctx->mod->order_count) ctx->curr_order = ctx->mod->order_repeat;
-		ctx->curr_pattern = get_pattern(ctx->mod, get_order(ctx->mod, ctx->curr_order));
+		ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
 	}
 }
 
@@ -705,7 +705,7 @@ $f0-$ff   Tone porta
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
 #endif
 
-void pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
+void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
 	static int remainder = 0;
 	while (true)

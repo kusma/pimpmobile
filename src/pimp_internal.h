@@ -168,9 +168,9 @@ enum
 typedef struct
 {
 	/* some current-states */
-	pimp_instrument *instrument;
-	pimp_sample     *sample;
-	pimp_envelope   *vol_env;
+	const pimp_instrument *instrument;
+	const pimp_sample     *sample;
+	const pimp_envelope   *vol_env;
 
 	s32 period;
 	s32 final_period;

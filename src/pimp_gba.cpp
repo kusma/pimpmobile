@@ -15,7 +15,7 @@ static u32 sound_buffer_index = 0;
 
 extern "C" void pimp_init(const void *module, const void *sample_bank)
 {
-	pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
+	__pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
 
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
@@ -44,6 +44,10 @@ extern "C" void pimp_vblank()
 	sound_buffer_index ^= 1;
 }
 
+extern "C" void pimp_set_pos(int row, int order)
+{
+//	__pimp_module_set_pos(row, order);
+}
 
 extern "C" int pimp_get_row()
 {
@@ -61,7 +65,7 @@ extern "C" void pimp_frame()
 	if (true == locked) return; // whops, we're in the middle of filling. sorry.
 	locked = true;
 
-	pimp_render(&__pimp_ctx, sound_buffers[sound_buffer_index], SOUND_BUFFER_SIZE);
+	__pimp_render(&__pimp_ctx, sound_buffers[sound_buffer_index], SOUND_BUFFER_SIZE);
 	
 	locked = false;
 }

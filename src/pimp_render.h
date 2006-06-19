@@ -25,7 +25,7 @@ typedef struct
 	
 } pimp_mod_context;
 
-void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer);
-void pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples);
+void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer);
+void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples);
 
 #endif /* PIMP_RENDER */
