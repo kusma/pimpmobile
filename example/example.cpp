@@ -55,6 +55,7 @@ void play_next_file()
 	
 	pimp_close();
 	pimp_init(mod, sample_bank);
+	pimp_set_callback(callback);
 }
 
 int main()
@@ -74,7 +75,6 @@ int main()
 	file_count = gbfs_count_objs(fs);
 	sample_bank  = gbfs_get_obj(fs, "sample_bank.bin", 0);
 	
-	pimp_set_callback(callback);
 	play_next_file();
 
 	SetInterrupt(IE_VBL, vblank);

@@ -1,8 +1,6 @@
-#include "math.h"
 #include "pimp_types.h"
-
-#include <assert.h>
-#include <stdio.h>
+#include "pimp_math.h"
+#include "pimp_debug.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -28,10 +26,10 @@ const u8 __pimp_clz_lut[256] =
 
 
 #ifndef NO_LINEAR_PERIODS
-unsigned get_linear_period(int note, int fine_tune)
+unsigned __pimp_get_linear_period(int note, int fine_tune)
 {
-	assert(fine_tune >= -8);
-	assert(fine_tune <   8);
+	ASSERT(fine_tune >= -8);
+	ASSERT(fine_tune <   8);
 	
 	int xm_note = note - (12 * 1) - 1; // we extended our note-range with one octave.
 	
@@ -40,7 +38,7 @@ unsigned get_linear_period(int note, int fine_tune)
 }
 
 #include "linear_delta_lut.h"
-unsigned get_linear_delta(unsigned period)
+unsigned __pimp_get_linear_delta(unsigned period)
 {
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
@@ -56,11 +54,11 @@ unsigned get_linear_delta(unsigned period)
 
 #ifndef NO_AMIGA_PERIODS
 #include "amiga_period_lut.h"
-unsigned get_amiga_period(int note, int fine_tune)
+unsigned __pimp_get_amiga_period(int note, int fine_tune)
 {
 	fine_tune /= 8; // todo: interpolate instead?
-	assert(fine_tune >= -8);
-	assert(fine_tune <=  8);
+	ASSERT(fine_tune >= -8);
+	ASSERT(fine_tune <=  8);
 	
 	/* bias up one octave to prevent from negative values due to fine tune*/
 	unsigned index = 12 * 8 + note * 8 + fine_tune;
@@ -84,7 +82,7 @@ unsigned get_amiga_period(int note, int fine_tune)
 }
 
 #include "amiga_delta_lut.h"
-unsigned get_amiga_delta(unsigned period)
+unsigned __pimp_get_amiga_delta(unsigned period)
 {
 	unsigned shamt = clz16(period) - 1;
 	unsigned p = period << shamt;

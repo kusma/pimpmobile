@@ -1,6 +1,8 @@
 #ifndef PIMP_INSTRUMENT_H
 #define PIMP_INSTRUMENT_H
 
+#include "pimp_types.h"
+
 typedef struct
 {
 	u32 sample_ptr;

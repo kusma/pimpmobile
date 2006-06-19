@@ -17,9 +17,4 @@
  #define ASSERT(expr)
 #endif
 
-#include "pimp_module.h"
-
-void print_pattern_entry(const pimp_pattern_entry *pe);
-void print_pattern(const pimp_module *mod, pimp_pattern *pat);
-
 #endif /* PIMP_DEBUG_H */

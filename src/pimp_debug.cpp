@@ -2,6 +2,7 @@
 #include "pimp_internal.h"
 #include "pimp_debug.h"
 
+#if 0
 void print_pattern_entry(const pimp_pattern_entry *pe)
 {
 	ASSERT(pe != NULL);
@@ -38,3 +39,5 @@ void print_pattern(const pimp_module *mod, pimp_pattern *pat)
 		iprintf("\n");
 	}
 }
+
+#endif

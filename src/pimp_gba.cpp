@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 pimp_mod_context __pimp_ctx;
-pimp_mixer __pimp_mixer;
+pimp_mixer       __pimp_mixer;
 
 static s8  sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 sound_buffer_index = 0;
@@ -42,6 +42,11 @@ extern "C" void pimp_vblank()
 		REG_DMA1CNT = DMA_DST_FIXED | DMA_REPEAT | DMA32 | DMA_SPECIAL | DMA_ENABLE;
 	}
 	sound_buffer_index ^= 1;
+}
+
+extern "C" void pimp_set_callback(pimp_callback in_callback)
+{
+	__pimp_ctx.callback = in_callback;
 }
 
 extern "C" void pimp_set_pos(int row, int order)

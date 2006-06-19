@@ -1,5 +1,5 @@
-#ifndef MATH_H
-#define MATH_H
+#ifndef PIMP_MATH_H
+#define PIMP_MATH_H
 
 #include "config.h"
 
@@ -38,13 +38,13 @@ static inline unsigned clz8(unsigned input)
 
 
 #ifndef NO_LINEAR_PERIODS
-unsigned get_linear_delta(unsigned period);
-unsigned get_linear_period(int note, int fine_tune);
+unsigned __pimp_get_linear_delta(unsigned period);
+unsigned __pimp_get_linear_period(int note, int fine_tune);
 #endif
 
 #ifndef NO_AMIGA_PERIODS
-unsigned get_amiga_delta(unsigned period);
-unsigned get_amiga_period(int note, int fine_tune);
+unsigned __pimp_get_amiga_delta(unsigned period);
+unsigned __pimp_get_amiga_period(int note, int fine_tune);
 #endif
 
-#endif /* MATH_H */
+#endif /* PIMP_MATH_H */
