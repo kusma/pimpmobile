@@ -4,7 +4,7 @@
 
 #include <gba_base.h>
 
-u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	assert(target != 0);
 	assert(sample_data != 0);
@@ -20,7 +20,7 @@ u32 mixer::mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol,
 	return sample_cursor;
 }
 
-void mixer::clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
+void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 {
 	s32 high_clamp = 127 + dc_offs;
 	s32 low_clamp = -128 + dc_offs;

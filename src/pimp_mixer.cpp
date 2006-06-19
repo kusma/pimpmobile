@@ -3,37 +3,11 @@
 
 #include <gba_systemcalls.h>
 #include <gba_dma.h>
-#include <gba_timers.h>
 
-/*
-mixing:
+static s32 event_delta = 0;
+static s32 event_cursor = 0;
 
-for each chan
-	if looping && loop event (sample-stop is loop event)
-		event_cursor = event_point;
-		do {
-			do {
-				mix sample
-				event_cursor -= event_delta
-			}
-			while (event_cursor > 0)
-			
-			handle event
-		}
-		while (not all samples rendered)
-		
-		mix all samples in tick with loop-check
-	else
-		mix all samples
-	end if
-end for
-
-*/
-
-s32 event_delta = 0;
-s32 event_cursor = 0;
-
-BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
+static BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 {
 	ASSERT(samples != 0);
 	
@@ -124,7 +98,7 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 
 u32 dc_offs = 0;
 
-void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
+void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
 {
 	if (chan->volume < 1) return;
 	dc_offs += chan->volume * 128;
@@ -162,10 +136,10 @@ void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 sam
 		}
 	}
 	ASSERT(chan->sample_data != 0);
-	chan->sample_cursor = pimp_mixer_mix_samples(target, samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
+	chan->sample_cursor = __pimp_mixer_mix_samples(target, samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
 }
 
-void pimp_mixer_reset(pimp_mixer *mixer)
+void __pimp_mixer_reset(pimp_mixer *mixer)
 {
 	ASSERT(mixer != NULL);
 	
@@ -177,9 +151,9 @@ void pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
-s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
-void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
+void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {
 	ASSERT(samples > 0);
 	
@@ -191,9 +165,9 @@ void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 	for (u32 c = 0; c < CHANNELS; ++c)
 	{
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
-		if (NULL != chan->sample_data) pimp_mixer_mix_channel(chan, sound_mix_buffer, samples);
+		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, sound_mix_buffer, samples);
 	}
 	dc_offs >>= 8;
 
-	pimp_mixer_clip_samples(target, sound_mix_buffer, samples, dc_offs);
+	__pimp_mixer_clip_samples(target, sound_mix_buffer, samples, dc_offs);
 }

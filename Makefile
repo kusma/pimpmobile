@@ -32,7 +32,7 @@ OBJS = \
 	src/pimp_debug.o       \
 	src/pimp_mod_context.o \
 	src/pimp_math.iwram.o  \
-	src/mixer.iwram.o
+	src/pimp_mixer.iwram.o
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG

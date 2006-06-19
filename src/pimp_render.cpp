@@ -610,7 +610,7 @@ void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 	while (true)
 	{
 		int samples_to_mix = MIN(remainder, samples);
-		if (samples_to_mix != 0) pimp_mixer_mix(ctx->mixer, buf, samples_to_mix);
+		if (samples_to_mix != 0) __pimp_mixer_mix(ctx->mixer, buf, samples_to_mix);
 		
 		buf       += samples_to_mix;
 		samples   -= samples_to_mix;
