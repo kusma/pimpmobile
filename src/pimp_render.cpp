@@ -39,7 +39,7 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 	ctx->curr_bpm   = 125;
 	ctx->curr_tempo = 5;
 	
-	ctx->global_volume = 1 << 10; /* 24.8 fixed point */
+	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	
 	ctx->curr_pattern = get_pattern(mod, get_order(mod, ctx->curr_order));
 	set_bpm(ctx, ctx->mod->bpm);
@@ -199,7 +199,7 @@ void update_row(pimp_mod_context *ctx)
 		pimp_channel_state                &chan = ctx->channels[c];
 		volatile pimp_mixer_channel_state &mc   = ctx->mixer->channels[c];
 		
-		const pimp_pattern_entry *note = &get_pattern_data(ctx->mod, ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
+		const pimp_pattern_entry *note = &get_pattern_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
 		
 #ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);
@@ -215,8 +215,8 @@ void update_row(pimp_mod_context *ctx)
 		if (note->instrument > 0)
 		{
 			chan.instrument = get_instrument(ctx->mod, note->instrument - 1);
-			chan.sample  = get_sample(ctx->mod, chan.instrument, chan.instrument->sample_map[note->note]);
-			chan.vol_env = get_vol_env(ctx->mod, chan.instrument);
+			chan.sample  = get_sample(chan.instrument, chan.instrument->sample_map[note->note]);
+			chan.vol_env = get_vol_env(chan.instrument);
 			
 			chan.vol_env_node = 0;
 			chan.vol_env_tick = 0;
@@ -240,7 +240,7 @@ void update_row(pimp_mod_context *ctx)
 			}
 			else
 			{
-				chan.sample = get_sample(ctx->mod, chan.instrument, chan.instrument->sample_map[note->note]);
+				chan.sample = get_sample(chan.instrument, chan.instrument->sample_map[note->note]);
 				mc.sample_cursor = 0;
 				mc.sample_data = ctx->sample_bank + chan.sample->data_ptr;
 				mc.sample_length = chan.sample->length;
@@ -639,7 +639,7 @@ $f0-$ff   Tone porta
 							// TODO: replace with a note_on-function
 							if (chan.instrument != 0)
 							{
-								chan.sample = get_sample(ctx->mod, chan.instrument, chan.instrument->sample_map[chan.note]);
+								chan.sample = get_sample(chan.instrument, chan.instrument->sample_map[chan.note]);
 								mc.sample_cursor = 0;
 								mc.sample_data = ctx->sample_bank + chan.sample->data_ptr;
 								mc.sample_length = chan.sample->length;

@@ -4,6 +4,11 @@
 #include "pimp_types.h"
 #include "config.h"
 
+STATIC INLINE void *get_ptr(const unsigned int *offset)
+{
+	return (char*)offset + *offset;
+}
+
 typedef struct
 {
 	/* offset relative to sample-bank */
@@ -157,22 +162,6 @@ enum
 	FLAG_PORTA_NOTE_MEMORY       = (1 << 14),
 };
 
-typedef struct
-{
-	// this is a offset relative to the begining of the pimp_module_t-structure
-	u32 data_ptr;
-	
-	u16 row_count;
-} pimp_pattern;
-
-/* packed, because it's all bytes. no member-alignment or anything needed */
-typedef struct __attribute__((packed))
-{
-	u8 pan;
-	u8 volume;
-	u8 mute;
-} pimp_channel;
-
 #include "pimp_instrument.h"
 #include "pimp_envelope.h"
 
@@ -203,55 +192,5 @@ typedef struct
 	u8  retrig_tick;
 } pimp_channel_state;
 
-#include "pimp_module.h"
-#include "pimp_debug.h"
-
-STATIC INLINE void *get_ptr(const pimp_module *mod, unsigned int offset)
-{
-	ASSERT(mod != NULL);
-	return (void*)((char*)mod + offset);
-}
-
-STATIC INLINE int get_order(const pimp_module *mod, int i)
-{
-	ASSERT(mod != NULL);
-	return ((char*)get_ptr(mod, mod->order_ptr))[i];
-}
-
-STATIC INLINE pimp_pattern *get_pattern(const pimp_module *mod, int i)
-{
-	ASSERT(mod != NULL);
-	return &((pimp_pattern*)get_ptr(mod, mod->pattern_ptr))[i];
-}
-
-STATIC INLINE pimp_pattern_entry *get_pattern_data(const pimp_module *mod, pimp_pattern *pat)
-{
-	ASSERT(pat != NULL);
-	return (pimp_pattern_entry*)get_ptr(mod, pat->data_ptr);
-}
-
-STATIC INLINE pimp_channel &get_channel(const pimp_module *mod, int i)
-{
-	ASSERT(mod != NULL);
-	return ((pimp_channel*)get_ptr(mod, mod->channel_ptr))[i];
-}
-
-STATIC INLINE pimp_instrument *get_instrument(const pimp_module *mod, int i)
-{
-	ASSERT(mod != NULL);
-	return &((pimp_instrument*)get_ptr(mod, mod->instrument_ptr))[i];
-}
-
-STATIC INLINE pimp_sample *get_sample(const pimp_module *mod, pimp_instrument *instr, int i)
-{
-	ASSERT(instr != NULL);
-	return &((pimp_sample*)get_ptr(mod, instr->sample_ptr))[i];
-}
-
-STATIC INLINE pimp_envelope *get_vol_env(const pimp_module *mod, pimp_instrument *instr)
-{
-	ASSERT(instr != NULL);
-	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : ((char*)mod + instr->vol_env_ptr));
-}
 
 #endif /* PIMP_INTERNAL_H */

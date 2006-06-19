@@ -448,7 +448,7 @@ void dump_module(module_t *mod, const char *filename)
 			exit(1);
 		}
 		
-		*target = pointer_back_map[it->first];
+		*target = pointer_back_map[it->first] - it->second;
 	}
 	
 	FILE *fp = fopen(filename, "wb");

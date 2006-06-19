@@ -27,4 +27,20 @@ typedef struct
 
 } pimp_instrument;
 
+#include "pimp_internal.h"
+#include "pimp_debug.h"
+#include "pimp_envelope.h"
+
+STATIC INLINE pimp_sample *get_sample(pimp_instrument *instr, int i)
+{
+	ASSERT(instr != NULL);
+	return &((pimp_sample*)get_ptr(&instr->sample_ptr))[i];
+}
+
+STATIC INLINE pimp_envelope *get_vol_env(pimp_instrument *instr)
+{
+	ASSERT(instr != NULL);
+	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : get_ptr(&instr->vol_env_ptr));
+}
+
 #endif /* PIMP_INSTRUMENT_H */

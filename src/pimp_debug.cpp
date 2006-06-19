@@ -24,7 +24,7 @@ void print_pattern_entry(const pimp_pattern_entry *pe)
 
 void print_pattern(const pimp_module *mod, pimp_pattern *pat)
 {
-	pimp_pattern_entry *pd = get_pattern_data(mod, pat);
+	pimp_pattern_entry *pd = get_pattern_data(pat);
 
 	iprintf("row count: %02x\n", pat->row_count);
 	
