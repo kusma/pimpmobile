@@ -19,7 +19,7 @@ STATIC INLINE void set_bpm(pimp_mod_context *ctx, int bpm)
 	ctx->tick_len = int((SAMPLERATE * 5) * (1 << 8)) / (bpm * 2);
 }
 
-void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
+void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
 {
 	assert(ctx != NULL);
 	
@@ -28,15 +28,18 @@ void init_pimp_mod_context(pimp_mod_context *ctx, const pimp_module *mod, const 
 	ctx->mixer = mixer;
 	
 	/* setup default player-state */
-	ctx->tick_len = 0;
+	ctx->tick_len      = 0;
 	ctx->curr_tick_len = 0;
-	ctx->curr_row = 0;
-	ctx->curr_order = 0;
-	ctx->curr_bpm = 125;
+	
+	ctx->curr_row      = 0;
+	ctx->curr_order    = 0;
+	ctx->curr_pattern  = 0;
+	ctx->curr_tick     = 0;
+	
+	ctx->curr_bpm   = 125;
 	ctx->curr_tempo = 5;
-	ctx->curr_tick = 0;
+	
 	ctx->global_volume = 1 << 10; /* 24.8 fixed point */
-	ctx->curr_pattern = 0;
 	
 	ctx->curr_pattern = get_pattern(mod, get_order(mod, ctx->curr_order));
 	set_bpm(ctx, ctx->mod->bpm);

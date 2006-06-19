@@ -15,7 +15,7 @@ static u32 sound_buffer_index = 0;
 
 extern "C" void pimp_init(const void *module, const void *sample_bank)
 {
-	init_pimp_mod_context(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
+	pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
 
 	u32 zero = 0;
 	CpuFastSet(&zero, &sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
