@@ -36,59 +36,6 @@ void porta_note(pimp_channel_state &chan)
 	}
 }
 
-unsigned eval_vol_env(pimp_channel_state &chan)
-{
-	ASSERT(NULL != chan.vol_env);
-
-#if 0
-	/* find the current volume envelope node */
-	if (chan.vol_env_node = -1)
-	{
-		for (int i = 0; i < chan.vol_env->node_count - 1; ++i)
-		{
-			if (chan.vol_env->node_tick[i] <= chan.vol_env_tick)
-			{
-				chan.vol_env_node = i;
-				break;
-			}
-		}
-	}
-#endif
-
-	// TODO: sustain
-	
-	// the magnitude of the envelope at tick N:
-	// first, find the last node at or before tick N - its position is M
-	// then, the magnitude of the envelope at tick N is given by
-	// magnitude = node_magnitude[M] + ((node_delta[M] * (N-M)) >> 8)
-	
-	s32 delta = chan.vol_env->node_delta[chan.vol_env_node];
-	u32 internal_tick = chan.vol_env_tick - chan.vol_env->node_tick[chan.vol_env_node];
-	
-	int val = chan.vol_env->node_magnitude[chan.vol_env_node];
-	val += ((long long)delta * internal_tick) >> 9;
-	
-	chan.vol_env_tick++;
-
-	if (chan.vol_env_node < (chan.vol_env->node_count - 1))
-	{
-#if 1
-		if (chan.vol_env->flags & (1 << 1))
-		{
-			/* sustain loop */
-			chan.vol_env_tick = 0; // HACK: just used to make the BP06 demo tune play correctly
-		}
-		else 
-#endif
-		if (chan.vol_env_tick >= chan.vol_env->node_tick[chan.vol_env_node + 1])
-		{
-			chan.vol_env_node++;
-		}
-	}
-	
-	return val << 2;
-}
-
 void update_row(pimp_mod_context *ctx)
 {
 	ASSERT(mod != 0);
@@ -115,10 +62,10 @@ void update_row(pimp_mod_context *ctx)
 		{
 			chan.instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
 			chan.sample  = get_sample(chan.instrument, chan.instrument->sample_map[note->note]);
-			chan.vol_env = get_vol_env(chan.instrument);
 			
-			chan.vol_env_node = 0;
-			chan.vol_env_tick = 0;
+			chan.vol_env.env = get_vol_env(chan.instrument);
+			__pimp_envelope_reset(&chan.vol_env);
+			
 			chan.volume = chan.sample->volume;
 			volume_dirty = true;
 		}
@@ -392,10 +339,10 @@ $f0-$ff   Tone porta
 			}
 		}
 		
-		if (volume_dirty || chan.vol_env != 0)
+		if (volume_dirty || chan.vol_env.env != 0)
 		{
 			mc.volume = (chan.volume * ctx->global_volume) >> 8;
-			if (chan.vol_env != 0) mc.volume = (mc.volume * eval_vol_env(chan)) >> 8;
+			if (chan.vol_env.env != 0) mc.volume = (mc.volume * __pimp_envelope_sample(&chan.vol_env, true)) >> 8;
 		}
 	}
 
@@ -588,11 +535,11 @@ $f0-$ff   Tone porta
 			}
 		}
 		
-		if (volume_dirty || chan.vol_env != 0)
+		if (volume_dirty || chan.vol_env.env != 0)
 		{
 			DEBUG_PRINT(("setting volume to: %02X\n", chan.volume));
 			mc.volume = (chan.volume * ctx->global_volume) >> 8;
-			if (chan.vol_env != 0) mc.volume = (mc.volume * eval_vol_env(chan)) >> 8;
+			if (chan.vol_env.env != 0) mc.volume = (mc.volume * __pimp_envelope_sample(&chan.vol_env, true)) >> 8;
 		}
 	}
 	ctx->curr_tick++;

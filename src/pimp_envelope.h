@@ -1,6 +1,8 @@
 #ifndef PIMP_ENVELOPE_H
 #define PIMP_ENVELOPE_H
 
+#include "pimp_internal.h"
+
 typedef struct
 {
 	u16 node_tick[25];
@@ -12,5 +14,20 @@ typedef struct
 	u8 loop_start, loop_end;
 	u8 sustain_loop_start, sustain_loop_end;
 } pimp_envelope;
+
+typedef struct
+{
+	const pimp_envelope *env;
+	s8  current_node;
+	u32 current_tick;
+} pimp_envelope_state;
+
+STATIC INLINE void __pimp_envelope_reset(pimp_envelope_state *state)
+{
+	state->current_node = 0;
+	state->current_tick = 0;
+}
+
+int __pimp_envelope_sample(pimp_envelope_state *state, bool sustain);
 
 #endif /* PIMP_ENVELOPE_H */

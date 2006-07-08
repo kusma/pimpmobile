@@ -162,35 +162,4 @@ enum
 	FLAG_PORTA_NOTE_MEMORY       = (1 << 14),
 };
 
-#include "pimp_instrument.h"
-#include "pimp_envelope.h"
-
-typedef struct
-{
-	/* some current-states */
-	const pimp_instrument *instrument;
-	const pimp_sample     *sample;
-	const pimp_envelope   *vol_env;
-
-	s32 period;
-	s32 final_period;
-	s32 porta_target;
-	u32 vol_env_tick;
-	u16 porta_speed;
-	s8  volume_slide_speed;
-	u8  note_delay;
-	s8  volume;
-	u8  pan;
-
-	u8  note;
-	u8  effect;
-	u8  effect_param;
-	u8  volume_command;
-	
-	s8  vol_env_node;
-	u8  note_retrig;
-	u8  retrig_tick;
-} pimp_channel_state;
-
-
 #endif /* PIMP_INTERNAL_H */

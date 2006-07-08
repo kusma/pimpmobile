@@ -28,9 +28,11 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	
 	for (unsigned i = 0; i < CHANNELS; ++i)
 	{
-		ctx->channels[i].instrument = (const pimp_instrument*)NULL;
-		ctx->channels[i].sample     = (const pimp_sample*)    NULL;
-		ctx->channels[i].vol_env    = (const pimp_envelope*)  NULL;
+		pimp_channel_state *chan = &ctx->channels[i];
+		chan->instrument  = (const pimp_instrument*)NULL;
+		chan->sample      = (const pimp_sample*)    NULL;
+		chan->vol_env.env = (const pimp_envelope*)  NULL;
+		__pimp_envelope_reset(&chan->vol_env);
 	}
 	
 	ctx->callback = (pimp_callback)NULL;

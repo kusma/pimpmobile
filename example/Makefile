@@ -35,7 +35,8 @@ MODULES = \
 	eye.mod \
 	rhino.mod \
 	melkedemo2.mod \
-	hypermmx.xm
+	hypermmx.xm \
+	../testbench/env_sustain.xm
 
 BIN_MODULES = $(MODULES:=.bin)
 

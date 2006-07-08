@@ -29,6 +29,7 @@ THUMB = -mthumb
 OBJS = \
 	src/pimp_gba.o         \
 	src/pimp_render.o      \
+	src/pimp_envelope.o    \
 	src/pimp_debug.o       \
 	src/pimp_mod_context.o \
 	src/pimp_math.iwram.o  \
