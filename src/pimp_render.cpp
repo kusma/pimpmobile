@@ -10,19 +10,19 @@
 // #define PRINT_PATTERNS
 
 /* need to move these to a separate channel state header (?) */
-void porta_up(pimp_channel_state &chan, s32 period_low_clamp)
+STATIC void porta_up(pimp_channel_state &chan, s32 period_low_clamp)
 {
 	chan.final_period -= chan.porta_speed;
 	if (chan.final_period < period_low_clamp) chan.final_period = period_low_clamp;
 }
 
-void porta_down(pimp_channel_state &chan, s32 period_high_clamp)
+STATIC void porta_down(pimp_channel_state &chan, s32 period_high_clamp)
 {
 	chan.final_period += chan.porta_speed;
 	if (chan.final_period > period_high_clamp) chan.final_period = period_high_clamp;
 }
 
-void porta_note(pimp_channel_state &chan)
+STATIC void porta_note(pimp_channel_state &chan)
 {
 	if (chan.final_period > chan.porta_target)
 	{
@@ -34,6 +34,18 @@ void porta_note(pimp_channel_state &chan)
 		chan.final_period += chan.porta_speed;
 		if (chan.final_period > chan.porta_target) chan.final_period = chan.porta_target;
 	}
+}
+
+STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
+{
+	int volume = chan->volume;
+	
+	if (chan->vol_env.env != 0)
+	{
+		volume = (volume * __pimp_envelope_sample(&chan->vol_env)) >> 8;
+		__pimp_envelope_advance_tick(&chan->vol_env, true);
+	}
+	return volume;
 }
 
 void update_row(pimp_mod_context *ctx)
@@ -341,8 +353,7 @@ $f0-$ff   Tone porta
 		
 		if (volume_dirty || chan.vol_env.env != 0)
 		{
-			mc.volume = (chan.volume * ctx->global_volume) >> 8;
-			if (chan.vol_env.env != 0) mc.volume = (mc.volume * __pimp_envelope_sample(&chan.vol_env, true)) >> 8;
+			mc.volume = (__pimp_channel_get_volume(&chan) * ctx->global_volume) >> 8;
 		}
 	}
 
@@ -537,11 +548,10 @@ $f0-$ff   Tone porta
 		
 		if (volume_dirty || chan.vol_env.env != 0)
 		{
-			DEBUG_PRINT(("setting volume to: %02X\n", chan.volume));
-			mc.volume = (chan.volume * ctx->global_volume) >> 8;
-			if (chan.vol_env.env != 0) mc.volume = (mc.volume * __pimp_envelope_sample(&chan.vol_env, true)) >> 8;
+			mc.volume = (__pimp_channel_get_volume(&chan) * ctx->global_volume) >> 8;
 		}
 	}
+	
 	ctx->curr_tick++;
 }
 

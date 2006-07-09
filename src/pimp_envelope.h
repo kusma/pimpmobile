@@ -28,6 +28,7 @@ STATIC INLINE void __pimp_envelope_reset(pimp_envelope_state *state)
 	state->current_tick = 0;
 }
 
-int __pimp_envelope_sample(pimp_envelope_state *state, bool sustain);
+int __pimp_envelope_sample(pimp_envelope_state *state);
+void __pimp_envelope_advance_tick(pimp_envelope_state *state, bool sustain);
 
 #endif /* PIMP_ENVELOPE_H */

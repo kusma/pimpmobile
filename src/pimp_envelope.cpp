@@ -58,12 +58,10 @@ unsigned eval_vol_env(pimp_channel_state &chan)
 }
 #endif
 
-int __pimp_envelope_sample(pimp_envelope_state *state, bool sustain)
+int __pimp_envelope_sample(pimp_envelope_state *state)
 {
-	ASSERT(NULL != chan.vol_env);
+	ASSERT(NULL != state);
 
-	// TODO: sustain
-	
 	// the magnitude of the envelope at tick N:
 	// first, find the last node at or before tick N - its position is M
 	// then, the magnitude of the envelope at tick N is given by
@@ -75,11 +73,19 @@ int __pimp_envelope_sample(pimp_envelope_state *state, bool sustain)
 	int val = state->env->node_magnitude[state->current_node];
 	val += ((long long)delta * internal_tick) >> 9;
 	
+	return val << 2;
+}
+
+void __pimp_envelope_advance_tick(pimp_envelope_state *state, bool sustain)
+{
+	ASSERT(NULL != state);
+	
 	// advance a tick (TODO: move to separate function)
 	state->current_tick++;
 	iprintf("%d\n", state->current_tick);
 	if (state->current_node < (state->env->node_count - 1))
 	{
+		// TODO: sustain
 #if 0
 		if (chan.vol_env->flags & (1 << 1))
 		{
@@ -93,6 +99,4 @@ int __pimp_envelope_sample(pimp_envelope_state *state, bool sustain)
 			state->current_node++;
 		}
 	}
-	
-	return val << 2;
 }
