@@ -9,6 +9,8 @@ STATIC INLINE void *get_ptr(const unsigned int *offset)
 	return (char*)offset + *offset;
 }
 
+#define KEY_OFF 121
+
 typedef struct
 {
 	/* offset relative to sample-bank */

@@ -32,11 +32,12 @@ OBJS = \
 	libgbfs.o
 
 MODULES = \
-	eye.mod \
-	rhino.mod \
-	melkedemo2.mod \
-	hypermmx.xm \
 	../testbench/env_sustain.xm
+#	eye.mod \
+#	rhino.mod \
+#	melkedemo2.mod \
+#	hypermmx.xm \
+#	eastwing.xm \
 
 BIN_MODULES = $(MODULES:=.bin)
 

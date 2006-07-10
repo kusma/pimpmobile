@@ -17,6 +17,7 @@ typedef struct
 //	const pimp_envelope   *vol_env;
 
 	pimp_envelope_state vol_env;
+	bool sustain;
 
 	s32 period;
 	s32 final_period;
@@ -31,7 +32,6 @@ typedef struct
 	u8  effect;
 	u8  effect_param;
 	u8  volume_command;
-	u8  note_off;
 	
 //	u32 vol_env_tick;
 //	s8  vol_env_node;
