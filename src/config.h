@@ -8,7 +8,7 @@
 
 /* check the sample-rate calculator at http://www.pineight.com/gba/samplerates/ for more glitch-free samplerates */
 /* 0x4000100 = 0xFFFF, 0x4000102 = 0x0083 */
-#define SAMPLERATE (18157.16 * 2)
+#define SAMPLERATE (18157.16)
 
 /* only 130 bytes big, quite damn pleasing results */
 #define AMIGA_DELTA_LUT_LOG_SIZE 7

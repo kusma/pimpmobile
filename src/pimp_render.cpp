@@ -38,19 +38,28 @@ STATIC void porta_note(pimp_channel_state *chan)
 
 STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 {
+	/* FADEOUT:  */
+
 	int volume = chan->volume;
 	
 	if (chan->vol_env.env != 0)
 	{
 		volume = (volume * __pimp_envelope_sample(&chan->vol_env)) >> 8;
 		__pimp_envelope_advance_tick(&chan->vol_env, chan->sustain);
+		
+		volume = (volume * chan->fadeout) >> 16;
+		chan->fadeout -= chan->instrument->volume_fadeout;
+		if (chan->fadeout <= 0)
+		{
+			// TODO: kill sample
+			chan->fadeout = 0;
+		}
 	}
 	else
 	{
 		if (!chan->sustain) volume = 0;
 	}
 	
-//	if (chan->sustain == true) printf("%d\n", volume);
 	return volume;
 }
 
@@ -91,6 +100,7 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 				chan->vol_env.env = get_vol_env(chan->instrument);
 				__pimp_envelope_reset(&chan->vol_env);
 				chan->sustain = true;
+				chan->fadeout = 1 << 16;
 				
 				chan->volume = chan->sample->volume;
 				volume_dirty = true;
@@ -128,10 +138,8 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 					{
 						chan->period = __pimp_get_amiga_period(((s32)note->note) + chan->sample->rel_note, chan->sample->fine_tune);
 					}
+					
 					chan->final_period = chan->period;
-					
-					chan->sustain = true;
-					
 					period_dirty = true;
 				}
 			}

@@ -14,27 +14,23 @@ typedef struct
 	const pimp_instrument *instrument;
 	const pimp_sample     *sample;
 	
-//	const pimp_envelope   *vol_env;
-
 	pimp_envelope_state vol_env;
 	bool sustain;
 
 	s32 period;
 	s32 final_period;
 	s32 porta_target;
+	s32 fadeout;
 	u16 porta_speed;
 	s8  volume_slide_speed;
 	u8  note_delay;
 	s8  volume;
 	u8  pan;
-
+	
 	u8  note;
 	u8  effect;
 	u8  effect_param;
 	u8  volume_command;
-	
-//	u32 vol_env_tick;
-//	s8  vol_env_node;
 	
 	u8  note_retrig;
 	u8  retrig_tick;
