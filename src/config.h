@@ -24,4 +24,6 @@
 #define ASSERT_ENABLED
 #endif
 
+#define DEBUG_PRINTF_ENABLED
+
 #endif /* CONFIG_H */

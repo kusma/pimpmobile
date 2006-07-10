@@ -41,6 +41,8 @@ STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 	/* FADEOUT:  */
 
 	int volume = chan->volume;
+//	printf("%x\n", chan->volume);
+//	return chan->volume;
 	
 	if (chan->vol_env.env != 0)
 	{
@@ -184,11 +186,25 @@ $f0-$ff   Tone porta
 				else
 				{
 					chan->volume = note->volume_command - 0x10;
-					DEBUG_PRINT(("setting volume to: %02X\n", chan->volume));
+//					DEBUG_PRINT(("setting volume to: %02X\n", chan->volume));
 					volume_dirty = true;
 				}
 			break;
 			case 0x6: break;
+			case 0x7: break;
+			
+			case 0x8:
+				chan->volume -= chan->volume_command & 0xF;
+				if (chan->volume < 0) chan->volume = 0;
+				volume_dirty = true;
+			break;
+			
+			case 0x9:
+				chan->volume += chan->volume_command & 0xF;
+				if (chan->volume > 64) chan->volume = 64;
+				volume_dirty = true;
+			break;
+			
 			
 			default:
 				DEBUG_PRINT(("unsupported volume-command %02X\n", note->volume_command));
@@ -453,6 +469,9 @@ $f0-$ff   Tone porta
 				volume_dirty = true;
 			break;
 			
+			case 0x8: break;
+			case 0x9: break;
+			
 			default:
 				DEBUG_PRINT(("unsupported volume-command %02X\n", chan->volume_command));
 		}
@@ -571,6 +590,7 @@ $f0-$ff   Tone porta
 			}
 		}
 		
+//		if (c == 7) printf("%i\n", (volume_dirty) ? 1 : 0);
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
 			mc.volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
