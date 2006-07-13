@@ -9,6 +9,7 @@
 
 #ifdef ASSERT_ENABLED
  #include <stdlib.h>
+ #include <stdio.h>
  #define ASSERT(expr) \
 	do { \
 		if (!(expr)) iprintf("*** ASSERT FAILED %s AT (%s:%i)\n", #expr, __FILE__, __LINE__); \

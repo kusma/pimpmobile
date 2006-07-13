@@ -109,6 +109,7 @@ typedef enum
 	EFF_RETRIG_NOTE            = 0x9,
 	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
 	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
+	EFF_NOTE_CUT_AFTER_X_TICKS = 0xC,
 	EFF_NOTE_DELAY             = 0xD,
 /*
 		0x: Amiga filter on/off (ignored; according to everybody, it sucks)
