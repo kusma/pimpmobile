@@ -40,8 +40,14 @@ typedef struct
 {
 	u32 tick_len;
 	u32 curr_tick_len;
+
 	u32 curr_row;
 	u32 curr_order;
+	
+	/* used to delay row / order getters. usefull for demo-synching */
+	u32 report_row;
+	u32 report_order;
+	
 	u32 curr_bpm;
 	u32 curr_tempo;
 	u32 curr_tick;
@@ -60,5 +66,26 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 void __pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order);
 void __pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm);
 void __pimp_mod_context_set_tempo(pimp_mod_context *ctx, int tempo);
+
+static inline int __pimp_mod_context_get_row(pimp_mod_context *ctx)
+{
+	return ctx->report_row;
+}
+
+static inline int __pimp_mod_context_get_order(pimp_mod_context *ctx)
+{
+	return ctx->report_order;
+}
+
+static inline int __pimp_mod_context_get_bpm(pimp_mod_context *ctx)
+{
+	return ctx->curr_bpm;
+}
+
+static inline int __pimp_mod_context_get_tempo(pimp_mod_context *ctx)
+{
+	return ctx->curr_tempo;
+}
+
 
 #endif /* PIMP_MOD_CONTEXT_H */

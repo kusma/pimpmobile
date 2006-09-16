@@ -11,9 +11,8 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	/* setup default player-state */
 	ctx->tick_len      = 0;
 	ctx->curr_tick_len = 0;
-	
-	ctx->curr_row      = 0;
-	ctx->curr_order    = 0;
+	ctx->report_row   = ctx->curr_row   = 0;
+	ctx->report_order = ctx->curr_order = 0;
 	ctx->curr_pattern  = 0;
 	ctx->curr_tick     = 0;
 	
@@ -38,6 +37,16 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	ctx->callback = (pimp_callback)NULL;
 
 	__pimp_mixer_reset(ctx->mixer);
+}
+
+void __pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
+{
+	ASSERT(ctx != NULL);
+
+	ctx->curr_tick = 0;
+	ctx->curr_row = row;
+	ctx->curr_order = order;
+	ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
 }
 
 void __pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)

@@ -51,17 +51,17 @@ extern "C" void pimp_set_callback(pimp_callback in_callback)
 
 extern "C" void pimp_set_pos(int row, int order)
 {
-//	__pimp_module_set_pos(row, order);
+	__pimp_mod_context_set_pos(&__pimp_ctx, row, order);
 }
 
 extern "C" int pimp_get_row()
 {
-	return __pimp_ctx.curr_row;
+	return __pimp_mod_context_get_row(&__pimp_ctx);
 }
 
 extern "C" int pimp_get_order()
 {
-	return __pimp_ctx.curr_order;
+	return __pimp_mod_context_get_order(&__pimp_ctx);
 }
 
 extern "C" void pimp_frame()

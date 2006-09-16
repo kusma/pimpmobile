@@ -43,6 +43,7 @@ void pimp_frame(); /* call once each frame. doesn't need to be called in preciou
 /* get information about playback */
 int pimp_get_row();
 int pimp_get_order();
+void pimp_set_pos(int row, int order);
 
 /* callback system (for music sync) */
 typedef void (*pimp_callback)(int, int);

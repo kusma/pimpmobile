@@ -75,6 +75,9 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 {
 	ASSERT(ctx != 0);
 	
+	ctx->report_row   = ctx->curr_row;
+	ctx->report_order = ctx->curr_order;
+	
 	for (u32 c = 0; c < ctx->mod->channel_count; ++c)
 	{
 		pimp_channel_state *chan = &ctx->channels[c];
@@ -310,9 +313,11 @@ $f0-$ff   Tone porta
 			break;
 
 			case EFF_BREAK_ROW:
-				ctx->curr_order++;
-				ctx->curr_row = (chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF) - 1;
-				ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
+				__pimp_mod_context_set_pos(
+					ctx,
+					(chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF) - 1, // row
+					ctx->curr_order + 1 // order
+				);
 			break;
 			
 			case EFF_MULTI_FX:
