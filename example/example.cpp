@@ -84,7 +84,10 @@ int main()
 	{
 		VBlankIntrWait();
 		ScanKeys();
-		if (KeysDown() & KEY_A) play_next_file();
+		int keys = KeysDown();
+		if (keys & KEY_RIGHT) pimp_set_pos(0, pimp_get_order() + 1);
+		if (keys & KEY_LEFT)  pimp_set_pos(pimp_get_row() + 8, pimp_get_order());
+		if (keys & KEY_A) play_next_file();
 	}
 
 	pimp_close();
