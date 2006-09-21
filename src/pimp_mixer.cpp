@@ -4,6 +4,12 @@
 #include <gba_systemcalls.h>
 #include <gba_dma.h>
 
+/*
+	TODO: this all needs a rewrite.
+	next implementation should always keep track of the next loop-event for all active channels,
+	to make binary searching for hit-point easier.
+*/
+
 STATIC s32 event_delta = 0;
 STATIC s32 event_cursor = 0;
 
@@ -107,6 +113,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 	
 	while (samples > 0 && detect_loop_event(chan, samples) == true)
 	{
+		// TODO: iterative binary search here instead
 		do
 		{
 			ASSERT((chan->sample_cursor >> 12) < chan->sample_length);
@@ -135,6 +142,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 			return;
 		}
 	}
+	
 	ASSERT(chan->sample_data != 0);
 	chan->sample_cursor = __pimp_mixer_mix_samples(target, samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
 }

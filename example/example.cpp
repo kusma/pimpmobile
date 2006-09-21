@@ -3,6 +3,7 @@
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 #include <gba_input.h>
+#include <gba_timers.h>
 
 #ifndef REG_WAITCNT
 #define REG_WAITCNT (*(vu16*)(REG_BASE + 0x0204))
@@ -23,28 +24,56 @@ void callback(int a, int b)
 	fade = 255;
 }
 
+const void *mod;
+GBFS_FILE const* fs;
+const void *sample_bank = 0;
+int curr_file = 0;
+int file_count = 0;
+
 void vblank()
 {
 	pimp_vblank();
 	if (fade > 0) fade -= 8;
 	int f = (fade * fade) >> 8;
 
+	while (REG_VCOUNT != 0);
+
+	REG_TM2CNT_L = 0;
+	REG_TM2CNT_H = 0;
+	REG_TM2CNT_H = TIMER_START;
+//	BG_COLORS[0] = RGB8(31, 31, 0);
+	pimp_frame();
+//	BG_COLORS[0] = RGB8(0, 0, 0);
+	u32 value = REG_TM2CNT_L;
 	BG_COLORS[0] = RGB8(f, f, f);
 	
-	while (REG_VCOUNT != 0);
-	pimp_frame();
+	static int counter = 0;
+	
+	static int accum = 0;
+//	float val = float(value) / ((1 << 24) / 60);
+	accum += value;
+
+	counter++;
+	if (counter == 60)
+	{
+
+		printf("%d\n", accum);
+//		printf("%d.%02d\n", int(val * 100), int(val * 100 * 100));
+
+//		pimp_set_pos(0, 0);
+		pimp_close();
+		pimp_init(mod, sample_bank);
+
+		counter = 0;
+		accum = 0;
+	}
+	
+//	printf("%d\n", value);
 }
-
-
-GBFS_FILE const* fs;
-const void *sample_bank = 0;
-int curr_file = 0;
-int file_count = 0;
 
 void play_next_file()
 {
 	static char name[32];
-	const void *mod;
 
 	do
 	{

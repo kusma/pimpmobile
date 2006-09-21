@@ -32,8 +32,9 @@ OBJS = \
 	libgbfs.o
 
 MODULES = \
-	../testbench/env_sustain.xm
-#	eye.mod \
+	melkedemo2.mod \
+	eye.mod
+#	../testbench/env_sustain.xm \
 #	rhino.mod \
 #	melkedemo2.mod \
 #	hypermmx.xm \

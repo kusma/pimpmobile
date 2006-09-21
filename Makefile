@@ -45,6 +45,7 @@ else
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
 	OBJS     += src/mixer_arm.iwram.o
+	OBJS     += src/mixer_arm_asm.o
 #	OBJS     += src/mixer_portable.iwram.o
 endif
 
@@ -83,6 +84,9 @@ lib/libpimpmobile.a: $(OBJS)
 
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+
+%.o: %.s
+	$(CC) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
 %.iwram.s: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(ARM) -c $< -o $@
