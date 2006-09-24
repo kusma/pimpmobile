@@ -175,7 +175,8 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
 		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, sound_mix_buffer, samples);
 	}
-	dc_offs >>= 8;
 
+	dc_offs >>= 8;
+	
 	__pimp_mixer_clip_samples(target, sound_mix_buffer, samples, dc_offs);
 }

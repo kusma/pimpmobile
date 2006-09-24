@@ -196,13 +196,14 @@ u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u3
 	ASSERT(target != NULL);
 	ASSERT(sample_data != NULL);
 #if 1
-	u32 ime = REG_IME;
-	REG_IME = 0;
+//	u32 ime = REG_IME;
+//	REG_IME = 0;
 	
-	sample_cursor = __pimp_mixer_mix_samples_asm(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);
+	sample_cursor = __pimp_mixer_mix_samples_asm(target, samples, sample_data, vol, sample_cursor, sample_cursor_delta);	
+//	printf("%d\n", REG_IME);
 
 	/* restore interrupt state */
-	REG_IME = ime;
+//	REG_IME = ime;
 	return sample_cursor;
 #endif
 

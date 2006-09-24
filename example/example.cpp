@@ -61,8 +61,8 @@ void vblank()
 //		printf("%d.%02d\n", int(val * 100), int(val * 100 * 100));
 
 //		pimp_set_pos(0, 0);
-		pimp_close();
-		pimp_init(mod, sample_bank);
+	//	pimp_close();
+//		pimp_init(mod, sample_bank);
 
 		counter = 0;
 		accum = 0;
