@@ -45,9 +45,9 @@ unsigned __pimp_get_linear_delta(unsigned period)
 	unsigned octave_period = p % (12 * 16 * 4);
 	unsigned delta = linear_delta_lut[octave_period] << octave;
 
-	// BEHOLD: the expression of the devil
-	// this compiles to one arm-instruction
-	delta = ((long long)delta * unsigned((1.0 / SAMPLERATE) * (1 << 3) * (1ULL << 32)) + (1ULL << 31)) >> 32;
+	/* BEHOLD: the expression of the devil (this compiles to one arm-instruction) */
+	const unsigned int scale = (unsigned int)((1.0 / SAMPLERATE) * (1 << 3) * (1ULL << 32));
+	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
 	return delta;
 }
 #endif /* NO_LINEAR_PERIODS */
@@ -97,9 +97,9 @@ unsigned __pimp_get_amiga_delta(unsigned period)
 	if (shamt > AMIGA_DELTA_LUT_FRAC_BITS) delta <<= shamt - AMIGA_DELTA_LUT_FRAC_BITS;
 	else delta >>= AMIGA_DELTA_LUT_FRAC_BITS - shamt;
 
-	// BEHOLD: the expression of the devil 2.0
-	// this compiles to one arm-instruction
-	delta = ((long long)delta * unsigned(((1.0 / SAMPLERATE) * (1 << 6)) * (1LL << 32)) + (1ULL << 31)) >> 32;
+	/* BEHOLD: the expression of the devil 2.0 (this compiles to one arm-instruction) */
+	const unsigned int scale = (unsigned int)(((1.0 / SAMPLERATE) * (1 << 6)) * (1LL << 32));
+	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
 	
 	return delta;
 }

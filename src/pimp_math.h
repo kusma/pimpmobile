@@ -4,6 +4,10 @@
 #include "pimp_config.h"
 #include "pimp_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const unsigned char __pimp_clz_lut[256];
 
 STATIC INLINE unsigned clz(unsigned input)
@@ -46,6 +50,10 @@ unsigned __pimp_get_linear_period(int note, int fine_tune);
 #ifndef NO_AMIGA_PERIODS
 unsigned __pimp_get_amiga_delta(unsigned period);
 unsigned __pimp_get_amiga_period(int note, int fine_tune);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* PIMP_MATH_H */
