@@ -1,9 +1,6 @@
 #include "pimp_mixer.h"
 #include "pimp_debug.h"
 
-#include <gba_systemcalls.h>
-#include <gba_dma.h>
-
 /*
 	TODO: this all needs a rewrite.
 	next implementation should always keep track of the next loop-event for all active channels,
@@ -111,7 +108,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 	
 	ASSERT(samples > 0);
 	
-	while (samples > 0 && detect_loop_event(chan, samples) == true)
+	while (samples > 0 && detect_loop_event(chan, samples) == TRUE)
 	{
 		// TODO: iterative binary search here instead
 		do
@@ -130,7 +127,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 		
 		ASSERT(samples >= 0);
 		
-		if (process_loop_event(chan) == false)
+		if (process_loop_event(chan) == FALSE)
 		{
 			// the sample has stopped, we need to fill the rest of the buffer with the dc-offset, so it doesn't ruin our unsigned mixing-thing
 			while (samples--)
@@ -149,9 +146,10 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 
 void __pimp_mixer_reset(pimp_mixer *mixer)
 {
+	u32 c;
 	ASSERT(mixer != NULL);
 	
-	for (u32 c = 0; c < CHANNELS; ++c)
+	for (c = 0; c < CHANNELS; ++c)
 	{
 		mixer->channels[c].sample_data = 0;
 		mixer->channels[c].sample_cursor = 0;
@@ -159,23 +157,22 @@ void __pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
-STATIC s32 sound_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
+STATIC s32 sound_mix_buffer[SOUND_BUFFER_SIZE] __attribute__((section(".iwram")));
 
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {
+	u32 c;
 	ASSERT(samples > 0);
 	
-	// zero out the sample-buffer
-	u32 zero = 0;
-	CpuFastSet(&zero, sound_mix_buffer, DMA_SRC_FIXED | (samples));
-
+	__pimp_mixer_clear(sound_mix_buffer, samples);
+	
 	dc_offs = 0;
-	for (u32 c = 0; c < CHANNELS; ++c)
+	for (c = 0; c < CHANNELS; ++c)
 	{
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
 		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, sound_mix_buffer, samples);
 	}
-
+	
 	dc_offs >>= 8;
 	
 	__pimp_mixer_clip_samples(target, sound_mix_buffer, samples, dc_offs);

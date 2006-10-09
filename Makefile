@@ -77,6 +77,12 @@ lib/libpimpmobile.a: $(OBJS)
 %.a:
 	$(AR) $(ARFLAGS) $@ $?
 
+%.iwram.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+
 %.iwram.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
