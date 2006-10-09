@@ -2,6 +2,7 @@
 
 void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
 {
+	int i;
 	ASSERT(ctx != NULL);
 	
 	ctx->mod = mod;
@@ -25,7 +26,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	__pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
-	for (unsigned i = 0; i < CHANNELS; ++i)
+	for (i = 0; i < CHANNELS; ++i)
 	{
 		pimp_channel_state *chan = &ctx->channels[i];
 		chan->instrument  = (const pimp_instrument*)NULL;
@@ -55,5 +56,6 @@ void __pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
 	ASSERT(bpm > 0);
 	
 	/* we're using 8 fractional-bits for the tick-length */
-	ctx->tick_len = int((SAMPLERATE * 5) * (1 << 8)) / (bpm * 2);
+	const int temp = (int)((SAMPLERATE * 5) * (1 << 8));
+	ctx->tick_len = temp / (bpm * 2);
 }

@@ -8,6 +8,10 @@
 #include "pimp_instrument.h"
 #include "pimp_envelope.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
 	/* some current-states */
@@ -15,7 +19,7 @@ typedef struct
 	const pimp_sample     *sample;
 	
 	pimp_envelope_state vol_env;
-	bool sustain;
+	BOOL sustain;
 
 	s32 period;
 	s32 final_period;
@@ -87,5 +91,8 @@ static inline int __pimp_mod_context_get_tempo(pimp_mod_context *ctx)
 	return ctx->curr_tempo;
 }
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PIMP_MOD_CONTEXT_H */
