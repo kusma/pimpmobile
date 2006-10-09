@@ -69,8 +69,8 @@ debug:
 bin/converter:
 	make -C converter
 
-bin/lut_gen: lut_gen.cpp src/math.cpp src/config.h
-	g++ lut_gen.cpp src/math.cpp -o bin/lut_gen
+bin/lut_gen: lut_gen.cpp src/pimp_math.cpp src/pimp_config.h
+	g++ $^ -o $@
 
 lib/libpimpmobile.a: $(OBJS)
 

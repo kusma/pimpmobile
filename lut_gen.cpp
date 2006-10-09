@@ -12,15 +12,8 @@
 #include <math.h>
 #include <typeinfo>
 
-#include "src/config.h" // get the current config
-
-typedef unsigned char  u8;
-typedef   signed char  s8;
-typedef unsigned short u16;
-typedef   signed short s16;
-typedef unsigned int   u32;
-typedef   signed int   s32;
-#include "src/math.h"
+#include "src/pimp_config.h" // get the current config
+#include "src/pimp_math.h"
 
 void error(const char *reason)
 {
@@ -66,21 +59,23 @@ void print_lut(FILE *fp, T *lut, size_t size)
 int main(int argc, char *argv[])
 {
 
+#if 0
+	/* generate */
 	for (unsigned o = 0; o < 1; ++o)
 	{
 		for (unsigned n = 0; n < 2; ++n)
 		{
 			for (int fine_tune = -8; fine_tune < 8; ++fine_tune)
 			{
-				printf("%d, ", get_amiga_period(n + o * 12, fine_tune) / 4);
-	//			printf("%f\n", delta1);
+				printf("%d, ", __pimp_get_amiga_period(n + o * 12, fine_tune) / 4);
 			}
 		}
 		printf("\n");
 	}
 	return 0;
+#endif
 
-	/* todo: use some flags and stuff to decide what to dump and to what filename */
+	/* TODO: use some flags and stuff to decide what to dump and to what filename */
 	if (1)
 	{
 		// generate a lut for linear frequencies
@@ -110,7 +105,6 @@ int main(int argc, char *argv[])
 		// now dump it
 		FILE *fp = fopen("src/amiga_delta_lut.h", "wb");
 		if (!fp) error("failed to open out-file");
-		
 		fprintf(fp, "const u16 amiga_delta_lut[%d] =\n{\n\t", ARRAY_SIZE(amiga_freq_lut));
 		PRINT_LUT(fp, amiga_freq_lut);
 		fprintf(fp, "\n};\n\n");
