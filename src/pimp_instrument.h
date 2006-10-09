@@ -32,6 +32,7 @@ typedef struct
 #include "pimp_internal.h"
 #include "pimp_debug.h"
 #include "pimp_envelope.h"
+#include "pimp_sample.h"
 
 STATIC INLINE pimp_sample *get_sample(const pimp_instrument *instr, int i)
 {

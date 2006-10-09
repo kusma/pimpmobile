@@ -11,39 +11,6 @@ STATIC INLINE void *get_ptr(const unsigned int *offset)
 
 #define KEY_OFF 121
 
-typedef struct
-{
-	/* offset relative to sample-bank */
-	u32 data_ptr;
-
-	u32 length;
-	u32 loop_start;
-	u32 loop_length;
-	
-/*
-	IT ONLY (later)
-	u32 sustain_loop_start;
-	u32 sustain_loop_end;
-*/
-	s16 fine_tune;
-	s16 rel_note;
-
-	u8  volume;
-	u8  loop_type;
-	u8  pan;
-	
-	u8 vibrato_speed;
-	u8 vibrato_depth;
-	u8 vibrato_sweep;
-	u8 vibrato_waveform;
-
-/*
-	IT ONLY (later)
-	u8  sustain_loop_type;
-*/
-
-} pimp_sample;
-
 typedef enum
 {
 	EFF_NONE                    = 0x00,
