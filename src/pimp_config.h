@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef PIMP_CONFIG_H
+#define PIMP_CONFIG_H
 
 #define CYCLES_PR_FRAME 280896
 
@@ -27,4 +27,4 @@
 #define DEBUG_PRINTF_ENABLED
 // #define ASSERT_ENABLED
 
-#endif /* CONFIG_H */
+#endif /* PIMP_CONFIG_H */
