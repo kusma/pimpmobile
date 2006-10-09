@@ -4,15 +4,15 @@
 
 u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
+	int i;
 	assert(target != 0);
 	assert(sample_data != 0);
 
-	for (unsigned i = samples; i; --i)
+	for (i = 0; i < samples; ++i)
 	{
-		register s32 samp = sample_data[sample_cursor >> 12];
+		s32 samp = sample_data[sample_cursor >> 12];
 		sample_cursor += sample_cursor_delta;
-		*target++ += samp * vol;
-		samples--;
+		target[i] += samp * vol;
 	}
 	
 	return sample_cursor;
@@ -20,21 +20,16 @@ u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u3
 
 void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 {
-	s32 high_clamp = 127 + dc_offs;
-	s32 low_clamp = -128 + dc_offs;
-	
+	int i;
 	assert(target != NULL);
 	assert(source != NULL);
 	
-	for (unsigned i = samples; i; --i)
+	for (i = 0; i < samples; ++i)
 	{
-		s32 samp = *source++;
-		samp -= dc_offs << 8;
-		samp >>= 6;
-//		s32 samp = (*source++) >> 8;
-//		samp -= dc_offs;
+		s32 samp = source[i];
+		samp = (samp >> 8) - dc_offs;
 		if (samp >  127) samp =  127;
 		if (samp < -128) samp = -128;
-		*target++ = samp;
+		target[i] = samp;
 	}
 }
