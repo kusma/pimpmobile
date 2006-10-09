@@ -5,10 +5,12 @@
 
 STATIC int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
 {
+	int i;
+	
 	ASSERT(NULL != env);
 	ASSERT(tick >= 0);
 	
-	for (int i = 1; i < env->node_count; ++i)
+	for (i = 1; i < env->node_count; ++i)
 	{
 		if (env->node_tick[i] > tick)
 		{
@@ -21,6 +23,9 @@ STATIC int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
 
 int __pimp_envelope_sample(pimp_envelope_state *state)
 {
+	s32 delta;
+	u32 internal_tick;
+	
 	ASSERT(NULL != state);
 
 	/* the magnitude of the envelope at tick N:
@@ -29,8 +34,8 @@ int __pimp_envelope_sample(pimp_envelope_state *state)
 	 * magnitude = node_magnitude[M] + ((node_delta[M] * (N - M)) >> 8)
 	 */
 	
-	s32 delta = state->env->node_delta[state->current_node];
-	u32 internal_tick = state->current_tick - state->env->node_tick[state->current_node];
+	delta = state->env->node_delta[state->current_node];
+	internal_tick = state->current_tick - state->env->node_tick[state->current_node];
 	
 	int val = state->env->node_magnitude[state->current_node];
 	val += ((long long)delta * internal_tick) >> 9;
@@ -38,7 +43,7 @@ int __pimp_envelope_sample(pimp_envelope_state *state)
 	return val << 2;
 }
 
-void __pimp_envelope_advance_tick(pimp_envelope_state *state, bool sustain)
+void __pimp_envelope_advance_tick(pimp_envelope_state *state, BOOL sustain)
 {
 	ASSERT(NULL != state);
 	
@@ -46,7 +51,7 @@ void __pimp_envelope_advance_tick(pimp_envelope_state *state, bool sustain)
 	state->current_tick++;
 	
 	/* check for sustain loop */
-	if ((state->env->flags & (1 << 1)) && (sustain == true))
+	if ((state->env->flags & (1 << 1)) && (sustain == TRUE))
 	{
 		if (state->current_tick >= state->env->sustain_loop_end)
 		{
