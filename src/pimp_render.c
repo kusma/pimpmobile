@@ -73,15 +73,19 @@ STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 
 STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 {
+	u32 c;
 	ASSERT(ctx != 0);
 	
 	ctx->report_row   = ctx->curr_row;
 	ctx->report_order = ctx->curr_order;
 	
-	for (u32 c = 0; c < ctx->mod->channel_count; ++c)
+	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
+		BOOL period_dirty = FALSE;
+		BOOL volume_dirty = FALSE;
+		
 		pimp_channel_state *chan = &ctx->channels[c];
-		volatile pimp_mixer_channel_state &mc   = ctx->mixer->channels[c];
+		volatile pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
 		const pimp_pattern_entry *note = &get_pattern_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
 		
@@ -93,13 +97,10 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		chan->effect_param     = note->effect_parameter;
 		chan->volume_command   = note->volume_command;
 		
-		bool period_dirty = false;
-		bool volume_dirty = false;
-		
 		if (note->note == KEY_OFF)
 		{
-			chan->sustain = false;
-			volume_dirty  = true; // we need to update volume if note off killed note
+			chan->sustain = FALSE;
+			volume_dirty  = TRUE; // we need to update volume if note off killed note
 		}
 		else
 		{
@@ -110,11 +111,11 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 				
 				chan->vol_env.env = get_vol_env(chan->instrument);
 				__pimp_envelope_reset(&chan->vol_env);
-				chan->sustain = true;
+				chan->sustain = TRUE;
 				chan->fadeout = 1 << 16;
 				
 				chan->volume = chan->sample->volume;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			}
 			
 			if (note->note > 0)
@@ -131,19 +132,19 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 						/* TODO: this should be handeled in the converter, and as an assert. */
 						
 						// stupid musician, tried to play an empty instrument...
-						mc.sample_data = NULL;
-						mc.sample_cursor = 0;
-						mc.sample_cursor_delta = 0;
+						mc->sample_data = NULL;
+						mc->sample_cursor = 0;
+						mc->sample_cursor_delta = 0;
 					}
 					else
 					{
 						chan->sample = get_sample(chan->instrument, chan->instrument->sample_map[note->note]);
-						mc.sample_cursor = 0;
-						mc.sample_data = ctx->sample_bank + chan->sample->data_ptr;
-						mc.sample_length = chan->sample->length;
-						mc.loop_type = (pimp_mixer_loop_type)chan->sample->loop_type;
-						mc.loop_start = chan->sample->loop_start;
-						mc.loop_end = chan->sample->loop_start + chan->sample->loop_length;
+						mc->sample_cursor = 0;
+						mc->sample_data = ctx->sample_bank + chan->sample->data_ptr;
+						mc->sample_length = chan->sample->length;
+						mc->loop_type = (pimp_mixer_loop_type)chan->sample->loop_type;
+						mc->loop_start = chan->sample->loop_start;
+						mc->loop_end = chan->sample->loop_start + chan->sample->loop_length;
 						
 						if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 						{
@@ -155,18 +156,18 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 						}
 						
 						chan->final_period = chan->period;
-						period_dirty = true;
+						period_dirty = TRUE;
 					}
 				}
 				
 				if (chan->effect == EFF_SAMPLE_OFFSET)
 				{
-					mc.sample_cursor = (chan->effect_param * 256) << 12;
+					mc->sample_cursor = (chan->effect_param * 256) << 12;
 					
-					if (mc.sample_cursor > (mc.sample_length << 12))
+					if (mc->sample_cursor > (mc->sample_length << 12))
 					{
-						if (ctx->mod->flags & FLAG_SAMPLE_OFFSET_CLAMP) mc.sample_cursor = mc.sample_length << 12;
-						else mc.sample_data = NULL; // kill sample
+						if (ctx->mod->flags & FLAG_SAMPLE_OFFSET_CLAMP) mc->sample_cursor = mc->sample_length << 12;
+						else mc->sample_data = NULL; // kill sample
 					}
 				}
 
@@ -176,7 +177,7 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		if (note->instrument > 0)
 		{
 			chan->volume = chan->sample->volume;
-			volume_dirty = true;
+			volume_dirty = TRUE;
 		}
 
 		switch (note->volume_command >> 4)
@@ -213,7 +214,7 @@ $f0-$ff   Tone porta
 				{
 					chan->volume = note->volume_command - 0x10;
 //					DEBUG_PRINT(("setting volume to: %02X\n", chan->volume));
-					volume_dirty = true;
+					volume_dirty = TRUE;
 				}
 			break;
 			case 0x6: break;
@@ -222,13 +223,13 @@ $f0-$ff   Tone porta
 			case 0x8:
 				chan->volume -= chan->volume_command & 0xF;
 				if (chan->volume < 0) chan->volume = 0;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			case 0x9:
 				chan->volume += chan->volume_command & 0xF;
 				if (chan->volume > 64) chan->volume = 64;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			
@@ -309,7 +310,7 @@ $f0-$ff   Tone porta
 			case EFF_SET_VOLUME:
 				chan->volume = chan->effect_param;
 				if (chan->volume > 64) chan->volume = 64;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 
 			case EFF_BREAK_ROW:
@@ -327,12 +328,12 @@ $f0-$ff   Tone porta
 
 					case EFF_FINE_PORTA_UP:
 						porta_up(chan, ctx->mod->period_low_clamp);
-						period_dirty = true;
+						period_dirty = TRUE;
 					break;
 					
 					case EFF_FINE_PORTA_DOWN:
 						porta_down(chan, ctx->mod->period_high_clamp);
-						period_dirty = true;
+						period_dirty = TRUE;
 					break;
 					
 					case EFF_RETRIG_NOTE:
@@ -342,13 +343,13 @@ $f0-$ff   Tone porta
 					case EFF_FINE_VOLUME_SLIDE_UP:
 						chan->volume += chan->effect_param & 0xF;
 						if (chan->volume > 64) chan->volume = 64;
-						volume_dirty = true;
+						volume_dirty = TRUE;
 					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
 						chan->volume -= chan->effect_param & 0xF;
 						if (chan->volume < 0) chan->volume = 0;
-						volume_dirty = true;
+						volume_dirty = TRUE;
 					break;
 					
 					case EFF_NOTE_DELAY:
@@ -399,17 +400,17 @@ $f0-$ff   Tone porta
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc.sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
 			}
 			else
 			{
-				mc.sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
 			}
 		}
 		
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
-			mc.volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
+			mc->volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
 		}
 	}
 
@@ -430,6 +431,7 @@ $f0-$ff   Tone porta
 
 STATIC void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
 {
+	u32 c;
 	if (ctx->mod == NULL) return; // no module active (sound-effects can still be playing, though)
 
 	if (ctx->curr_tick == ctx->curr_tempo)
@@ -439,13 +441,12 @@ STATIC void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
 		return;
 	}
 	
-	for (u32 c = 0; c < ctx->mod->channel_count; ++c)
+	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
-		pimp_channel_state *chan = &ctx->channels[c];
-		pimp_mixer_channel_state &mc   = ctx->mixer->channels[c];
-		
-		bool period_dirty = false;
-		bool volume_dirty = false;
+		pimp_channel_state       *chan = &ctx->channels[c];
+		pimp_mixer_channel_state *mc   = &ctx->mixer->channels[c];
+		BOOL period_dirty = FALSE;
+		BOOL volume_dirty = FALSE;
 		
 		switch (chan->volume_command >> 4)
 		{
@@ -475,13 +476,13 @@ $f0-$ff   Tone porta
 			case 0x6:
 				chan->volume -= chan->volume_command & 0xF;
 				if (chan->volume < 0) chan->volume = 0;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			case 0x7:
 				chan->volume += chan->volume_command & 0xF;
 				if (chan->volume > 64) chan->volume = 64;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			case 0x8: break;
@@ -497,17 +498,17 @@ $f0-$ff   Tone porta
 			
 			case EFF_PORTA_UP:
 				porta_up(chan, ctx->mod->period_low_clamp);
-				period_dirty = true;
+				period_dirty = TRUE;
 			break;
 			
 			case EFF_PORTA_DOWN:
 				porta_down(chan, ctx->mod->period_high_clamp);
-				period_dirty = true;
+				period_dirty = TRUE;
 			break;
 			
 			case EFF_PORTA_NOTE:
 				porta_note(chan);
-				period_dirty = true;
+				period_dirty = TRUE;
 			break;
 			
 			case EFF_VIBRATO:
@@ -515,13 +516,13 @@ $f0-$ff   Tone porta
 			
 			case EFF_PORTA_NOTE_VOLUME_SLIDE:
 				porta_note(chan);
-				period_dirty = true;
+				period_dirty = TRUE;
 				
 				/* todo: move to a separate function */
 				chan->volume += chan->volume_slide_speed;
 				if (chan->volume > 64) chan->volume = 64;
 				if (chan->volume < 0) chan->volume = 0;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			case EFF_SAMPLE_OFFSET: break;
@@ -530,7 +531,7 @@ $f0-$ff   Tone porta
 				chan->volume += chan->volume_slide_speed;
 				if (chan->volume > 64) chan->volume = 64;
 				if (chan->volume < 0) chan->volume = 0;
-				volume_dirty = true;
+				volume_dirty = TRUE;
 			break;
 			
 			case EFF_MULTI_FX:
@@ -542,7 +543,7 @@ $f0-$ff   Tone porta
 						chan->retrig_tick++;
 						if (chan->retrig_tick == chan->note_retrig)
 						{
-							mc.sample_cursor = 0;
+							mc->sample_cursor = 0;
 							chan->retrig_tick = 0;
 						}
 					break;
@@ -559,12 +560,12 @@ $f0-$ff   Tone porta
 							if (chan->instrument != 0)
 							{
 								chan->sample = get_sample(chan->instrument, chan->instrument->sample_map[chan->note]);
-								mc.sample_cursor = 0;
-								mc.sample_data = ctx->sample_bank + chan->sample->data_ptr;
-								mc.sample_length = chan->sample->length;
-								mc.loop_type = (pimp_mixer_loop_type)chan->sample->loop_type;
-								mc.loop_start = chan->sample->loop_start;
-								mc.loop_end = chan->sample->loop_start + chan->sample->loop_length;
+								mc->sample_cursor = 0;
+								mc->sample_data = ctx->sample_bank + chan->sample->data_ptr;
+								mc->sample_length = chan->sample->length;
+								mc->loop_type = (pimp_mixer_loop_type)chan->sample->loop_type;
+								mc->loop_start = chan->sample->loop_start;
+								mc->loop_end = chan->sample->loop_start + chan->sample->loop_length;
 								
 								if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 								{
@@ -575,7 +576,7 @@ $f0-$ff   Tone porta
 									chan->period = __pimp_get_amiga_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
 								}
 								chan->final_period = chan->period;
-								period_dirty = true;
+								period_dirty = TRUE;
 							}
 						}
 					break;
@@ -586,7 +587,7 @@ $f0-$ff   Tone porta
 				chan->retrig_tick++;
 				if (chan->retrig_tick == chan->note_retrig)
 				{
-					mc.sample_cursor = 0;
+					mc->sample_cursor = 0;
 					chan->retrig_tick = 0;
 				}
 			break;
@@ -599,18 +600,18 @@ $f0-$ff   Tone porta
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc.sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
 			}
 			else
 			{
-				mc.sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
 			}
 		}
 		
 //		if (c == 7) printf("%i\n", (volume_dirty) ? 1 : 0);
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
-			mc.volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
+			mc->volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
 		}
 	}
 	
@@ -627,7 +628,7 @@ $f0-$ff   Tone porta
 void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
 	static int remainder = 0;
-	while (true)
+	while (TRUE)
 	{
 		int samples_to_mix = MIN(remainder, samples);
 		if (samples_to_mix != 0) __pimp_mixer_mix(ctx->mixer, buf, samples_to_mix);
