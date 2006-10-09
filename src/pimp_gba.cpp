@@ -75,7 +75,7 @@ extern "C" void pimp_frame()
 	locked = FALSE;
 }
 
-void __pimp_mixer_clear(void *target, int samples)
+extern "C" void __pimp_mixer_clear(void *target, int samples)
 {
 	u32 zero = 0;
 	CpuFastSet(&zero, target, DMA_SRC_FIXED | (samples));
