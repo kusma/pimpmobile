@@ -15,7 +15,7 @@
 
 #include "../include/pimpmobile.h"
 #include "../src/pimp_mixer.h"
-#include "../src/config.h"
+#include "../src/pimp_config.h"
 #include "gbfs.h"
 
 int fade = 0;

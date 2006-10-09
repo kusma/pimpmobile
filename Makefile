@@ -39,12 +39,12 @@ ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g3 -ggdb
 	CFLAGS   += -g3 -ggdb
-	OBJS     += src/mixer_portable.o
+	OBJS     += src/pimp_mixer_portable.o
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
-	OBJS     += src/mixer_arm_asm.o
+	OBJS     += src/pimp_mixer_arm.o
 endif
 
 	

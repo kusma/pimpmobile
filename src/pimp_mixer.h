@@ -2,7 +2,7 @@
 #define PIMP_MIXER_H
 
 #include "pimp_types.h"
-#include "config.h"
+#include "pimp_config.h"
 
 typedef enum
 {
@@ -32,7 +32,15 @@ typedef struct
 void __pimp_mixer_reset(pimp_mixer *mixer);
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 
-extern "C" u32  __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);
-extern "C" void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+u32  __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);
+void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PIMP_MIXER_H */

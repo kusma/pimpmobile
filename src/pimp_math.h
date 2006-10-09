@@ -1,7 +1,7 @@
 #ifndef PIMP_MATH_H
 #define PIMP_MATH_H
 
-#include "config.h"
+#include "pimp_config.h"
 
 extern const unsigned char __pimp_clz_lut[256];
 
