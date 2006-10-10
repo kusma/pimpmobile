@@ -1,3 +1,8 @@
+/* pimp_gba.c -- GameBoy Advance c-interface for Pimpmobile
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <gba_base.h>
 
 #define PIMP_TYPES_H /* prevent pimp_types.h from being included */

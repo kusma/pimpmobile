@@ -1,3 +1,8 @@
+/* pimp_mixer_clip_arm.S -- ARM assembly optimized sample clipping code
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 @ samples to align = 3 - (DST & 3)
 
 .clipper_align_jumptable: @ used to align the pointer

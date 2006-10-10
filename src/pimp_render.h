@@ -1,3 +1,8 @@
+/* pimp_render.h -- Interface for the actual audio-rendering in Pimpmobile
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef PIMP_RENDER
 #define PIMP_RENDER
 

@@ -1,3 +1,8 @@
+/* pimp_base.h -- Some base defines used in Pimpmobile
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef PIMP_BASE_H
 #define PIMP_BASE_H
 

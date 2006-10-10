@@ -1,3 +1,8 @@
+/* pimp_mixer.h -- The state and interface for the various mixers
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef PIMP_MIXER_H
 #define PIMP_MIXER_H
 

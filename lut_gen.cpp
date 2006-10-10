@@ -1,5 +1,10 @@
+/* lut_gen.cpp -- Look-up table generator for Pimpmobile
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 /*
-	this is the lut-generator for pimpmobile.
+	This is the lut-generator for pimpmobile.
 	
 	the delta-luts are dependant on the sample-rate, and must be re-generated
 	whenever the sample-rate-config has changed.
@@ -60,23 +65,23 @@ int main(int argc, char *argv[])
 {
 
 #if 0
-	/* generate */
-	for (unsigned o = 0; o < 1; ++o)
 	{
-		for (unsigned n = 0; n < 2; ++n)
+		/* generate amiga period table */
+		for (unsigned o = 0; o < 1; ++o)
 		{
-			for (int fine_tune = -8; fine_tune < 8; ++fine_tune)
+			for (unsigned n = 0; n < 2; ++n)
 			{
-				printf("%d, ", __pimp_get_amiga_period(n + o * 12, fine_tune) / 4);
+				for (int fine_tune = -8; fine_tune < 8; ++fine_tune)
+				{
+					printf("%d, ", __pimp_get_amiga_period(n + o * 12, fine_tune) / 4);
+				}
 			}
+			printf("\n");
 		}
-		printf("\n");
+		return 0;
 	}
-	return 0;
 #endif
 
-	/* TODO: use some flags and stuff to decide what to dump and to what filename */
-	if (1)
 	{
 		// generate a lut for linear frequencies
 		for (unsigned i = 0; i < 12 * 64; ++i)
@@ -93,7 +98,6 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 
-	if (1)
 	{
 		// generate a lut for amiga frequencies
 		for (unsigned i = 0; i < (AMIGA_DELTA_LUT_SIZE / 2) + 1; ++i)

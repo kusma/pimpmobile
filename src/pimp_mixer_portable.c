@@ -1,3 +1,8 @@
+/* pimp_mixer_portable.c -- A portable audio mixer
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdlib.h>
 #include <assert.h>
 #include "pimp_mixer.h"

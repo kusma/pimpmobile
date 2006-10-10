@@ -1,3 +1,8 @@
+/* pimp_types.h -- Base types for use internally in Pimpmobile
+ * Copyright (C) 2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef PIMP_TYPES_H
 #define PIMP_TYPES_H
 

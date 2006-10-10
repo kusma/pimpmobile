@@ -1,3 +1,8 @@
+/* pimp_mixer.c -- High level mixer code
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include "pimp_mixer.h"
 #include "pimp_debug.h"
 

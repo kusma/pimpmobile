@@ -1,3 +1,8 @@
+/* pimp_envelope.h -- Envelope routines
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include "pimp_envelope.h"
 #include "pimp_debug.h"
 
