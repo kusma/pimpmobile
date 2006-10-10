@@ -1,3 +1,6 @@
+#include <gba_base.h>
+
+#define PIMP_TYPES_H /* prevent pimp_types.h from being included */
 #include "pimp_render.h"
 
 #include <gba_dma.h>
@@ -13,7 +16,7 @@ pimp_mixer       __pimp_mixer;
 STATIC s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 STATIC u32 __pimp_sound_buffer_index = 0;
 
-extern "C" void pimp_init(const void *module, const void *sample_bank)
+void pimp_init(const void *module, const void *sample_bank)
 {
 	__pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
 
@@ -23,16 +26,16 @@ extern "C" void pimp_init(const void *module, const void *sample_bank)
 	REG_SOUNDCNT_X = (1 << 7);
 	
 	/* setup timer-shit */
-	REG_TM0CNT_L = (1 << 16) - int((1 << 24) / SAMPLERATE);
+	REG_TM0CNT_L = (1 << 16) - (int)((1 << 24) / SAMPLERATE);
 	REG_TM0CNT_H = TIMER_START;
 }
 
-extern "C" void pimp_close()
+void pimp_close()
 {
 	REG_SOUNDCNT_X = 0;
 }
 
-extern "C" void pimp_vblank()
+void pimp_vblank()
 {
 	if (__pimp_sound_buffer_index == 0)
 	{
@@ -44,27 +47,27 @@ extern "C" void pimp_vblank()
 	__pimp_sound_buffer_index ^= 1;
 }
 
-extern "C" void pimp_set_callback(pimp_callback in_callback)
+void pimp_set_callback(pimp_callback in_callback)
 {
 	__pimp_ctx.callback = in_callback;
 }
 
-extern "C" void pimp_set_pos(int row, int order)
+void pimp_set_pos(int row, int order)
 {
 	__pimp_mod_context_set_pos(&__pimp_ctx, row, order);
 }
 
-extern "C" int pimp_get_row()
+int pimp_get_row()
 {
 	return __pimp_mod_context_get_row(&__pimp_ctx);
 }
 
-extern "C" int pimp_get_order()
+int pimp_get_order()
 {
 	return __pimp_mod_context_get_order(&__pimp_ctx);
 }
 
-extern "C" void pimp_frame()
+void pimp_frame()
 {
 	static volatile BOOL locked = FALSE;
 	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
@@ -75,7 +78,7 @@ extern "C" void pimp_frame()
 	locked = FALSE;
 }
 
-extern "C" void __pimp_mixer_clear(void *target, int samples)
+void __pimp_mixer_clear(void *target, int samples)
 {
 	u32 zero = 0;
 	CpuFastSet(&zero, target, DMA_SRC_FIXED | (samples));

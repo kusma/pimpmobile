@@ -1,7 +1,7 @@
 #ifndef PIMP_MIXER_H
 #define PIMP_MIXER_H
 
-#include "pimp_types.h"
+#include "pimp_base.h"
 #include "pimp_config.h"
 
 #ifdef __cplusplus

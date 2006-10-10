@@ -1,7 +1,7 @@
 #ifndef PIMP_INTERNAL_H
 #define PIMP_INTERNAL_H
 
-#include "pimp_types.h"
+#include "pimp_base.h"
 #include "pimp_config.h"
 
 STATIC INLINE void *get_ptr(const unsigned int *offset)

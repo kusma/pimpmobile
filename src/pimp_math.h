@@ -2,7 +2,7 @@
 #define PIMP_MATH_H
 
 #include "pimp_config.h"
-#include "pimp_types.h"
+#include "pimp_base.h"
 
 #ifdef __cplusplus
 extern "C" {
