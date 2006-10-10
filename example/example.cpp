@@ -1,3 +1,8 @@
+/* example.cpp -- Pimpmobile GameBoy Advance example
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <gba_console.h>
 #include <gba_video.h>
 #include <gba_interrupt.h>
