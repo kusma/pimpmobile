@@ -91,13 +91,4 @@ lib/libpimpmobile.a: $(OBJS)
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
-%.o: %.s
-	$(CC) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@ -MMD -MF $(@:.o=.d)
-
-%.iwram.s: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(ARM) -c $< -o $@
-
-%.s: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(THUMB) -c $< -o $@
-
 -include $(OBJS:.o=.d)
