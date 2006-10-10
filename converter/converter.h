@@ -1,3 +1,8 @@
+/* converter.h -- Pimpmobile converter toplevel header
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdio.h>
 
 typedef unsigned char  u8;

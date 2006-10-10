@@ -1,3 +1,8 @@
+/* converter_xm.cpp -- FastTracker XM converting code
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

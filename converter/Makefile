@@ -1,4 +1,6 @@
 # Makefile for pimpmobile module player file converter
+# Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+# For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
 CC      = gcc
 CXX     = g++

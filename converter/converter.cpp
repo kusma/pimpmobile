@@ -1,3 +1,8 @@
+/* converter.cpp -- Pimpmobile converter toplevel code
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+ 
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>

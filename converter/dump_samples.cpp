@@ -1,3 +1,8 @@
+/* dump_samples.cpp -- Sample data dumper
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stddef.h>
