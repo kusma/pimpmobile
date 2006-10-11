@@ -35,46 +35,33 @@ const void *sample_bank = 0;
 int curr_file = 0;
 int file_count = 0;
 
-void vblank()
+int accum = 0;
+void mix()
 {
-	pimp_vblank();
-	if (fade > 0) fade -= 8;
-	int f = (fade * fade) >> 8;
-
-	while (REG_VCOUNT != 0);
-
 	REG_TM2CNT_L = 0;
 	REG_TM2CNT_H = 0;
 	REG_TM2CNT_H = TIMER_START;
-//	BG_COLORS[0] = RGB8(31, 31, 0);
+	pimp_vblank();
 	pimp_frame();
-//	BG_COLORS[0] = RGB8(0, 0, 0);
 	u32 value = REG_TM2CNT_L;
-	BG_COLORS[0] = RGB8(f, f, f);
-	
-	static int counter = 0;
-	
-	static int accum = 0;
-//	float val = float(value) / ((1 << 24) / 60);
 	accum += value;
+}
 
-	counter++;
-	if (counter == 60)
-	{
-		float percent = float(accum * 100) / (1 << 24);
-		
-		printf("cpu: %d.%03d%% (%d c/f)\n", int(percent), int(percent * 1000) % 1000, accum / 60);
-//		printf("%d.%02d\n", int(val * 100), int(val * 100 * 100));
+void report()
+{
+	float percent = float(accum * 100) / (1 << 24);
+	iprintf("cpu: %d.%03d%% (%d c/f)\n", int(percent), int(percent * 1000) % 1000, accum / 60);
+	accum = 0;
+}
 
-//		pimp_set_pos(0, 0);
-	//	pimp_close();
-//		pimp_init(mod, sample_bank);
+void timer3()
+{
+	report();
+}
 
-		counter = 0;
-		accum = 0;
-	}
-	
-//	printf("%d\n", value);
+void vblank()
+{
+	mix();
 }
 
 void play_next_file()
@@ -112,6 +99,11 @@ int main()
 	
 	play_next_file();
 
+	SetInterrupt(IE_TIMER3, timer3);
+	EnableInterrupt(IE_TIMER3);
+	REG_TM3CNT_L = 0;
+	REG_TM3CNT_H = TIMER_START | TIMER_IRQ | 2;
+	
 	SetInterrupt(IE_VBL, vblank);
 	EnableInterrupt(IE_VBL);
 	
@@ -124,6 +116,7 @@ int main()
 		if (keys & KEY_LEFT)  pimp_set_pos(pimp_get_row() + 8, pimp_get_order());
 		if (keys & KEY_A) play_next_file();
 	}
-
+	
 	pimp_close();
+	return 0;
 }
