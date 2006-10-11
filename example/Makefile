@@ -57,7 +57,7 @@ else
 	CFLAGS   += -O3 -fomit-frame-pointer
 endif
 	
-.PHONY: all clean run debug
+.PHONY: all clean run
 
 all: $(TARGET)
 
@@ -66,10 +66,6 @@ clean:
 
 run: $(TARGET)
 	$(GBAEMU) $(TARGET)
-
-debug: $(TARGET:.gba=.elf)
-	$(DEVKITPRO)/insight/bin/arm-elf-insight.exe &
-	$(DEVKITPRO)/vba/VisualBoyAdvance-SDL.exe -Gtcp:55555 example.elf
 
 data.gbfs: sample_bank.bin $(BIN_MODULES)
 
