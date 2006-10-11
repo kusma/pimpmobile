@@ -3,13 +3,6 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
-/*
-	This is the lut-generator for pimpmobile.
-	
-	the delta-luts are dependant on the sample-rate, and must be re-generated
-	whenever the sample-rate-config has changed.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +10,10 @@
 #include <math.h>
 #include <typeinfo>
 
-#include "src/pimp_config.h" // get the current config
-#include "src/pimp_math.h"
+/* The amiga delta look-up table are dependent on the AMIGA_DELTA_LUT_SIZE-define
+ * in src/pimp_config.h, and must be regenerated whenever it changes
+ */
+#include "src/pimp_config.h"
 
 void error(const char *reason)
 {
@@ -154,6 +149,7 @@ int main(int argc, char *argv[])
 #endif
 
 #if 0
+	/* some code from a lameass attempt at some cheap dithering code. sounded like crap ;) */
 	for (unsigned i = 0; i < 304; ++i)
 	{
 		float r;
