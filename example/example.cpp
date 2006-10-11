@@ -61,8 +61,9 @@ void vblank()
 	counter++;
 	if (counter == 60)
 	{
-
-		printf("%d\n", accum);
+		float percent = float(accum * 100) / (1 << 24);
+		
+		printf("cpu: %d.%03d%% (%d c/f)\n", int(percent), int(percent * 1000) % 1000, accum / 60);
 //		printf("%d.%02d\n", int(val * 100), int(val * 100 * 100));
 
 //		pimp_set_pos(0, 0);
@@ -96,7 +97,7 @@ int main()
 {
 //	REG_WAITCNT = 0x46d6; // lets set some cool waitstates...
 	REG_WAITCNT = 0x46da; // lets set some cool waitstates...
-
+	
 	InitInterrupt();
 	EnableInterrupt(IE_VBL);
 	consoleInit(0, 4, 0, NULL, 0, 15);
