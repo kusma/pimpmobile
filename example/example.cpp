@@ -19,15 +19,7 @@
 #include <string.h>
 
 #include "../include/pimpmobile.h"
-#include "../src/pimp_mixer.h"
-#include "../src/pimp_config.h"
 #include "gbfs.h"
-
-int fade = 0;
-void callback(int a, int b)
-{
-	fade = 255;
-}
 
 const void *mod;
 GBFS_FILE const* fs;
@@ -77,7 +69,6 @@ void play_next_file()
 	
 	pimp_close();
 	pimp_init(mod, sample_bank);
-	pimp_set_callback(callback);
 }
 
 int main()
