@@ -23,6 +23,7 @@
 // #define IRQ_SAFE
 #define USE_BRESENHAM_MIXER
 // #define NO_MIXING
+// #define NO_CLIPPING
 
 .stack_store:
 .word 0
@@ -315,18 +316,21 @@ __pimp_mixer_mix_samples:
 
 
 
-//	target, sound_mix_buffer, samples, dc_offs
-
 .clipper_jumptable:
 .word .clip0
 .word .clip1
 .word .clip2
 .word .clip3
 
-
+//	target, sound_mix_buffer, samples, dc_offs
 .global __pimp_mixer_clip_samples
 __pimp_mixer_clip_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack
+
+#ifdef NO_CLIPPING
+	ldmfd sp!, {r4-r12, lr} @ restore rest of registers
+	bx lr                   @ return to caller
+#endif
 	
 	@ find how many samples to fixup
 	and r4, r2, #3
