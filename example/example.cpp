@@ -76,8 +76,8 @@ int main()
 //	REG_WAITCNT = 0x46d6; // lets set some cool waitstates...
 	REG_WAITCNT = 0x46da; // lets set some cool waitstates...
 	
-	InitInterrupt();
-	EnableInterrupt(IE_VBL);
+	irqInit();
+	irqEnable(IRQ_VBLANK);
 	consoleInit(0, 4, 0, NULL, 0, 15);
 
 	BG_COLORS[0] = RGB5(0, 0, 0);
@@ -90,19 +90,19 @@ int main()
 	
 	play_next_file();
 
-	SetInterrupt(IE_TIMER3, timer3);
-	EnableInterrupt(IE_TIMER3);
+	irqSet(IRQ_TIMER3, timer3);
+	irqEnable(IRQ_TIMER3);
 	REG_TM3CNT_L = 0;
 	REG_TM3CNT_H = TIMER_START | TIMER_IRQ | 2;
 	
-	SetInterrupt(IE_VBL, vblank);
-	EnableInterrupt(IE_VBL);
+	irqSet(IRQ_VBLANK, vblank);
+	irqEnable(IRQ_VBLANK);
 	
 	while (1)
 	{
 		VBlankIntrWait();
-		ScanKeys();
-		int keys = KeysDown();
+		scanKeys();
+		int keys = keysDown();
 		if (keys & KEY_RIGHT) pimp_set_pos(0, pimp_get_order() + 1);
 		if (keys & KEY_LEFT)  pimp_set_pos(pimp_get_row() + 8, pimp_get_order());
 		if (keys & KEY_A) play_next_file();
