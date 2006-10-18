@@ -3,6 +3,11 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
+.text
+.section .iwram
+.arm
+.align 2
+
 @ samples to align = 3 - (DST & 3)
 
 .clipper_align_jumptable: @ used to align the pointer

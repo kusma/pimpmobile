@@ -339,14 +339,14 @@ __pimp_mixer_clip_samples:
 	adr	r5, .clipper_jumptable
 	ldr	pc, [r5, r4, lsl #2]
 
-.clip3:
-	ldr r4, [r1], #4
-	rsb r4, r3, r4, lsr #8
-	cmps r4, #127
-	movge r4, #127
-	cmps r4, #-128
-	movle r4, #-128
-	strb r4, [r0], #1
+.clip3:                        @ 10 cycles pr sample
+	ldr r4, [r1], #4           @ 3 cycles
+	rsb r4, r3, r4, lsr #8     @ 1 cycle
+	cmps r4, #127              @ 1 cycle
+	movge r4, #127             @ 1 cycle
+	cmps r4, #-128             @ 1 cycle
+	movle r4, #-128            @ 1 cycle
+	strb r4, [r0], #1          @ 2 cycles
 
 .clip2:
 	ldr r4, [r1], #4
