@@ -100,4 +100,7 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
 
+%.s: %.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(THUMB) -c $< -o $@
+
 -include $(OBJS:.o=.d)
