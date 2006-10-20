@@ -6,17 +6,25 @@
 #ifndef PIMP_DEBUG_H
 #define PIMP_DEBUG_H
 
-#ifdef DEBUG_PRINTF_ENABLED
- #define DEBUG_PRINT(X) iprintf X
+/* current debug level */
+#define DEBUG_LEVEL 100
+
+/* some standard debug levels */
+#define DEBUG_LEVEL_INFO    10
+#define DEBUG_LEVEL_WARNING 50
+#define DEBUG_LEVEL_ERROR   100
+
+#ifdef DEBUG_PRINT_ENABLE
+ #define DEBUG_PRINT(debug_level, X) do { if (DEBUG_LEVEL <= debug_level) iprintf X } while(0)
 #else
- #define DEBUG_PRINT(X)
+ #define DEBUG_PRINT(debug_level, X)
 #endif
 
-#ifdef ASSERT_ENABLED
+#ifdef ASSERT_ENABLE
  #include <stdlib.h>
  #include <stdio.h>
  #define ASSERT(expr) \
-	do { \
+	do {              \
 		if (!(expr)) iprintf("*** ASSERT FAILED %s AT (%s:%i)\n", #expr, __FILE__, __LINE__); \
 	} while(0)
 #else

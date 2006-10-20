@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	for (unsigned period = 1; period < 32767; period += 17)
 	{
 		float frequency1 = (8363 * 1712) / float(period);
-		float delta1 = frequency1 / SAMPLERATE;
+		float delta1 = frequency1 / (SAMPLERATE);
 		delta1 = unsigned(delta1 * (1 << 12) + 0.5) * (1.0 / (1 << 12));
 		
 		float delta2 = get_amiga_delta(period) * (1.0 / (1 << 12));
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 			int period = (10 * 12 * 16 * 4) - i * (16 * 4) - fine_tune / 2;
 			
 			float frequency1 = 8363 * pow(2.0, float(6 * 12 * 16 * 4 - period) / (12 * 16 * 4));
-			float delta1 = frequency1 / SAMPLERATE;
+			float delta1 = frequency1 / (SAMPLERATE);
 			delta1 = unsigned(delta1 * (1 << 12) + 0.5) * (1.0 / (1 << 12));
 			
 			float delta2 = get_linear_delta(period) * (1.0 / (1 << 12));

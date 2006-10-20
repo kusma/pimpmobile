@@ -7,6 +7,7 @@
 
 #define PIMP_TYPES_H /* prevent pimp_types.h from being included */
 #include "pimp_render.h"
+#include "pimp_debug.h"
 
 #include <gba_dma.h>
 #include <gba_sound.h>
@@ -18,8 +19,14 @@
 pimp_mod_context __pimp_ctx;
 pimp_mixer       __pimp_mixer;
 
+/* setup some constants */
+#define CYCLES_PR_FRAME 280896
+#define SAMPLES_PER_FRAME ((int)((1 << 24) / ((float)SAMPLERATE)))
+#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PER_FRAME))
+
 STATIC s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 STATIC u32 __pimp_sound_buffer_index = 0;
+s32        __pimp_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void pimp_init(const void *module, const void *sample_bank)
 {
@@ -30,8 +37,10 @@ void pimp_init(const void *module, const void *sample_bank)
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
 	REG_SOUNDCNT_X = (1 << 7);
 	
-	/* setup timer-shit */
-	REG_TM0CNT_L = (1 << 16) - (int)((1 << 24) / SAMPLERATE);
+	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PER_FRAME, SOUND_BUFFER_SIZE));
+
+	/* setup timer */
+	REG_TM0CNT_L = (1 << 16) - SAMPLES_PER_FRAME;
 	REG_TM0CNT_H = TIMER_START;
 }
 
@@ -77,7 +86,7 @@ void pimp_frame()
 	static volatile BOOL locked = FALSE;
 	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
 	locked = TRUE;
-
+	
 	__pimp_render(&__pimp_ctx, __pimp_sound_buffers[__pimp_sound_buffer_index], SOUND_BUFFER_SIZE);
 	
 	locked = FALSE;
@@ -85,6 +94,14 @@ void pimp_frame()
 
 void __pimp_mixer_clear(void *target, int samples)
 {
-	u32 zero = 0;
-	CpuFastSet(&zero, target, DMA_SRC_FIXED | (samples));
+	int i;
+	const u32 zero = 0;
+	u32 *dst = (u32*)target;
+	
+	for (i = samples &7; i; --i)
+	{
+		*dst++ = 0;
+	}
+	
+	CpuFastSet(&zero, dst, DMA_SRC_FIXED | (samples & ~7));
 }

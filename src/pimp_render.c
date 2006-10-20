@@ -12,7 +12,7 @@
 #include "pimp_mixer.h"
 #include "pimp_math.h"
 
-// #define PRINT_PATTERNS
+/* #define PRINT_PATTERNS */
 
 /* need to move these to a separate channel state header (?) */
 STATIC void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
@@ -64,7 +64,7 @@ STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 		chan->fadeout -= chan->instrument->volume_fadeout;
 		if (chan->fadeout <= 0)
 		{
-			// TODO: kill sample
+			/* TODO: kill sample */
 			chan->fadeout = 0;
 		}
 	}
@@ -105,7 +105,7 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		if (note->note == KEY_OFF)
 		{
 			chan->sustain = FALSE;
-			volume_dirty  = TRUE; // we need to update volume if note off killed note
+			volume_dirty  = TRUE; /* we need to update volume if note off killed note */
 		}
 		else
 		{
@@ -136,7 +136,7 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 					{
 						/* TODO: this should be handeled in the converter, and as an assert. */
 						
-						// stupid musician, tried to play an empty instrument...
+						/* stupid musician, tried to play an empty instrument... */
 						mc->sample_data = NULL;
 						mc->sample_cursor = 0;
 						mc->sample_cursor_delta = 0;
@@ -172,7 +172,7 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 					if (mc->sample_cursor > (mc->sample_length << 12))
 					{
 						if (ctx->mod->flags & FLAG_SAMPLE_OFFSET_CLAMP) mc->sample_cursor = mc->sample_length << 12;
-						else mc->sample_data = NULL; // kill sample
+						else mc->sample_data = NULL; /* kill sample */
 					}
 				}
 
@@ -213,12 +213,12 @@ $f0-$ff   Tone porta
 				if (note->volume_command > 0x50)
 				{
 					/* something else */
-					DEBUG_PRINT(("unsupported volume-command %02X\n", note->volume_command));
+					DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", note->volume_command));
 				}
 				else
 				{
 					chan->volume = note->volume_command - 0x10;
-//					DEBUG_PRINT(("setting volume to: %02X\n", chan->volume));
+					DEBUG_PRINT(DEBUG_LEVEL_INFO, ("setting volume to: %02X\n", chan->volume));
 					volume_dirty = TRUE;
 				}
 			break;
@@ -239,7 +239,7 @@ $f0-$ff   Tone porta
 			
 			
 			default:
-				DEBUG_PRINT(("unsupported volume-command %02X\n", note->volume_command));
+				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", note->volume_command));
 		}
 		
 		switch (chan->effect)
@@ -257,7 +257,7 @@ $f0-$ff   Tone porta
 			case EFF_PORTA_NOTE:
 				if (note->note > 0)
 				{
-					// no fine tune or relative note here, boooy
+					/* no fine tune or relative note here, boooy */
 					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, 0);
 					else chan->porta_target = __pimp_get_amiga_period(note->note, 0);
 					
@@ -274,7 +274,7 @@ $f0-$ff   Tone porta
 				/* TODO: move to a separate function ? */
 				if (note->note > 0)
 				{
-					// no fine tune or relative note here, boooy
+					/* no fine tune or relative note here, boooy */
 					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, 0);
 					else chan->porta_target = __pimp_get_amiga_period(note->note, 0);
 					
@@ -321,8 +321,8 @@ $f0-$ff   Tone porta
 			case EFF_BREAK_ROW:
 				__pimp_mod_context_set_pos(
 					ctx,
-					(chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF) - 1, // row
-					ctx->curr_order + 1 // order
+					(chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF) - 1, /* row */
+					ctx->curr_order + 1 /* order */
 				);
 			break;
 			
@@ -363,7 +363,7 @@ $f0-$ff   Tone porta
 					break;
 					
 					default:
-						DEBUG_PRINT(("unsupported effect E%X\n", chan->effect_param >> 4));
+						DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect E%X\n", chan->effect_param >> 4));
 				}
 			break;
 			
@@ -380,7 +380,7 @@ $f0-$ff   Tone porta
 			case EFF_PAN_SLIDE: break;
 */
 			case EFF_MULTI_RETRIG:
-				if ((note->effect_parameter & 0xF0) != 0) DEBUG_PRINT(("multi retrig x-parameter != 0 not supported\n"));
+				if ((note->effect_parameter & 0xF0) != 0) DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("multi retrig x-parameter != 0 not supported\n"));
 				if ((note->effect_parameter & 0xF) != 0) chan->note_retrig = note->effect_parameter & 0xF;
 			break;
 			
@@ -397,7 +397,7 @@ $f0-$ff   Tone porta
 */
 			
 			default:
-				DEBUG_PRINT(("unsupported effect %02X\n", chan->effect));
+				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect %02X\n", chan->effect));
 				ASSERT(0);
 		}
 		
@@ -437,7 +437,7 @@ $f0-$ff   Tone porta
 STATIC void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
 {
 	u32 c;
-	if (ctx->mod == NULL) return; // no module active (sound-effects can still be playing, though)
+	if (ctx->mod == NULL) return; /* no module active (sound-effects can still be playing, though) */
 
 	if (ctx->curr_tick == ctx->curr_tempo)
 	{
@@ -494,7 +494,7 @@ $f0-$ff   Tone porta
 			case 0x9: break;
 			
 			default:
-				DEBUG_PRINT(("unsupported volume-command %02X\n", chan->volume_command));
+				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", chan->volume_command));
 		}
 		
 		switch (chan->effect)
@@ -558,10 +558,10 @@ $f0-$ff   Tone porta
 					break; /* fine volume slide is only done on tick0 */
 					
 					case EFF_NOTE_DELAY:
-						// note on
+						/* note on */
 						if (--chan->note_delay == 0)
 						{
-							// TODO: replace with a note_on-function
+							/* TODO: replace with a note_on-function */
 							if (chan->instrument != 0)
 							{
 								chan->sample = get_sample(chan->instrument, chan->instrument->sample_map[chan->note]);
@@ -597,10 +597,10 @@ $f0-$ff   Tone porta
 				}
 			break;
 			
-//				default: ASSERT(0);
+/*				default: ASSERT(0); */
 		}
 		
-		// period to delta-conversion
+		/* period to delta-conversion */
 		if (period_dirty)
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
@@ -613,7 +613,6 @@ $f0-$ff   Tone porta
 			}
 		}
 		
-//		if (c == 7) printf("%i\n", (volume_dirty) ? 1 : 0);
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
 			mc->volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
@@ -646,7 +645,7 @@ void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 		
 		__pimp_mod_context_update_tick(ctx);
 		
-		// fixed point tick length
+		/* fixed point tick length */
 		ctx->curr_tick_len += ctx->tick_len;
 		remainder           = ctx->curr_tick_len >> 8;
 		ctx->curr_tick_len -= (ctx->curr_tick_len >> 8) << 8;

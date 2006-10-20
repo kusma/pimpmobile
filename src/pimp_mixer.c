@@ -35,12 +35,12 @@ STATIC BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 		case LOOP_TYPE_PINGPONG:
 			if (chan->sample_cursor_delta >= 0)
 			{
-				// moving forwards through the sample
+				/* moving forwards through the sample */
 				check_point = chan->loop_end;
 			}
 			else
 			{
-				// moving backwards through the sample
+				/* moving backwards through the sample */
 				check_point = chan->loop_start;
 				if (end_sample < (check_point << 12))
 				{
@@ -63,7 +63,7 @@ STATIC BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 	return FALSE;
 }
 
-// returns false if we hit sample-end
+/* returns false if we hit sample-end */
 BOOL process_loop_event(pimp_mixer_channel_state *chan)
 {
 	switch (chan->loop_type)
@@ -115,7 +115,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 	
 	while (samples > 0 && detect_loop_event(chan, samples) == TRUE)
 	{
-		// TODO: iterative binary search here instead
+		/* TODO: iterative binary search here instead */
 		do
 		{
 			ASSERT((chan->sample_cursor >> 12) < chan->sample_length);
@@ -134,12 +134,12 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 		
 		if (process_loop_event(chan) == FALSE)
 		{
-			// the sample has stopped, we need to fill the rest of the buffer with the dc-offset, so it doesn't ruin our unsigned mixing-thing
+			/* the sample has stopped, we need to fill the rest of the buffer with the dc-offset, so it doesn't ruin our unsigned mixing-thing */
 			while (samples--)
 			{
 				*target++ += chan->volume * 128;
 			}
-			// terminate sample
+			/* terminate sample */
 			chan->sample_data = 0;
 			return;
 		}
@@ -162,23 +162,23 @@ void __pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
-STATIC s32 sound_mix_buffer[SOUND_BUFFER_SIZE] __attribute__((section(".iwram")));
+extern s32 __pimp_mix_buffer[];
 
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {
 	u32 c;
 	ASSERT(samples > 0);
-	
-	__pimp_mixer_clear(sound_mix_buffer, samples);
+
+	__pimp_mixer_clear(__pimp_mix_buffer, samples);
 	
 	dc_offs = 0;
 	for (c = 0; c < CHANNELS; ++c)
 	{
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
-		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, sound_mix_buffer, samples);
+		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, __pimp_mix_buffer, samples);
 	}
 	
 	dc_offs >>= 8;
 	
-	__pimp_mixer_clip_samples(target, sound_mix_buffer, samples, dc_offs);
+	__pimp_mixer_clip_samples(target, __pimp_mix_buffer, samples, dc_offs);
 }

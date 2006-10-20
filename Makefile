@@ -46,8 +46,9 @@ else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
+#	OBJS     += src/pimp_mixer_portable.o
 	OBJS     += src/pimp_mixer_arm.o
-#	OBJS     += src/pimp_mixer_clip_arm.o
+	OBJS     += src/pimp_mixer_clip_arm.o
 endif
 
 	

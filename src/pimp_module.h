@@ -29,8 +29,7 @@ typedef struct
 	u32 flags;
 	u32 reserved; /* for future flags */
 	
-	// these are offsets relative to the begining of the pimp_module_t-structure
-	/* TODO: make these relative to their storage, and make a generic getter for those kinds of pointers */
+	/* these are offsets relative to the begining of the pimp_module_t-structure */
 	u32 order_ptr;
 	u32 pattern_ptr;
 	u32 channel_ptr;

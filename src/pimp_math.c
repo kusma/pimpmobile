@@ -36,10 +36,10 @@ unsigned __pimp_get_linear_period(int note, int fine_tune)
 	ASSERT(fine_tune >= -8);
 	ASSERT(fine_tune <   8);
 	
-	int xm_note = note - (12 * 1) - 1; // we extended our note-range with one octave.
+	int xm_note = note - (12 * 1) - 1; /* we extended our note-range with one octave. */
 	
 	return (10 * 12 * 16 * 4 - xm_note * 16 * 4 - fine_tune / 2);
-//	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2;
+/*	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2; */
 }
 
 #include "linear_delta_lut.h"
@@ -51,7 +51,7 @@ unsigned __pimp_get_linear_delta(unsigned period)
 	unsigned delta = linear_delta_lut[octave_period] << octave;
 
 	/* BEHOLD: the expression of the devil (this compiles to one arm-instruction) */
-	const unsigned int scale = (unsigned int)((1.0 / SAMPLERATE) * (1 << 3) * (1ULL << 32));
+	const unsigned int scale = (unsigned int)((1.0 / (SAMPLERATE)) * (1 << 3) * (1ULL << 32));
 	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
 	return delta;
 }
@@ -61,7 +61,7 @@ unsigned __pimp_get_linear_delta(unsigned period)
 #include "amiga_period_lut.h"
 unsigned __pimp_get_amiga_period(int note, int fine_tune)
 {
-	fine_tune /= 8; // todo: interpolate instead?
+	fine_tune /= 8; /* todo: interpolate instead? */
 	ASSERT(fine_tune >= -8);
 	ASSERT(fine_tune <=  8);
 	
@@ -94,16 +94,16 @@ unsigned __pimp_get_amiga_delta(unsigned period)
 	unsigned p_frac = p & ((1 << AMIGA_DELTA_LUT_FRAC_BITS) - 1);
 	p >>= AMIGA_DELTA_LUT_FRAC_BITS;
 
-	// interpolate table-entries for better result
-	int d1 = amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; // (8363 * 1712) / float(p);
-	int d2 = amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; // (8363 * 1712) / float(p + 1);
+	/* interpolate table-entries for better result */
+	int d1 = amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p) */
+	int d2 = amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p + 1) */
 	unsigned delta = (d1 << AMIGA_DELTA_LUT_FRAC_BITS) + (d2 - d1) * p_frac;
 
 	if (shamt > AMIGA_DELTA_LUT_FRAC_BITS) delta <<= shamt - AMIGA_DELTA_LUT_FRAC_BITS;
 	else delta >>= AMIGA_DELTA_LUT_FRAC_BITS - shamt;
 
 	/* BEHOLD: the expression of the devil 2.0 (this compiles to one arm-instruction) */
-	const unsigned int scale = (unsigned int)(((1.0 / SAMPLERATE) * (1 << 6)) * (1LL << 32));
+	const unsigned int scale = (unsigned int)(((1.0 / (SAMPLERATE)) * (1 << 6)) * (1LL << 32));
 	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
 	
 	return delta;
