@@ -29,8 +29,8 @@
 #define COUNT     r2
 #define BIAS      r3
 
-#define TEMP1     r4
-#define TEMP2     r5
+#define TEMP1     r8
+#define TEMP2     r9
 
 .global __pimp_mixer_clip_samples
 __pimp_mixer_clip_samples:
@@ -53,7 +53,7 @@ __pimp_mixer_clip_samples:
 	mvnne TEMP1, TEMP2, lsr #24       @ 1 cycle
 	eor   TEMP1, TEMP1, #0x80         @ 1 cycle
 	strb  TEMP1, [DST], #1            @ 2 cycles
-
+	
 .clip3:
 	ldr   TEMP1, [SRC], #4
 	add   TEMP1, BIAS, r4, asr #8
@@ -77,19 +77,19 @@ __pimp_mixer_clip_samples:
 	mvnne TEMP1, TEMP2, lsr #24
 	eor   TEMP1, TEMP1, #0x80
 	strb  TEMP1, [DST], #1
-
+	
 .clip0:
-
+	
 	subs COUNT, COUNT, #1             @ 1 cycle
 	bne .clip_single_loop             @ 3 cycles
-
+	
 	ldmfd sp!, {r4-r12, lr} @ restore all registers but parameters and stack
 	bx lr
-
 	
-#define FLIP_SIGN r6
-#define TEMP r12
-
+	
+#define FLIP_SIGN r10
+#define TEMP      r11
+	
 	ldr FLIP_SIGN, =0x80808080
 	
 .clip_loop:                         @ 7 cycles pr sample:
