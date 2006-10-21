@@ -11,41 +11,10 @@
 #include "pimp_debug.h"
 #include "pimp_mixer.h"
 #include "pimp_math.h"
+#include "pimp_effects.h"
 
 /* #define PRINT_PATTERNS */
 
-/* need to move these to a separate channel state header (?) */
-STATIC void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
-{
-	ASSERT(chan != 0);
-
-	chan->final_period -= chan->porta_speed;
-	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
-}
-
-STATIC void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
-{
-	ASSERT(chan != 0);
-
-	chan->final_period += chan->porta_speed;
-	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
-}
-
-STATIC void porta_note(pimp_channel_state *chan)
-{
-	ASSERT(chan != 0);
-
-	if (chan->final_period > chan->porta_target)
-	{
-		chan->final_period -= chan->porta_speed;
-		if (chan->final_period < chan->porta_target) chan->final_period = chan->porta_target;
-	}
-	else if (chan->final_period < chan->porta_target)
-	{
-		chan->final_period += chan->porta_speed;
-		if (chan->final_period > chan->porta_target) chan->final_period = chan->porta_target;
-	}
-}
 
 STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 {
