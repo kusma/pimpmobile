@@ -16,8 +16,8 @@
 
 #include <stdio.h>
 
-pimp_mod_context __pimp_ctx;
-pimp_mixer       __pimp_mixer;
+pimp_mixer       __pimp_mixer IWRAM_DATA;
+pimp_mod_context __pimp_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
@@ -92,11 +92,13 @@ void pimp_frame()
 	locked = FALSE;
 }
 
-void __pimp_mixer_clear(void *target, int samples)
+void __pimp_mixer_clear(s32 *target, u32 samples)
 {
 	int i;
 	const u32 zero = 0;
 	u32 *dst = (u32*)target;
+	
+	ASSERT(NULL != dst);
 	
 	for (i = samples &7; i; --i)
 	{
