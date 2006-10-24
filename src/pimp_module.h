@@ -53,7 +53,7 @@ typedef struct
 #include "pimp_internal.h"
 
 /* pattern entry */
-static INLINE pimp_pattern_entry *get_pattern_data(pimp_pattern *pat)
+static INLINE pimp_pattern_entry *get_pattern_data(const pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
 	return (pimp_pattern_entry*)get_ptr(&pat->data_ptr);

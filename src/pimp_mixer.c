@@ -122,7 +122,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 			ASSERT((chan->sample_cursor >> 12) < chan->sample_length);
 			ASSERT(chan->sample_data != 0);
 			
-			s32 samp = ((u8*)chan->sample_data)[chan->sample_cursor >> 12];
+			const s32 samp = ((u8*)chan->sample_data)[chan->sample_cursor >> 12];
 			chan->sample_cursor += chan->sample_cursor_delta;
 			*target++ += samp * chan->volume;
 			
