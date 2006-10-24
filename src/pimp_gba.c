@@ -24,8 +24,8 @@ pimp_mod_context __pimp_ctx   EWRAM_DATA;
 #define SAMPLES_PER_FRAME ((int)((1 << 24) / ((float)SAMPLERATE)))
 #define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PER_FRAME))
 
-STATIC s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
-STATIC u32 __pimp_sound_buffer_index = 0;
+static s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+static u32 __pimp_sound_buffer_index = 0;
 s32        __pimp_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void pimp_init(const void *module, const void *sample_bank)

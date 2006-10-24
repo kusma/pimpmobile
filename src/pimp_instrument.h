@@ -39,13 +39,13 @@ typedef struct
 #include "pimp_envelope.h"
 #include "pimp_sample.h"
 
-STATIC INLINE pimp_sample *get_sample(const pimp_instrument *instr, int i)
+static INLINE pimp_sample *get_sample(const pimp_instrument *instr, int i)
 {
 	ASSERT(instr != NULL);
 	return &((pimp_sample*)get_ptr(&instr->sample_ptr))[i];
 }
 
-STATIC INLINE pimp_envelope *get_vol_env(const pimp_instrument *instr)
+static INLINE pimp_envelope *get_vol_env(const pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
 	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : get_ptr(&instr->vol_env_ptr));

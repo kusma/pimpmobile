@@ -16,7 +16,7 @@
 /* #define PRINT_PATTERNS */
 
 
-STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
+static int __pimp_channel_get_volume(pimp_channel_state *chan)
 {
 	ASSERT(chan != 0);
 	
@@ -45,7 +45,11 @@ STATIC int __pimp_channel_get_volume(pimp_channel_state *chan)
 	return volume;
 }
 
-STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
+static void note_on(pimp_channel_state *chan, pimp_pattern_entry *note)
+{
+}
+
+static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 {
 	u32 c;
 	ASSERT(ctx != 0);
@@ -144,7 +148,6 @@ STATIC void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 						else mc->sample_data = NULL; /* kill sample */
 					}
 				}
-
 			}
 		}
 		
@@ -403,7 +406,7 @@ $f0-$ff   Tone porta
 	}
 }
 
-STATIC void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
+static void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
 {
 	u32 c;
 	if (ctx->mod == NULL) return; /* no module active (sound-effects can still be playing, though) */
@@ -600,15 +603,14 @@ $f0-$ff   Tone porta
 
 void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
-	static int remainder = 0;
 	while (TRUE)
 	{
-		int samples_to_mix = MIN(remainder, samples);
+		int samples_to_mix = MIN(ctx->remainder, samples);
 		if (samples_to_mix != 0) __pimp_mixer_mix(ctx->mixer, buf, samples_to_mix);
 		
-		buf       += samples_to_mix;
-		samples   -= samples_to_mix;
-		remainder -= samples_to_mix;
+		buf            += samples_to_mix;
+		samples        -= samples_to_mix;
+		ctx->remainder -= samples_to_mix;
 		
 		if (samples == 0) break;
 		
@@ -616,7 +618,7 @@ void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 		
 		/* fixed point tick length */
 		ctx->curr_tick_len += ctx->tick_len;
-		remainder           = ctx->curr_tick_len >> 8;
+		ctx->remainder      = ctx->curr_tick_len >> 8;
 		ctx->curr_tick_len -= (ctx->curr_tick_len >> 8) << 8;
 	}
 }

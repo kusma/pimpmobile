@@ -12,7 +12,7 @@ extern "C" {
 
 #include "pimp_internal.h"
 
-STATIC void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
+static void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
 {
 	ASSERT(chan != 0);
 
@@ -20,7 +20,7 @@ STATIC void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
 	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
 }
 
-STATIC void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
+static void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
 {
 	ASSERT(chan != 0);
 
@@ -28,7 +28,7 @@ STATIC void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
 	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
 }
 
-STATIC void porta_note(pimp_channel_state *chan)
+static void porta_note(pimp_channel_state *chan)
 {
 	ASSERT(chan != 0);
 

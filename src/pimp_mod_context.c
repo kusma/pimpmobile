@@ -24,6 +24,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	
 	ctx->curr_bpm   = 125;
 	ctx->curr_tempo = 5;
+	ctx->remainder = 0;
 	
 	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	

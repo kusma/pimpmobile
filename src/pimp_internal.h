@@ -9,7 +9,7 @@
 #include "pimp_base.h"
 #include "pimp_config.h"
 
-STATIC INLINE void *get_ptr(const unsigned int *offset)
+static INLINE void *get_ptr(const unsigned int *offset)
 {
 	return (char*)offset + *offset;
 }

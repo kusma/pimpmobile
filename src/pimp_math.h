@@ -15,7 +15,7 @@ extern "C" {
 
 extern const unsigned char __pimp_clz_lut[256];
 
-STATIC INLINE unsigned clz(unsigned input)
+static INLINE unsigned clz(unsigned input)
 {
 	/* two iterations of binary search */
 	unsigned c = 0;
@@ -29,7 +29,7 @@ STATIC INLINE unsigned clz(unsigned input)
 	return __pimp_clz_lut[input] + c;
 }
 
-STATIC INLINE unsigned clz16(unsigned input)
+static INLINE unsigned clz16(unsigned input)
 {
 	/* one iteration of binary search */
 	unsigned c = 0;
@@ -41,7 +41,7 @@ STATIC INLINE unsigned clz16(unsigned input)
 	return __pimp_clz_lut[input] + c;
 }
 
-STATIC INLINE unsigned clz8(unsigned input)
+static INLINE unsigned clz8(unsigned input)
 {
 	return __pimp_clz_lut[input];
 }

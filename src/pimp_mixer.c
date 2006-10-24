@@ -12,10 +12,10 @@
 	to make binary searching for hit-point easier.
 */
 
-STATIC s32 event_delta = 0;
-STATIC s32 event_cursor = 0;
+static s32 event_delta = 0;
+static s32 event_cursor = 0;
 
-STATIC BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
+static BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 {
 	ASSERT(samples != 0);
 	
@@ -104,14 +104,15 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 	return TRUE;
 }
 
-STATIC u32 dc_offs = 0;
+static u32 dc_offs = 0;
 
 void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
 {
+	ASSERT(NULL != chan);
+	ASSERT(samples > 0);
+	
 	if (chan->volume < 1) return;
 	dc_offs += chan->volume * 128;
-	
-	ASSERT(samples > 0);
 	
 	while (samples > 0 && detect_loop_event(chan, samples) == TRUE)
 	{

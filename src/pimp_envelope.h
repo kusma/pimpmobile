@@ -31,7 +31,7 @@ typedef struct
 	u32 current_tick;
 } pimp_envelope_state;
 
-STATIC INLINE void __pimp_envelope_reset(pimp_envelope_state *state)
+static INLINE void __pimp_envelope_reset(pimp_envelope_state *state)
 {
 	state->current_node = 0;
 	state->current_tick = 0;

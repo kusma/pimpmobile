@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-STATIC int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
+static int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
 {
 	int i;
 	

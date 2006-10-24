@@ -24,10 +24,6 @@
 #define FALSE ((BOOL)0)
 #endif
 
-#ifndef STATIC
-#define STATIC static
-#endif
-
 #ifndef INILIE
 #define INLINE inline
 #endif

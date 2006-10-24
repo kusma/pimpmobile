@@ -49,6 +49,7 @@ typedef struct
 {
 	u32 tick_len;
 	u32 curr_tick_len;
+	u32 remainder;
 
 	u32 curr_row;
 	u32 curr_order;
