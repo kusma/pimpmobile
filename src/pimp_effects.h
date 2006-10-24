@@ -12,7 +12,6 @@ extern "C" {
 
 #include "pimp_internal.h"
 
-/* need to move these to a separate channel state header (?) */
 STATIC void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
 {
 	ASSERT(chan != 0);
