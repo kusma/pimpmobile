@@ -87,6 +87,8 @@ unsigned __pimp_get_amiga_period(int note, int fine_tune)
 }
 
 #include "amiga_delta_lut.h"
+#define AMIGA_DELTA_LUT_SIZE (1 << AMIGA_DELTA_LUT_LOG_SIZE)
+#define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG_SIZE)
 unsigned __pimp_get_amiga_delta(unsigned period)
 {
 	unsigned shamt = clz16(period) - 1;
