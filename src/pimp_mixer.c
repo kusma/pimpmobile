@@ -104,15 +104,10 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 	return TRUE;
 }
 
-static u32 dc_offs = 0;
-
 void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
 {
 	ASSERT(NULL != chan);
 	ASSERT(samples > 0);
-	
-	if (chan->volume < 1) return;
-	dc_offs += chan->volume * 128;
 	
 	while (samples > 0 && detect_loop_event(chan, samples) == TRUE)
 	{
@@ -168,6 +163,10 @@ extern s32 __pimp_mix_buffer[];
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {
 	u32 c;
+	int dc_offs;
+	
+	ASSERT(NULL != mixer);
+	ASSERT(NULL != target);
 	ASSERT(samples > 0);
 
 	__pimp_mixer_clear(__pimp_mix_buffer, samples);
@@ -176,7 +175,11 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 	for (c = 0; c < CHANNELS; ++c)
 	{
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
-		if (NULL != chan->sample_data) __pimp_mixer_mix_channel(chan, __pimp_mix_buffer, samples);
+		if ((NULL != chan->sample_data) && (chan->volume > 1))
+		{
+			__pimp_mixer_mix_channel(chan, __pimp_mix_buffer, samples);
+			dc_offs += chan->volume * 128;
+		}
 	}
 	
 	dc_offs >>= 8;
