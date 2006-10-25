@@ -30,11 +30,10 @@ int file_count = 0;
 int accum = 0;
 void mix()
 {
-	pimp_vblank();
-	while (REG_VCOUNT != 0);
 	REG_TM2CNT_L = 0;
 	REG_TM2CNT_H = 0;
 	REG_TM2CNT_H = TIMER_START;
+	pimp_vblank();
 	pimp_frame();
 	u32 value = REG_TM2CNT_L;
 	accum += value;
