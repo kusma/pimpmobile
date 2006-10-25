@@ -6,9 +6,9 @@
 
 import sys
 
-AMIGA_DELTA_LUT_LOG_SIZE = 7
-AMIGA_DELTA_LUT_SIZE = 1 << AMIGA_DELTA_LUT_LOG_SIZE
-AMIGA_DELTA_LUT_FRAC_BITS = 15 - AMIGA_DELTA_LUT_LOG_SIZE
+AMIGA_DELTA_LUT_LOG2_SIZE = 7
+AMIGA_DELTA_LUT_SIZE = 1 << AMIGA_DELTA_LUT_LOG2_SIZE
+AMIGA_DELTA_LUT_FRAC_BITS = 15 - AMIGA_DELTA_LUT_LOG2_SIZE
 
 def print_lut(lut):
 	print 'const u16 linear_delta_lut[768] =\n{'
@@ -22,7 +22,6 @@ def print_lut_to_file(file, lutname, lut):
 #	if (min_elem < 0):         print 'need signed'
 #	if (max_elem > (1 << 16)): print 'need more than 16 bit'
 #	print 'max: %d, min %d' % (max_elem, min_elem)
-
 	file.write('const u16 %s[%d] =\n{\n\t' % (lutname, len(lut)))
 	line_start = file.tell()
 	for e in lut:
@@ -47,7 +46,7 @@ def dump_linear_lut(filename):
 def dump_amiga_lut(filename):
 	amiga_delta_lut = gen_amiga_delta_lut()
 	f = open(filename, 'w')
-	f.write('#define AMIGA_DELTA_LUT_LOG_SIZE %d\n' % (AMIGA_DELTA_LUT_LOG_SIZE))
+	f.write('#define AMIGA_DELTA_LUT_LOG2_SIZE %d\n' % (AMIGA_DELTA_LUT_LOG2_SIZE))
 	print_lut_to_file(f, 'amiga_delta_lut', amiga_delta_lut)
 	f.close()
 
