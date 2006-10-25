@@ -4,8 +4,6 @@
 # Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
-import sys
-
 AMIGA_DELTA_LUT_LOG2_SIZE = 7
 AMIGA_DELTA_LUT_SIZE = 1 << AMIGA_DELTA_LUT_LOG2_SIZE
 AMIGA_DELTA_LUT_FRAC_BITS = 15 - AMIGA_DELTA_LUT_LOG2_SIZE
