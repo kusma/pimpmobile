@@ -15,11 +15,10 @@ def print_lut(lut):
 	print '\n};\n'
 
 def print_lut_to_file(file, lutname, lut):
-#	max_elem = reduce(max, lut)
-#	min_elem = reduce(min, lut)
-#	if (min_elem < 0):         print 'need signed'
-#	if (max_elem > (1 << 16)): print 'need more than 16 bit'
-#	print 'max: %d, min %d' % (max_elem, min_elem)
+	max_elem = reduce(max, lut)
+	min_elem = reduce(min, lut)
+	assert(min_elem >= 0)
+	assert(max_elem < (1 << 16))
 	file.write('const u16 %s[%d] =\n{\n\t' % (lutname, len(lut)))
 	line_start = file.tell()
 	for e in lut:
