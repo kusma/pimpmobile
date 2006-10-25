@@ -29,14 +29,14 @@ def print_lut_to_file(file, lutname, lut):
 		file.write('%d, ' % e)
 		if file.tell() > (line_start + 80):
 			file.write('\n\t')
-			line_start = file.tell()    
+			line_start = file.tell()
 	file.write('\n};\n\n')
 
 def gen_linear_delta_lut():
-	return list((int(((2.0 ** (i / 768.0)) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5)) for i in range(0, 12 * 64))
+	return [(int(((2.0 ** (i / 768.0)) * 8363.0 / (1 << 8)) * float(1 << 9) + 0.5)) for i in range(0, 12 * 64)]
 
 def gen_amiga_delta_lut():
-	return list((int(((8363 * 1712) / float(((i + (AMIGA_DELTA_LUT_SIZE / 2)) * 32768) / AMIGA_DELTA_LUT_SIZE)) * (1 << 6) + 0.5)) for i in range(0, (AMIGA_DELTA_LUT_SIZE / 2) + 1))
+	return [(int(((8363 * 1712) / float(((i + (AMIGA_DELTA_LUT_SIZE / 2)) * 32768) / AMIGA_DELTA_LUT_SIZE)) * (1 << 6) + 0.5)) for i in range(0, (AMIGA_DELTA_LUT_SIZE / 2) + 1)]
 
 def dump_linear_lut(filename):
 	linear_delta_lut = gen_linear_delta_lut()
