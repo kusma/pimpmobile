@@ -30,6 +30,7 @@ s32        __pimp_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void pimp_init(const void *module, const void *sample_bank)
 {
+	__pimp_mixer.mix_buffer = __pimp_mix_buffer;
 	__pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
 
 	u32 zero = 0;

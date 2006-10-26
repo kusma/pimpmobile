@@ -6,6 +6,19 @@
 #include "pimp_mixer.h"
 #include "pimp_debug.h"
 
+void __pimp_mixer_reset(pimp_mixer *mixer)
+{
+	u32 c;
+	ASSERT(mixer != NULL);
+	
+	for (c = 0; c < CHANNELS; ++c)
+	{
+		mixer->channels[c].sample_data = 0;
+		mixer->channels[c].sample_cursor = 0;
+		mixer->channels[c].sample_cursor_delta = 0;
+	}
+}
+
 /*
 	TODO: this all needs a rewrite.
 	next implementation should always keep track of the next loop-event for all active channels,
@@ -142,23 +155,12 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 	}
 	
 	ASSERT(chan->sample_data != 0);
+#if 1
 	chan->sample_cursor = __pimp_mixer_mix_samples(target, samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
+#else
+	chan->sample_cursor = chan->sample_cursor + chan->sample_cursor_delta * samples;
+#endif
 }
-
-void __pimp_mixer_reset(pimp_mixer *mixer)
-{
-	u32 c;
-	ASSERT(mixer != NULL);
-	
-	for (c = 0; c < CHANNELS; ++c)
-	{
-		mixer->channels[c].sample_data = 0;
-		mixer->channels[c].sample_cursor = 0;
-		mixer->channels[c].sample_cursor_delta = 0;
-	}
-}
-
-extern s32 __pimp_mix_buffer[];
 
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 {
@@ -166,10 +168,11 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 	int dc_offs;
 	
 	ASSERT(NULL != mixer);
+	ASSERT(NULL != mixer->mix_buffer);
 	ASSERT(NULL != target);
 	ASSERT(samples > 0);
 
-	__pimp_mixer_clear(__pimp_mix_buffer, samples);
+	__pimp_mixer_clear(mixer->mix_buffer, samples);
 	
 	dc_offs = 0;
 	for (c = 0; c < CHANNELS; ++c)
@@ -177,12 +180,12 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 		pimp_mixer_channel_state *chan = &mixer->channels[c];
 		if ((NULL != chan->sample_data) && (chan->volume > 1))
 		{
-			__pimp_mixer_mix_channel(chan, __pimp_mix_buffer, samples);
+			__pimp_mixer_mix_channel(chan, mixer->mix_buffer, samples);
 			dc_offs += chan->volume * 128;
 		}
 	}
 	
 	dc_offs >>= 8;
 	
-	__pimp_mixer_clip_samples(target, __pimp_mix_buffer, samples, dc_offs);
+	__pimp_mixer_clip_samples(target, mixer->mix_buffer, samples, dc_offs);
 }

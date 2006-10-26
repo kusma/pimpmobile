@@ -36,7 +36,7 @@ typedef struct
 typedef struct
 {
 	pimp_mixer_channel_state channels[CHANNELS];
-	/* TODO: any other needed states */
+	s32 *mix_buffer;
 } pimp_mixer;
 	
 void __pimp_mixer_reset(pimp_mixer *mixer);
