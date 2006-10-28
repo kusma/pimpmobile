@@ -64,13 +64,17 @@ void convert_sample(sample_header_t *samp)
 			default: assert(false); // should not happen. ever. u8-samples are dealt with earlier.
 		}
 		
-		// dither and downsample
+		// downsample
 		if (samp->format == SAMPLE_UNSIGNED_16BIT || samp->format == SAMPLE_SIGNED_16BIT)
 		{
-//			new_sample = int(float(new_sample) + normal_noise() * (2.0 / 3) * (1 << 7)) >> 8;
-			new_sample = int(float(new_sample)) >> 8;
+#if 0
+			// dither, proven more or less to not be a good idea
+			new_sample = int(float(new_sample) + normal_noise() * (2.0 / 3) * (1 << 7)) >> 8;
 			if (new_sample >  127) new_sample =  127;
 			if (new_sample < -128) new_sample = -128;
+#else
+			new_sample >>= 8;
+#endif
 		}
 		
 		// make unsigned
@@ -150,7 +154,7 @@ void print_patterns(module_t *mod)
 
 int main(int argc, char *argv[])
 {
-
+	
 	if (argc < 2) print_usage();
 	
 	for (int i = 1; i < argc; ++i)
