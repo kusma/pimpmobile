@@ -34,8 +34,7 @@ OBJS = \
 
 MODULES = \
 	data/*.xm  \
-	data/*.mod \
-	data/*.s3m
+	data/*.mod
 
 BIN_MODULES = $(MODULES:=.bin)
 

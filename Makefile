@@ -60,7 +60,7 @@ bin/example.gba: lib/libpimpmobile.a
 	make -C example
 
 clean:
-	$(RM) bin/* $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a *~ src/*~ include/*~
+	$(RM) bin/* $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a
 	make -C converter clean
 	make -C example clean
 
