@@ -21,8 +21,8 @@ pimp_mod_context __pimp_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
-#define SAMPLES_PER_FRAME ((int)((1 << 24) / ((float)SAMPLERATE)))
-#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PER_FRAME))
+#define SAMPLES_PR_FRAME  ((int)((1 << 24) / ((float)SAMPLERATE)))
+#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PR_FRAME))
 
 static s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 __pimp_sound_buffer_index = 0;
@@ -38,10 +38,10 @@ void pimp_init(const void *module, const void *sample_bank)
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
 	REG_SOUNDCNT_X = (1 << 7);
 	
-	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PER_FRAME, SOUND_BUFFER_SIZE));
+	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PR_FRAME, SOUND_BUFFER_SIZE));
 
 	/* setup timer */
-	REG_TM0CNT_L = (1 << 16) - SAMPLES_PER_FRAME;
+	REG_TM0CNT_L = (1 << 16) - SAMPLES_PR_FRAME;
 	REG_TM0CNT_H = TIMER_START;
 }
 
