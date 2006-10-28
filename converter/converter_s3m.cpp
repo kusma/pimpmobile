@@ -29,6 +29,9 @@ module_t *load_module_s3m(FILE *fp)
 	unsigned char type;
 	fread(&type, 1, 1, fp);
 	if (type != 16) return NULL;
+
+	printf("S3M not yet supported, sorry!\n");
+	return NULL;
 	
 	printf("huston, we have s3m.\n");
 	
@@ -92,6 +95,25 @@ module_t *load_module_s3m(FILE *fp)
 		mod->period_high_clamp = 32767; // fist value is linear, second is amiga
 	}
 
+	fseek(fp, 0x40, SEEK_SET);
+	int chans = 0;
+
+	unsigned enable_map = 0;
+	assert(sizeof(enable_map) >= 4);
+	
+	for (int i = 0; i < 32; ++i)
+	{
+		char state;
+		fread(&state, 1, 1, fp);
+		if (0 == (state & 1 << 8))
+		{
+			chans++;
+			enable_map |= 1 << i;
+		}
+		printf("%02x ", state);
+	}
+	printf("\n%d active channels\n", chans);
+	
 //	mod->num_channels = ;                 /* number of channels in the pattern-data of the module. */
 /*
 	u8  play_order_repeat_position;
