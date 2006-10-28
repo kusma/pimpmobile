@@ -7,6 +7,17 @@
 #include <assert.h>
 #include "pimp_mixer.h"
 
+void __pimp_mixer_clear(s32 *target, u32 samples)
+{
+	int i;
+	assert(target != 0);
+
+	for (i = 0; i < samples; ++i)
+	{
+		target[i] = 0;
+	}
+}
+
 u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	int i;
