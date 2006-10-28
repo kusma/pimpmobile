@@ -6,7 +6,6 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
 
-GBAEMU    ?= vba
 DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
 PIMPMOBILE = ..
@@ -34,13 +33,9 @@ OBJS = \
 	libgbfs.o
 
 MODULES = \
-	melkedemo2.mod \
-	eye.mod
-#	../testbench/env_sustain.xm \
-#	rhino.mod \
-#	melkedemo2.mod \
-#	hypermmx.xm \
-#	eastwing.xm \
+	data/*.xm  \
+	data/*.mod \
+	data/*.s3m
 
 BIN_MODULES = $(MODULES:=.bin)
 
@@ -63,9 +58,6 @@ all: $(TARGET)
 
 clean:
 	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) data.gbfs sample_bank.bin $(BIN_MODULES) *~
-
-run: $(TARGET)
-	$(GBAEMU) $(TARGET)
 
 data.gbfs: sample_bank.bin $(BIN_MODULES)
 
@@ -99,8 +91,5 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
-
-%.s: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -fverbose-asm $(THUMB) -c $< -o $@
 
 -include $(OBJS:.o=.d)
