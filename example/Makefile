@@ -86,9 +86,9 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	cat $^ > $@
 
 %.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 %.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 -include $(OBJS:.o=.d)
