@@ -82,18 +82,21 @@ lib/libpimpmobile.a: $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 
 %.iwram.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 %.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+
+%.iwram.s: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -S -fverbose-asm $(ARM) -c $< -o $@
 
 %.s: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -S -fverbose-asm $(THUMB) -c $< -o $@
 
 %.iwram.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 %.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 -include $(OBJS:.o=.d)
