@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 
-#include "../include/pimpmobile.h"
 #include "pimp_internal.h"
 #include "pimp_render.h"
 #include "pimp_debug.h"
