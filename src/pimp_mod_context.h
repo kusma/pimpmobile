@@ -6,7 +6,7 @@
 #ifndef PIMP_MOD_CONTEXT_H
 #define PIMP_MOD_CONTEXT_H
 
-#include "../include/pimpmobile.h"
+#include "../include/pimpmobile.h" /* needed for pimp_callback */
 #include "pimp_module.h"
 #include "pimp_mixer.h"
 
