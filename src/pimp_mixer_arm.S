@@ -58,7 +58,9 @@ __pimp_mixer_mix_samples:
 	bx lr                   @ return to caller
 #endif
 	
+#ifndef IRQ_SAFE
 	str sp, .stack_store    @ store stack pointer so we can use that register in our mixer (note, interrupts must be disabled for this to be safe)
+#endif
 
 #define TARGET              r0
 #define COUNTER             r1
@@ -197,6 +199,7 @@ __pimp_mixer_mix_samples:
 #else
 	stmia TARGET!, {UNROLL_RANGE}
 	
+	@ mix a single sample
 	ldr   r10, [TARGET]
 	ldrb  TEMP, [SAMPLE_DATA, SAMPLE_CURSOR, lsr #12]
 	mla   r10, TEMP, VOLUME, r10
