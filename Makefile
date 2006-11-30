@@ -54,10 +54,13 @@ endif
 	
 .PHONY: all clean run debug
 
-all: bin/example.gba
+all: bin/example.bin bin/example.gba
 
-bin/example.gba: lib/libpimpmobile.a
+bin/example.gba::
 	make -C example
+
+bin/example.bin::
+	make -C example ../bin/example.bin
 
 clean:
 	$(RM) bin/* $(OBJS) $(OBJS:.o=.d) lib/libpimpmobile.a
