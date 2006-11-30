@@ -44,6 +44,13 @@ static void porta_note(pimp_channel_state *chan)
 	}
 }
 
+static void note_slide(pimp_channel_state *chan, int speed)
+{
+	chan->volume += speed;
+	if (chan->volume > 64) chan->volume = 64;
+	if (chan->volume < 0)  chan->volume = 0;
+}
+
 #ifdef __cplusplus
 }
 #endif

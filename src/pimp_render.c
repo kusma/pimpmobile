@@ -12,6 +12,9 @@
 #include "pimp_math.h"
 #include "pimp_effects.h"
 
+
+#define EFFECT_MISSING(eff_id)
+
 /* #define PRINT_PATTERNS */
 
 
@@ -197,14 +200,12 @@ $f0-$ff   Tone porta
 			case 0x7: break;
 			
 			case 0x8:
-				chan->volume -= chan->volume_command & 0xF;
-				if (chan->volume < 0) chan->volume = 0;
+				note_slide(chan, -(chan->volume_command & 0xF));
 				volume_dirty = TRUE;
 			break;
 			
 			case 0x9:
-				chan->volume += chan->volume_command & 0xF;
-				if (chan->volume > 64) chan->volume = 64;
+				note_slide(chan, chan->volume_command & 0xF);
 				volume_dirty = TRUE;
 			break;
 			
@@ -238,8 +239,8 @@ $f0-$ff   Tone porta
 				}
 				if (chan->effect_param != 0) chan->porta_speed = chan->effect_param * 4;
 			break;
-/*
-			case EFF_VIBRATO: break; */
+
+			case EFF_VIBRATO: EFFECT_MISSING(chan->effect); break;
 			
 			case EFF_PORTA_NOTE_VOLUME_SLIDE:
 				/* TODO: move to a separate function ? */
@@ -263,11 +264,11 @@ $f0-$ff   Tone porta
 					chan->volume_slide_speed = -(chan->effect_param & 0xF);
 				}
 			break;
-/*
-			case EFF_VIBRATO_VOLUME_SLIDE: break;
-			case EFF_TREMOLO: break;
-			case EFF_SET_PAN: break;
-*/
+
+			case EFF_VIBRATO_VOLUME_SLIDE: EFFECT_MISSING(chan->effect); break;
+			case EFF_TREMOLO:              EFFECT_MISSING(chan->effect); break;
+			case EFF_SET_PAN:              EFFECT_MISSING(chan->effect); break;
+
 			case EFF_SAMPLE_OFFSET: break;
 			
 			case EFF_VOLUME_SLIDE:
@@ -281,7 +282,7 @@ $f0-$ff   Tone porta
 				}
 			break;
 			
-/*			case EFF_JUMP_ORDER: break; */
+			case EFF_JUMP_ORDER: EFFECT_MISSING(chan->effect); break;
 
 			case EFF_SET_VOLUME:
 				chan->volume = chan->effect_param;
@@ -313,18 +314,19 @@ $f0-$ff   Tone porta
 					break;
 					
 					case EFF_RETRIG_NOTE:
-						if ((note->effect_parameter & 0xF) != 0) chan->note_retrig = note->effect_parameter & 0xF;
+						if ((note->effect_parameter & 0xF) != 0)
+						{
+							chan->note_retrig = note->effect_parameter & 0xF;
+						}
 					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_UP:
-						chan->volume += chan->effect_param & 0xF;
-						if (chan->volume > 64) chan->volume = 64;
+						note_slide(chan, chan->effect_param & 0xF);
 						volume_dirty = TRUE;
 					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
-						chan->volume -= chan->effect_param & 0xF;
-						if (chan->volume < 0) chan->volume = 0;
+						note_slide(chan, -(chan->effect_param & 0xF));
 						volume_dirty = TRUE;
 					break;
 					
@@ -343,29 +345,26 @@ $f0-$ff   Tone porta
 				else __pimp_mod_context_set_bpm(ctx, chan->effect_param);
 			break;
 			
-/*
-			case EFF_SET_GLOBAL_VOLUME: break;
-			case EFF_GLOBAL_VOLUME_SLIDE: break;
-			case EFF_KEY_OFF: break;
-			case EFF_SET_ENVELOPE_POSITION: break;
-			case EFF_PAN_SLIDE: break;
-*/
+			case EFF_SET_GLOBAL_VOLUME:     EFFECT_MISSING(chan->effect); break;
+			case EFF_GLOBAL_VOLUME_SLIDE:   EFFECT_MISSING(chan->effect); break;
+			case EFF_KEY_OFF:               EFFECT_MISSING(chan->effect); break;
+			case EFF_SET_ENVELOPE_POSITION: EFFECT_MISSING(chan->effect); break;
+			case EFF_PAN_SLIDE:             EFFECT_MISSING(chan->effect); break;
+
 			case EFF_MULTI_RETRIG:
 				if ((note->effect_parameter & 0xF0) != 0) DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("multi retrig x-parameter != 0 not supported\n"));
 				if ((note->effect_parameter & 0xF) != 0) chan->note_retrig = note->effect_parameter & 0xF;
 			break;
 			
-/*			case EFF_TREMOR: break; */
+			case EFF_TREMOR: EFFECT_MISSING(chan->effect); break;
 			
 			case EFF_SYNC_CALLBACK:
 				if (ctx->callback != NULL) ctx->callback(0, chan->effect_param);
 			break;
 			
-/*
-			case EFF_ARPEGGIO: break;
-			case EFF_SET_TEMPO: break;
-			case EFF_SET_BPM: break;
-*/
+			case EFF_ARPEGGIO:  EFFECT_MISSING(chan->effect); break;
+			case EFF_SET_TEMPO: EFFECT_MISSING(chan->effect); break;
+			case EFF_SET_BPM:   EFFECT_MISSING(chan->effect); break;
 			
 			default:
 				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect %02X\n", chan->effect));
@@ -450,14 +449,12 @@ $f0-$ff   Tone porta
 			case 0x5: break;
 	
 			case 0x6:
-				chan->volume -= chan->volume_command & 0xF;
-				if (chan->volume < 0) chan->volume = 0;
+				note_slide(chan, -(chan->volume_command & 0xF));
 				volume_dirty = TRUE;
 			break;
 			
 			case 0x7:
-				chan->volume += chan->volume_command & 0xF;
-				if (chan->volume > 64) chan->volume = 64;
+				note_slide(chan, chan->volume_command & 0xF);
 				volume_dirty = TRUE;
 			break;
 			
@@ -494,19 +491,14 @@ $f0-$ff   Tone porta
 				porta_note(chan);
 				period_dirty = TRUE;
 				
-				/* todo: move to a separate function */
-				chan->volume += chan->volume_slide_speed;
-				if (chan->volume > 64) chan->volume = 64;
-				if (chan->volume < 0) chan->volume = 0;
+				note_slide(chan, chan->volume_slide_speed);
 				volume_dirty = TRUE;
 			break;
 			
 			case EFF_SAMPLE_OFFSET: break;
 			
 			case EFF_VOLUME_SLIDE:
-				chan->volume += chan->volume_slide_speed;
-				if (chan->volume > 64) chan->volume = 64;
-				if (chan->volume < 0) chan->volume = 0;
+				note_slide(chan, chan->volume_slide_speed);
 				volume_dirty = TRUE;
 			break;
 			
