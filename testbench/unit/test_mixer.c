@@ -113,14 +113,32 @@ static void test_looping(void)
 	chan.event_cursor        = 8 << 12;
 	chan.volume              = 1;
 	
-	int target_size = 8;
-	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	
 	const s32 forward_loop_ref[] = {
 		0x00, 0x01, 0x02, 0x03, /* loop */
 		0x00, 0x01, 0x02, 0x03 /* done */
 	};
+	
+	int target_size = 8;
+
+	/* loop should happen exactly at loop-end */
+	chan.sample_cursor       = 0 << 12;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
+
+	/* loop should happen right after loop-end */
+	chan.sample_cursor       = (0 << 12) + 1;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
+
+	/* loop should happen way after loop-end */
+	chan.sample_cursor       = (1 << 12) - 1;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
 	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
 
 
@@ -128,9 +146,9 @@ static void test_looping(void)
 		0x00, 0x01, 0x02, 0x03, /* change direction */
 		0x03, 0x02, 0x01, 0x00, /* change direction */
 		0x00, 0x01, 0x02, 0x03  /* done */ };	
-	
-	/* loop should happen exactly at sample-end */
 	target_size = 8 + 4;
+	
+	/* loop should happen exactly at loop-end */
 	chan.loop_type           = LOOP_TYPE_PINGPONG;
 	chan.sample_cursor       = 0 << 12;
 	chan.sample_cursor_delta = 1 << 12;
@@ -138,8 +156,7 @@ static void test_looping(void)
 	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
 	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 
-	/* loop should happen right after sample-end */
-	target_size = 8 + 4;
+	/* loop should happen right after loop-end */
 	chan.loop_type           = LOOP_TYPE_PINGPONG;
 	chan.sample_cursor       = (0 << 12) + 1;
 	chan.sample_cursor_delta = 1 << 12;
@@ -147,8 +164,7 @@ static void test_looping(void)
 	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
 	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 
-	/* loop should happen way after sample-end */
-	target_size = 8 + 4;
+	/* loop should happen way after loop-end */
 	chan.loop_type           = LOOP_TYPE_PINGPONG;
 	chan.sample_cursor       = (1 << 12) - 1;
 	chan.sample_cursor_delta = 1 << 12;
