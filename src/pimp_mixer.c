@@ -55,10 +55,10 @@ static BOOL detect_loop_event(pimp_mixer_channel_state *chan, int samples)
 			{
 				/* moving backwards through the sample */
 				check_point = chan->loop_start;
-				if (end_sample < (check_point << 12))
+				if (end_sample <= (check_point << 12))
 				{
 					event_delta = -chan->sample_cursor_delta;
-					event_cursor = -((check_point << 12) - chan->sample_cursor);
+					event_cursor = -((check_point << 12) - chan->sample_cursor - 1);
 					return TRUE;
 				}
 				return FALSE;
@@ -96,19 +96,22 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 		case LOOP_TYPE_PINGPONG:
 			do
 			{
+//				printf("");
 				if (chan->sample_cursor_delta >= 0)
 				{
-					/* is there an off-by-one error here ? */
-					chan->sample_cursor -=  (chan->loop_end) << 12;
+					chan->sample_cursor -=  chan->loop_end << 12;
 					chan->sample_cursor  = -chan->sample_cursor;
-					chan->sample_cursor +=  (chan->loop_end) << 12;
+					chan->sample_cursor +=  chan->loop_end << 12;
+					ASSERT(chan->sample_cursor > 0);
+					chan->sample_cursor -= 1;
 				}
 				else
 				{
-					/* is there an off-by-one error here ? */
 					chan->sample_cursor -=  (chan->loop_start) << 12;
 					chan->sample_cursor  = -chan->sample_cursor;
 					chan->sample_cursor +=  (chan->loop_start) << 12;
+					ASSERT(chan->sample_cursor > (chan->loop_start << 12));
+					chan->sample_cursor -= 1;
 				}
 				chan->sample_cursor_delta = -chan->sample_cursor_delta;
 			}
