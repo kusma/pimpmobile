@@ -25,7 +25,7 @@
  #include <stdio.h>
  #define ASSERT(expr) \
 	do {              \
-		if (!(expr)) iprintf("*** ASSERT FAILED %s AT (%s:%i)\n", #expr, __FILE__, __LINE__); \
+		if (!(expr)) printf("*** ASSERT FAILED %s AT %s:%i\n", #expr, __FILE__, __LINE__); \
 	} while(0)
 #else
  #define ASSERT(expr)

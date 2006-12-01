@@ -98,15 +98,17 @@ BOOL process_loop_event(pimp_mixer_channel_state *chan)
 			{
 				if (chan->sample_cursor_delta >= 0)
 				{
-					chan->sample_cursor -=  chan->loop_end << 12;
+					/* is there an off-by-one error here ? */
+					chan->sample_cursor -=  (chan->loop_end) << 12;
 					chan->sample_cursor  = -chan->sample_cursor;
-					chan->sample_cursor +=  chan->loop_end << 12;
+					chan->sample_cursor +=  (chan->loop_end) << 12;
 				}
 				else
 				{
-					chan->sample_cursor -=  chan->loop_start << 12;
+					/* is there an off-by-one error here ? */
+					chan->sample_cursor -=  (chan->loop_start) << 12;
 					chan->sample_cursor  = -chan->sample_cursor;
-					chan->sample_cursor +=  chan->loop_start << 12;
+					chan->sample_cursor +=  (chan->loop_start) << 12;
 				}
 				chan->sample_cursor_delta = -chan->sample_cursor_delta;
 			}
@@ -125,14 +127,17 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 	while (samples > 0 && detect_loop_event(chan, samples) == TRUE)
 	{
 		/* TODO: iterative binary search here instead */
+
 		do
 		{
 			ASSERT((chan->sample_cursor >> 12) < chan->sample_length);
 			ASSERT(chan->sample_data != 0);
+
 			
 			const s32 samp = ((u8*)chan->sample_data)[chan->sample_cursor >> 12];
 			chan->sample_cursor += chan->sample_cursor_delta;
 			*target++ += samp * chan->volume;
+
 			
 			samples--;
 			event_cursor -= event_delta;
@@ -143,6 +148,7 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 		
 		if (process_loop_event(chan) == FALSE)
 		{
+
 			/* the sample has stopped, we need to fill the rest of the buffer with the dc-offset, so it doesn't ruin our unsigned mixing-thing */
 			while (samples--)
 			{
@@ -152,8 +158,11 @@ void __pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 s
 			chan->sample_data = 0;
 			return;
 		}
+		
+		/* check that process_loop_event() didn't put us outside the sample */
+		ASSERT((chan->sample_cursor >> 12) < chan->sample_length);
 	}
-	
+
 	ASSERT(chan->sample_data != 0);
 #if 1
 	chan->sample_cursor = __pimp_mixer_mix_samples(target, samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
@@ -170,7 +179,7 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 	ASSERT(NULL != mixer);
 	ASSERT(NULL != mixer->mix_buffer);
 	ASSERT(NULL != target);
-	ASSERT(samples > 0);
+	ASSERT(samples >= 0);
 
 	__pimp_mixer_clear(mixer->mix_buffer, samples);
 	
