@@ -25,31 +25,9 @@ typedef struct
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 */
 
-void test_mem(const void *array, const void *reference, int size)
+void test_int_array(const int *array, const int *reference, int size, const char *file, int line)
 {
-	char temp[256];
-	int err = 0;
-	
-	int i;
-	for (i = 0; i < size; ++i)
-	{
-		char val = ((char*)array)[i];
-		char ref = ((char*)reference)[i];
-		if (val != ref)
-		{
-			snprintf(temp, 256, "byte #%d not equal, got %X - expected %X", i, val, ref);
-			err = 1;
-			break;
-		}
-	}
-	
-	if (0 != err) test_fail(temp);
-	else test_pass();
-}
-
-void test_int_array(const int *array, const int *reference, int size)
-{
-	char temp[256];
+	char temp[1024];
 	int err = 0;
 	
 	int i;
@@ -59,7 +37,7 @@ void test_int_array(const int *array, const int *reference, int size)
 		char ref = reference[i];
 		if (val != ref)
 		{
-			snprintf(temp, 256, "element #%d not equal, got %X - expected %X", i + 1, val, ref);
+			snprintf(temp, 1024, "%s:%d -- element #%d not equal, got %X - expected %X", file, line, i + 1, val, ref);
 			err = 1;
 			break;
 		}
@@ -71,8 +49,7 @@ void test_int_array(const int *array, const int *reference, int size)
 
 
 #define TEST_INTS_EQUAL(value, expected) TEST((value) == (expected), test_printf("ints not equal, got %d - expected %d", (int)(value), (int)(expected)))
-#define TEST_MEM_EQUAL(array, reference, size) test_mem(array, reference, size)
-#define TEST_INT_ARRAYS_EQUAL(array, reference, size) test_int_array(array, reference, size)
+#define TEST_INT_ARRAYS_EQUAL(array, reference, size) test_int_array(array, reference, size, __FILE__, __LINE__)
 
 #define MAX_TARGET_SIZE 1024
 s8  target[MAX_TARGET_SIZE + 2];
@@ -124,7 +101,6 @@ static void test_looping(void)
 
 	pimp_mixer_channel_state chan;
 	
-	const int target_size = 8;
 	const u8 sample_data[] = { 0x00, 0x01, 0x02, 0x03, 0x04 };
 	
 	chan.sample_length       = ARRAY_SIZE(sample_data);
@@ -137,21 +113,48 @@ static void test_looping(void)
 	chan.event_cursor        = 8 << 12;
 	chan.volume              = 1;
 	
+	int target_size = 8;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
 	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
 	
-	const s32 forward_loop_ref[] = { 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03 };
-	TEST_MEM_EQUAL(mix_buffer, forward_loop_ref, sizeof(forward_loop_ref));
-		
-	chan.loop_type           = LOOP_TYPE_PINGPONG;
-	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	
-	const s32 forward_loop_ref2[] = { 0x00, 0x01, 0x02, 0x03, 0x03, 0x02, 0x01, 0x00 };
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref2, 8);
-	
-//	TEST_MEM_EQUAL(mix_buffer, forward_loop_ref, sizeof(forward_loop_ref2));
+	const s32 forward_loop_ref[] = {
+		0x00, 0x01, 0x02, 0x03, /* loop */
+		0x00, 0x01, 0x02, 0x03 /* done */
+	};
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
 
+
+	const s32 pingpong_loop_ref[] = {
+		0x00, 0x01, 0x02, 0x03, /* change direction */
+		0x03, 0x02, 0x01, 0x00, /* change direction */
+		0x00, 0x01, 0x02, 0x03  /* done */ };	
+	
+	/* loop should happen exactly at sample-end */
+	target_size = 8 + 4;
+	chan.loop_type           = LOOP_TYPE_PINGPONG;
+	chan.sample_cursor       = 0 << 12;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
+
+	/* loop should happen right after sample-end */
+	target_size = 8 + 4;
+	chan.loop_type           = LOOP_TYPE_PINGPONG;
+	chan.sample_cursor       = (0 << 12) + 1;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
+
+	/* loop should happen way after sample-end */
+	target_size = 8 + 4;
+	chan.loop_type           = LOOP_TYPE_PINGPONG;
+	chan.sample_cursor       = (1 << 12) - 1;
+	chan.sample_cursor_delta = 1 << 12;
+	memset(mix_buffer, 0, target_size * sizeof(u32));
+	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 }
 
 void test_mixer(void)
