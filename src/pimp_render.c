@@ -12,10 +12,21 @@
 #include "pimp_math.h"
 #include "pimp_effects.h"
 
+#define EFFECT_MISSING(ctx, eff_id) do {                           \
+	DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("** eff: %x\n", eff_id));      \
+	if ((ctx)->callback != NULL)                                   \
+	{                                                              \
+		ctx->callback(PIMP_CALLBACK_UNSUPPORTED_EFFECT, (eff_id)); \
+	}                                                              \
+} while(0)
 
-#define EFFECT_MISSING(eff_id)
-
-/* #define PRINT_PATTERNS */
+#define VOLUME_EFFECT_MISSING(ctx, eff_id) do {                           \
+	DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("** vol eff: %x\n", eff_id));         \
+	if ((ctx)->callback != NULL)                                          \
+	{                                                                     \
+		ctx->callback(PIMP_CALLBACK_UNSUPPORTED_VOLUME_EFFECT, (eff_id)); \
+	}                                                                     \
+} while(0)
 
 
 static int __pimp_channel_get_volume(pimp_channel_state *chan)
@@ -56,8 +67,11 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 	u32 c;
 	ASSERT(ctx != 0);
 	
-	ctx->report_row   = ctx->curr_row;
-	ctx->report_order = ctx->curr_order;
+	ctx->curr_tick    = 0;
+	ctx->curr_row     = ctx->next_row;
+	ctx->curr_order   = ctx->next_order;
+	ctx->curr_pattern = ctx->next_pattern;
+	__pimp_mod_context_update_next_pos(ctx);
 	
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
@@ -87,15 +101,17 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 			if (note->instrument > 0)
 			{
 				chan->instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
-				chan->sample  = get_sample(chan->instrument, chan->instrument->sample_map[note->note]);
 				
 				chan->vol_env.env = get_vol_env(chan->instrument);
 				__pimp_envelope_reset(&chan->vol_env);
 				chan->sustain = TRUE;
 				chan->fadeout = 1 << 16;
 				
-				chan->volume = chan->sample->volume;
-				volume_dirty = TRUE;
+				if (NULL != chan->sample)
+				{
+					chan->volume = chan->sample->volume;
+					volume_dirty = TRUE;
+				}
 			}
 			
 			if (note->note > 0)
@@ -107,6 +123,9 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 					!(chan->effect == EFF_MULTI_FX && chan->effect_param ==  EFF_NOTE_DELAY)
 					)
 				{
+					/* according to mixer_comments2.txt, vibrato counter is reset at new notes */
+					chan->vibrato_counter = 0;
+					
 					if (chan->instrument->sample_count == 0)
 					{
 						/* TODO: this should be handeled in the converter, and as an assert. */
@@ -159,7 +178,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 			volume_dirty = TRUE;
 		}
 
-		switch (note->volume_command >> 4)
+		switch (chan->volume_command >> 4)
 		{
 /*
   0       Do nothing
@@ -209,9 +228,31 @@ $f0-$ff   Tone porta
 				volume_dirty = TRUE;
 			break;
 			
+			case 0xc:
+				/* COMPLETELY UNTESTED CODE!!! */
+				chan->pan = (chan->volume_command & 0xF) << 4;
+			break;
+			
+			case 0xd:
+				{
+					/* COMPLETELY UNTESTED CODE!!! */
+					int new_pan = ((int)chan->pan) - ((chan->volume_command & 0xF) << 4);
+					if (new_pan < 0) new_pan = 0;
+					chan->pan = new_pan;
+				}
+			break;
+			
+			case 0xe:
+				{
+					/* COMPLETELY UNTESTED CODE!!! */
+					int new_pan = ((int)chan->pan) + ((chan->volume_command & 0xF) << 4);
+					if (new_pan > 255) new_pan = 255;
+					chan->pan = new_pan;
+				}
+			break;
 			
 			default:
-				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", note->volume_command));
+				VOLUME_EFFECT_MISSING(ctx, chan->volume_command);
 		}
 		
 		switch (chan->effect)
@@ -229,9 +270,9 @@ $f0-$ff   Tone porta
 			case EFF_PORTA_NOTE:
 				if (note->note > 0)
 				{
-					/* no fine tune or relative note here, boooy */
-					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, 0);
-					else chan->porta_target = __pimp_get_amiga_period(note->note, 0);
+					/* fine tune and relative note are taken into account */
+					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
+					else chan->porta_target = __pimp_get_amiga_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
 					
 					/* clamp porta-target period (should not be done for S3M) */
 					if (chan->porta_target > ctx->mod->period_high_clamp) chan->porta_target = ctx->mod->period_high_clamp;
@@ -240,10 +281,12 @@ $f0-$ff   Tone porta
 				if (chan->effect_param != 0) chan->porta_speed = chan->effect_param * 4;
 			break;
 
-			case EFF_VIBRATO: EFFECT_MISSING(chan->effect); break;
+			case EFF_VIBRATO:
+				if (0 != (chan->effect_param & 0xF0)) chan->vibrato_speed = chan->effect_param >> 4;
+				if (0 != (chan->effect_param & 0x0F)) chan->vibrato_depth = chan->effect_param & 0x0F;
+			break;
 			
 			case EFF_PORTA_NOTE_VOLUME_SLIDE:
-				/* TODO: move to a separate function ? */
 				if (note->note > 0)
 				{
 					/* no fine tune or relative note here, boooy */
@@ -265,9 +308,12 @@ $f0-$ff   Tone porta
 				}
 			break;
 
-			case EFF_VIBRATO_VOLUME_SLIDE: EFFECT_MISSING(chan->effect); break;
-			case EFF_TREMOLO:              EFFECT_MISSING(chan->effect); break;
-			case EFF_SET_PAN:              EFFECT_MISSING(chan->effect); break;
+			case EFF_VIBRATO_VOLUME_SLIDE: EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_TREMOLO:              EFFECT_MISSING(ctx, chan->effect); break;
+
+			case EFF_SET_PAN:
+				chan->pan = chan->effect_param;
+			break;
 
 			case EFF_SAMPLE_OFFSET: break;
 			
@@ -282,7 +328,10 @@ $f0-$ff   Tone porta
 				}
 			break;
 			
-			case EFF_JUMP_ORDER: EFFECT_MISSING(chan->effect); break;
+			case EFF_JUMP_ORDER:
+				/* go to order xy */
+				__pimp_mod_context_set_next_pos( ctx, 0, chan->effect_param );
+			break;
 
 			case EFF_SET_VOLUME:
 				chan->volume = chan->effect_param;
@@ -291,9 +340,10 @@ $f0-$ff   Tone porta
 			break;
 
 			case EFF_BREAK_ROW:
-				__pimp_mod_context_set_pos(
+				/* go to next order, row xy (decimal) */
+				__pimp_mod_context_set_next_pos(
 					ctx,
-					(chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF) - 1, /* row */
+					(chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF), /* row */
 					ctx->curr_order + 1 /* order */
 				);
 			break;
@@ -311,6 +361,27 @@ $f0-$ff   Tone porta
 					case EFF_FINE_PORTA_DOWN:
 						porta_down(chan, ctx->mod->period_high_clamp);
 						period_dirty = TRUE;
+					break;
+					
+					case EFF_PATTERN_LOOP:
+						if (0 == (chan->effect_param & 0xF))
+						{
+							chan->loop_target_order = ctx->curr_order;
+							chan->loop_target_row   = ctx->curr_row;
+						}
+						else
+						{
+							if (0 == chan->loop_counter)
+							{
+								chan->loop_counter = chan->effect_param & 0xF;
+							}
+							else chan->loop_counter--;
+							
+							if (0 < chan->loop_counter)
+							{
+								__pimp_mod_context_set_next_pos(ctx, chan->loop_target_row, chan->loop_target_order);
+							}
+						}
 					break;
 					
 					case EFF_RETRIG_NOTE:
@@ -336,7 +407,7 @@ $f0-$ff   Tone porta
 					break;
 					
 					default:
-						DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect E%X\n", chan->effect_param >> 4));
+						EFFECT_MISSING(ctx, (chan->effect << 4) | (chan->effect_param >> 4)); 
 				}
 			break;
 			
@@ -345,26 +416,26 @@ $f0-$ff   Tone porta
 				else __pimp_mod_context_set_bpm(ctx, chan->effect_param);
 			break;
 			
-			case EFF_SET_GLOBAL_VOLUME:     EFFECT_MISSING(chan->effect); break;
-			case EFF_GLOBAL_VOLUME_SLIDE:   EFFECT_MISSING(chan->effect); break;
-			case EFF_KEY_OFF:               EFFECT_MISSING(chan->effect); break;
-			case EFF_SET_ENVELOPE_POSITION: EFFECT_MISSING(chan->effect); break;
-			case EFF_PAN_SLIDE:             EFFECT_MISSING(chan->effect); break;
+			case EFF_SET_GLOBAL_VOLUME:     EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_GLOBAL_VOLUME_SLIDE:   EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_KEY_OFF:               EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_SET_ENVELOPE_POSITION: EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_PAN_SLIDE:             EFFECT_MISSING(ctx, chan->effect); break;
 
 			case EFF_MULTI_RETRIG:
 				if ((note->effect_parameter & 0xF0) != 0) DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("multi retrig x-parameter != 0 not supported\n"));
 				if ((note->effect_parameter & 0xF) != 0) chan->note_retrig = note->effect_parameter & 0xF;
 			break;
 			
-			case EFF_TREMOR: EFFECT_MISSING(chan->effect); break;
+			case EFF_TREMOR: EFFECT_MISSING(ctx, chan->effect); break;
 			
 			case EFF_SYNC_CALLBACK:
-				if (ctx->callback != NULL) ctx->callback(0, chan->effect_param);
+				if (ctx->callback != NULL) ctx->callback(PIMP_CALLBACK_SYNC, chan->effect_param);
 			break;
 			
-			case EFF_ARPEGGIO:  EFFECT_MISSING(chan->effect); break;
-			case EFF_SET_TEMPO: EFFECT_MISSING(chan->effect); break;
-			case EFF_SET_BPM:   EFFECT_MISSING(chan->effect); break;
+			case EFF_ARPEGGIO:  EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_SET_TEMPO: EFFECT_MISSING(ctx, chan->effect); break;
+			case EFF_SET_BPM:   EFFECT_MISSING(ctx, chan->effect); break;
 			
 			default:
 				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect %02X\n", chan->effect));
@@ -392,16 +463,6 @@ $f0-$ff   Tone porta
 #ifdef PRINT_PATTERNS	
 	iprintf("\n");
 #endif
-
-	ctx->curr_tick = 0;
-	ctx->curr_row++;
-	if (ctx->curr_row == ctx->curr_pattern->row_count)
-	{
-		ctx->curr_row = 0;
-		ctx->curr_order++;
-		if (ctx->curr_order >= ctx->mod->order_count) ctx->curr_order = ctx->mod->order_repeat;
-		ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
-	}
 }
 
 static void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
@@ -460,9 +521,9 @@ $f0-$ff   Tone porta
 			
 			case 0x8: break;
 			case 0x9: break;
-			
-			default:
-				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", chan->volume_command));
+			case 0xc: break;
+			case 0xd: break;
+			case 0xe: break;
 		}
 		
 		switch (chan->effect)
@@ -485,6 +546,8 @@ $f0-$ff   Tone porta
 			break;
 			
 			case EFF_VIBRATO:
+				vibrato(chan, ctx->mod->period_low_clamp, ctx->mod->period_high_clamp);
+				period_dirty = TRUE;
 			break;
 			
 			case EFF_PORTA_NOTE_VOLUME_SLIDE:
@@ -495,6 +558,7 @@ $f0-$ff   Tone porta
 				volume_dirty = TRUE;
 			break;
 			
+			case EFF_SET_PAN: break;
 			case EFF_SAMPLE_OFFSET: break;
 			
 			case EFF_VOLUME_SLIDE:
@@ -506,6 +570,9 @@ $f0-$ff   Tone porta
 				switch (chan->effect_param >> 4)
 				{
 					case EFF_AMIGA_FILTER: break;
+					case EFF_FINE_PORTA_UP: break;
+					case EFF_FINE_PORTA_DOWN: break;
+					case EFF_PATTERN_LOOP: break;
 					
 					case EFF_RETRIG_NOTE:
 						chan->retrig_tick++;
