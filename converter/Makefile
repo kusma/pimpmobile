@@ -43,6 +43,9 @@ clean:
 
 $(TARGET): $(OBJS)
 	$(LD) $^ $(LDFLAGS) -o $@
+	
+converter2: dump_module2.o dump.o
+	$(LD) $^ $(LDFLAGS) -o $@
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
