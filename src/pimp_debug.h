@@ -15,7 +15,7 @@
 #define DEBUG_LEVEL_ERROR   100
 
 #ifdef DEBUG_PRINT_ENABLE
- #define DEBUG_PRINT(debug_level, X) do { if (DEBUG_LEVEL <= debug_level) iprintf X } while(0)
+ #define DEBUG_PRINT(debug_level, X) do { if (DEBUG_LEVEL <= debug_level) iprintf X; } while(0)
 #else
  #define DEBUG_PRINT(debug_level, X)
 #endif
