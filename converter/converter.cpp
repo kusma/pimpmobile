@@ -175,12 +175,12 @@ int main(int argc, char *argv[])
 		}
 		
 		fclose(fp);
-		printf("done loading\n");
+/*		printf("done loading\n"); */
 		
-		printf("converting samples\n");
+/*		printf("converting samples\n"); */
 		convert_samples(mod); // convert all samples to unsigned 8bit format
 
-		printf("dumping samples\n");
+/*		printf("dumping samples\n"); */
 		dump_samples(mod); // find any duplicate samples, and merge them
 		
 //		print_patterns(mod);
