@@ -193,16 +193,15 @@ module_t *load_module_mod(FILE *fp)
 		unsigned loop_length = ((buf[0] << 8) | buf[1]) << 1;
 		samp.loop_end = samp.loop_start + loop_length;
 		if (samp.loop_end > samp.length) samp.loop_end = samp.length;
-		
+/*		
 		printf("sample: %02X - ", i + 1);
 		printf("loop start: %d ", samp.loop_start);
 		printf("loop end: %d ", samp.loop_end);
-		
+*/	
 		if ((samp.loop_start <= 2) && (loop_length <= 4)) samp.loop_type = LOOP_NONE;
 		else samp.loop_type = LOOP_FORWARD;
 		
-//		samp.loop_type = LOOP_NONE;
-		printf("\n");
+//		printf("\n");
 	}
 	
 
