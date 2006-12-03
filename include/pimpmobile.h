@@ -45,6 +45,14 @@ int pimp_get_row();
 int pimp_get_order();
 void pimp_set_pos(int row, int order);
 
+enum pimp_callback_type
+{
+	PIMP_CALLBACK_SYNC = 0,
+	PIMP_CALLBACK_NOTE = 1,
+	PIMP_CALLBACK_UNSUPPORTED_EFFECT = 2,
+	PIMP_CALLBACK_UNSUPPORTED_VOLUME_EFFECT = 3
+};
+
 /* callback system (for music sync) */
 typedef void (*pimp_callback)(int, int);
 void pimp_set_callback(pimp_callback callback);

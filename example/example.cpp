@@ -56,6 +56,23 @@ void vblank()
 	mix();
 }
 
+void callback(int type, int data)
+{
+	switch (type)
+	{
+		case PIMP_CALLBACK_SYNC:
+		break;
+		
+		case PIMP_CALLBACK_UNSUPPORTED_EFFECT:
+			iprintf("eff: %X\n", data);
+		break;
+		
+		case PIMP_CALLBACK_UNSUPPORTED_VOLUME_EFFECT:
+			iprintf("vol eff: %X\n", data);
+		break;
+	}
+}
+
 void play_next_file()
 {
 	static char name[32];
@@ -70,6 +87,7 @@ void play_next_file()
 	pimp_close();
 	iprintf("loading %s\n", name);
 	pimp_init(mod, sample_bank);
+	pimp_set_callback(callback);
 }
 
 int main()
