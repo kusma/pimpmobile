@@ -14,6 +14,12 @@ static INLINE void *get_ptr(const unsigned int *offset)
 	return (char*)offset + *offset;
 }
 
+static INLINE void set_ptr(unsigned int *dst, const void *ptr)
+{
+	*dst = ((int)ptr) - (int)dst;
+}
+
+
 #define KEY_OFF 121
 
 typedef enum
