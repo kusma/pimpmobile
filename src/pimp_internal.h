@@ -84,6 +84,7 @@ typedef enum
 	EFF_AMIGA_FILTER           = 0x0,
 	EFF_FINE_PORTA_UP          = 0x1,
 	EFF_FINE_PORTA_DOWN        = 0x2,
+	EFF_PATTERN_LOOP           = 0x6,
 	EFF_RETRIG_NOTE            = 0x9,
 	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
 	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
