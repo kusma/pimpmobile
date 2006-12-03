@@ -13,47 +13,6 @@
 #include "converter.h"
 #include "../src/pimp_internal.h"
 
-#include <vector>
-
-/* little endian, datatypes aligned to their size */
-class BinChunk
-{
-public:
-	bool align(int a)
-	{
-		if ((data.size() % a) != 0)
-		{
-			int b = a - (data.size() % a);
-			for (;b;--b) data.push_back(0);
-			return false;
-		}
-		return true;
-	}
-	
-	void dump(const unsigned char b)
-	{
-		data.push_back(b);
-	}
-
-	void dump(const unsigned short h)
-	{
-		align(2);
-		data.push_back((unsigned char)(h >> 0));
-		data.push_back((unsigned char)(h >> 8));
-	}
-
-	void dump(const unsigned int i)
-	{
-		align(4);
-		data.push_back((unsigned char)(i >>  0));
-		data.push_back((unsigned char)(i >>  8));
-		data.push_back((unsigned char)(i >> 16));
-		data.push_back((unsigned char)(i >> 24));
-	}
-
-private:
-	std::vector<unsigned char> data;
-};
 
 unsigned buffer_size = 0;
 unsigned char *data = 0;
@@ -126,66 +85,6 @@ void dump_string(const char *str, const size_t len)
 	else pos += slen;
 }
 
-void dump_datastruct(const char *format, ...)
-{
-	va_list marker;
-	va_start(marker, format);
-	
-	unsigned int i;
-
-	while (*format != '\0')
-	{
-		if (buffer_size < (pos + 4))
-		{
-			buffer_size *= 2;
-			data = (unsigned char*)realloc(data, buffer_size);
-			memset(&data[buffer_size / 2], 0, buffer_size / 2);
-		}
-		
-		switch (*format++)
-		{
-			case 'x':
-				pos++;
-			break;
-			
-			case 'b':
-				i = va_arg(marker, int);
-				dump_byte((unsigned char)i);
-			break;
-			
-			case 'h':
-				i = va_arg(marker, int);
-				dump_halfword((unsigned short)i);
-			break;
-			
-			case 'i':
-				i = va_arg(marker, int);
-				dump_word((unsigned int)i);
-			break;
-			
-			default: assert(0);
-		}
-	}
-	va_end(marker);
-}
-
-/*
-struct foo
-{
-	int a __attribute__ ((aligned(8)));
-	int b __attribute__ ((aligned(8)));
-};
-*/
-
-
-/*
-	// these are offsets relative to the begining of the pimp_module_t-structure
-	unsigned order_ptr;
-	unsigned pattern_data_ptr;
-	unsigned channel_ptr;
-	unsigned instrument_ptr;
-*/
-
 using std::map;
 using std::multimap;
 using std::make_pair;
@@ -194,7 +93,7 @@ void dump_module(module_t *mod, const char *filename)
 {
 	assert(mod != 0);
 
-	printf("\ndumping module \"%s\"\n\n", mod->name);
+	printf("dumping module \"%s\" to %s\n", mod->name, filename);
 	pos = 0;
 	buffer_size = 1024;
 	
@@ -341,11 +240,9 @@ void dump_module(module_t *mod, const char *filename)
 			dump_word(0);
 		}
 		
-//		if (instr.panning_envelope != 0) pointer_map.insert(make_pair(instr.panning_envelope, pos));
 		dump_word((unsigned)instr.panning_envelope);
 #if 0
 		// IT ONLY 
-		if (instr.pitch_envelope != 0) pointer_map.insert(make_pair(instr.pitch_envelope, pos));
 		dump_word((unsigned)instr.pitch_envelope);
 #endif
 		dump_halfword(instr.fadeout_rate);
@@ -455,7 +352,7 @@ void dump_module(module_t *mod, const char *filename)
 		
 		*target = pointer_back_map[it->first] - it->second;
 	}
-	
+
 	FILE *fp = fopen(filename, "wb");
 	if (!fp)
 	{
