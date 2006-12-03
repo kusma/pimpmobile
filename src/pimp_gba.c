@@ -93,6 +93,7 @@ void pimp_frame()
 	locked = FALSE;
 }
 
+#ifndef DEBUG
 void __pimp_mixer_clear(s32 *target, u32 samples)
 {
 	int i;
@@ -108,3 +109,4 @@ void __pimp_mixer_clear(s32 *target, u32 samples)
 	
 	CpuFastSet(&zero, dst, DMA_SRC_FIXED | (samples & ~7));
 }
+#endif
