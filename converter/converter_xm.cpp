@@ -85,7 +85,7 @@ module_t *load_module_xm(FILE *fp)
 	char name[20 + 1];
 	fread(name, 20, 1, fp);
 	name[20] = '\0';
-	printf("name : \"%s\"\n", name);
+/*	printf("name : \"%s\"\n", name); */
 
 	// just another file-sanity-check
 	unsigned char magic;
@@ -96,7 +96,7 @@ module_t *load_module_xm(FILE *fp)
 	char tracker_name[20 + 1];
 	fread(tracker_name, 20, 1, fp);
 	tracker_name[20] = '\0';
-	printf("tracker-name : \"%s\"\n", tracker_name);
+/*	printf("tracker-name : \"%s\"\n", tracker_name); */
 	
 	unsigned short version;
 	fread(&version, 2, 1, fp);
@@ -135,7 +135,7 @@ module_t *load_module_xm(FILE *fp)
 	not the number of patterns as documented.
 	ohwell, let's convert. */
 	
-#define PRINT_HEADER
+// #define PRINT_HEADER
 #ifdef PRINT_HEADER
 	printf("header size: %u\n", xm_header.header_size);
 	printf("len:         %u\n", xm_header.len);
@@ -147,10 +147,10 @@ module_t *load_module_xm(FILE *fp)
 	printf("tempo:       %u\n", xm_header.tempo);
 	printf("bpm:         %u\n", xm_header.bpm);
 #endif
-	
+#if 0
 	if ((xm_header.flags & 1) == 0) printf("AAAAMIIIIIGAH!\n");
 	else printf("LINEAR!!\n");
-	
+#endif
 	if ((xm_header.flags & 1) == 0)
 	{
 		mod->use_linear_frequency_table = false;            // behavour flag
@@ -203,7 +203,7 @@ module_t *load_module_xm(FILE *fp)
 	// seek to start of pattern
 	fseek(fp, 60 + xm_header.header_size, SEEK_SET);
 	
-	printf("dumping pattern-data...");
+/*	printf("loading pattern-data..."); */
 	mod->patterns.resize(xm_header.patterns);
 	
 	// load patterns
@@ -317,10 +317,11 @@ module_t *load_module_xm(FILE *fp)
 		// seek to end of block
 		fseek(fp, last_pos + pattern_header.header_size + pattern_header.data_size, SEEK_SET);
 	}
+/*
 	printf("done!\n");
-	
 	printf("loading instrument-data...\n");
-	
+*/
+
 	// load instruments
 	mod->instruments.resize(xm_header.instruments);
 	for (unsigned i = 0; i < xm_header.instruments; ++i)
@@ -331,6 +332,7 @@ module_t *load_module_xm(FILE *fp)
 		memset(&ih, 0, sizeof(ih));
 		
 		instrument_t &instr = mod->instruments[i];
+		memset(&instr, 0, sizeof(instrument_t));
 		
 		fread(&ih.header_size,  4,  1, fp);
 		fread(&ih.name,         1, 22, fp);
@@ -370,7 +372,12 @@ module_t *load_module_xm(FILE *fp)
 		if ((ih.vol_type & 1) == 1)
 		{
 			instr.volume_envelope = (envelope_t*)malloc(sizeof(envelope_t));
-			assert(instr.volume_envelope != 0);
+			if (NULL == instr.volume_envelope)
+			{
+				/* TODO: cleanup */
+				return NULL;
+			}
+			
 			memset(instr.volume_envelope, 0, sizeof(envelope_t));
 
 			envelope_t *env = instr.volume_envelope;
@@ -456,7 +463,6 @@ module_t *load_module_xm(FILE *fp)
 			xm_sample_header_t &sh = sample_headers[s];
 			
 			// load sample-header
-			sh.length = 0xDEADBEEF;
 			fread(&sh.length,      4,  1, fp);
 			fread(&sh.loop_start,  4,  1, fp);
 			fread(&sh.loop_length, 4,  1, fp);
@@ -591,7 +597,7 @@ module_t *load_module_xm(FILE *fp)
 #endif
 
 	}
-	printf("done!\n");
+/*	printf("done!\n"); */
 	
 	return mod;
 }
