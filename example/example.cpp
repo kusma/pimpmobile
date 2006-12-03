@@ -21,7 +21,7 @@
 #include "../include/pimpmobile.h"
 #include "gbfs.h"
 
-const void *mod;
+const void *mod = NULL;
 GBFS_FILE const* fs;
 const void *sample_bank = 0;
 int curr_file = 0;
@@ -68,6 +68,7 @@ void play_next_file()
 	while (strncmp(name, "sample_bank.bin", 32) == 0);
 	
 	pimp_close();
+	iprintf("loading %s\n", name);
 	pimp_init(mod, sample_bank);
 }
 
@@ -87,6 +88,12 @@ int main()
 	fs = find_first_gbfs_file((void*)0x08000000);
 	file_count = gbfs_count_objs(fs);
 	sample_bank  = gbfs_get_obj(fs, "sample_bank.bin", 0);
+	
+	if (file_count <= 0)
+	{
+		iprintf("no files in file-system\n");
+		return 1;
+	}
 	
 	play_next_file();
 
