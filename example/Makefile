@@ -32,9 +32,7 @@ OBJS = \
 	example.o \
 	libgbfs.o
 
-MODULES = \
-	data/*.xm  \
-	data/*.mod
+MODULES = $(shell ls data/*.xm data/*.mod)
 
 BIN_MODULES = $(MODULES:=.bin)
 
