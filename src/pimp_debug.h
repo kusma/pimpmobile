@@ -25,7 +25,12 @@
  #include <stdio.h>
  #define ASSERT(expr) \
 	do {              \
-		if (!(expr)) printf("*** ASSERT FAILED %s AT %s:%i\n", #expr, __FILE__, __LINE__); \
+		if (!(expr))  \
+		{             \
+			printf("*** ASSERT FAILED %s AT %s:%i\n", #expr, __FILE__, __LINE__); \
+			fflush(stdout); \
+			exit(1); \
+		} \
 	} while(0)
 #else
  #define ASSERT(expr)
