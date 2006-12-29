@@ -29,9 +29,10 @@ typedef struct
 	const u8             *sample_data;
 	u32                   sample_cursor;
 	s32                   sample_cursor_delta;
-	u32                   event_cursor; /* the position of the next event */
 	s32                   volume;
 } pimp_mixer_channel_state;
+
+int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, int samples);
 
 typedef struct
 {

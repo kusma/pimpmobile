@@ -24,8 +24,26 @@
 #define FALSE ((BOOL)0)
 #endif
 
-#ifndef INILIE
+#ifndef MAX
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
+#ifndef MIN
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef INLINE
 #define INLINE inline
+#endif
+
+#ifndef UNIT_TESTING
+#define STATIC static
+#else
+#define STATIC
+#endif
+
+#ifndef PURE
+#define PURE __attribute__((pure))
 #endif
 
 #endif /* PIMP_BASE_H */

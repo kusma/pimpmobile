@@ -1,5 +1,6 @@
 #include <src/pimp_mixer.h>
 #include "../framework/test.h"
+#include "../framework/helpers.h"
 
 /*
 
@@ -25,31 +26,6 @@ typedef struct
 void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 */
 
-void test_int_array(const int *array, const int *reference, int size, const char *file, int line)
-{
-	char temp[1024];
-	int err = 0;
-	
-	int i;
-	for (i = 0; i < size; ++i)
-	{
-		char val = array[i];
-		char ref = reference[i];
-		if (val != ref)
-		{
-			snprintf(temp, 1024, "%s:%d -- element #%d not equal, got %X - expected %X", file, line, i + 1, val, ref);
-			err = 1;
-			break;
-		}
-	}
-	
-	if (0 != err) test_fail(temp);
-	else test_pass();
-}
-
-
-#define TEST_INTS_EQUAL(value, expected) TEST((value) == (expected), test_printf("ints not equal, got %d - expected %d", (int)(value), (int)(expected)))
-#define TEST_INT_ARRAYS_EQUAL(array, reference, size) test_int_array(array, reference, size, __FILE__, __LINE__)
 
 #define MAX_TARGET_SIZE 1024
 s8  target[MAX_TARGET_SIZE + 2];
@@ -80,14 +56,20 @@ static void test_mixer_basic(void)
 		
 		__pimp_mixer_mix(&mixer, target + 1, target_size);
 		
+		/* test that values outside the buffer haven't been written */
+		/* target */
 		TEST_INTS_EQUAL(target[0], rnd);
-		TEST_INTS_EQUAL(target[target_size + 1], rnd);
+		TEST_INTS_EQUAL(target[target_size + 1], rnd);	
+		/* mix_buffer */
+		TEST_INTS_EQUAL(mix_buffer[target_size + 1], rnd);	
 		TEST_INTS_EQUAL(mix_buffer[0], rnd);
-		TEST_INTS_EQUAL(mix_buffer[target_size + 1], rnd);
 	}
 }
 
 #define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
+
+int linear_search_loop_event(int event_cursor, int event_delta, int max_samples);
+int calc_loop_event(int event_cursor, int event_delta, int max_samples);
 
 static void test_looping(void)
 {
@@ -103,6 +85,53 @@ static void test_looping(void)
 	
 	const u8 sample_data[] = { 0x00, 0x01, 0x02, 0x03, 0x04 };
 	
+	/* quick, let's test pimp_mixer_detect_loop_event() */
+	{
+		int i;
+		
+		for (i = 0; i < 1000000; ++i)
+		{
+			int max_samples = rand() % 1024;
+			int event_cursor = rand();
+			int event_delta = rand();
+			int correct = linear_search_loop_event(event_cursor, event_delta, max_samples);
+			int res = calc_loop_event(event_cursor, event_delta, max_samples);
+			TEST_INTS_EQUAL(res, correct);
+		}
+		
+		chan.loop_type           = LOOP_TYPE_FORWARD;
+		chan.loop_start          = 0;
+		chan.loop_end            = 4;
+		chan.sample_cursor       = 0 << 12;
+		chan.sample_cursor_delta = 1 << 12;
+
+		/* test that the clamp to buffer size happens at the right place */
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 1), -1);
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 2), -1);
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 3), -1);
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 4), 4);
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+#if 0
+#define CLAMP 4
+		for (i = 1; i < CLAMP; ++i)
+		{
+			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), i);
+		}
+		
+		for (i = CLAMP; i < 1024; ++i)
+		{
+			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), CLAMP);
+			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), CLAMP);
+		}
+#endif
+		/* see that the correct amount of samples are mixed event at the border values */
+		chan.sample_cursor       = (0 << 12) + 1;
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+		chan.sample_cursor       = (1 << 12) - 1;
+		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+	}
+
+	
 	chan.sample_length       = ARRAY_SIZE(sample_data);
 	chan.loop_start          = 0;
 	chan.loop_end            = 4;
@@ -110,7 +139,6 @@ static void test_looping(void)
 	chan.sample_data         = sample_data;
 	chan.sample_cursor       = 0 << 12;
 	chan.sample_cursor_delta = 1 << 12;
-	chan.event_cursor        = 8 << 12;
 	chan.volume              = 1;
 	
 	const s32 forward_loop_ref[] = {
@@ -140,7 +168,6 @@ static void test_looping(void)
 	memset(mix_buffer, 0, target_size * sizeof(u32));
 	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
 	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
-
 
 	const s32 pingpong_loop_ref[] = {
 		0x00, 0x01, 0x02, 0x03, /* change direction */

@@ -18,7 +18,7 @@ LD      = $(PREFIX)g++
 AS      = $(PREFIX)as
 AR      = $(PREFIX)ar
 
-CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include
+CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
 CFLAGS   = -mthumb-interwork -mlong-calls
 CXXFLAGS = -mthumb-interwork -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  = -mthumb-interwork -Wl,--gc-section -Wl,-Map,$(basename $@).map
