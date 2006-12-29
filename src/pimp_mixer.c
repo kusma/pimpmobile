@@ -52,7 +52,7 @@ STATIC PURE int calc_loop_event(int event_cursor, int event_delta, const int max
 /* returns the number of samples that can be mixed before a loop event occurs */
 PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, const int max_samples)
 {
-	ASSERT(samples > 0);
+	ASSERT(max_samples > 0);
 	ASSERT(NULL != chan);
 	
 	int safe_samples;
