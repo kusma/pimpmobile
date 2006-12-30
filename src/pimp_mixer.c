@@ -33,14 +33,32 @@ STATIC PURE int linear_search_loop_event(int event_cursor, int event_delta, cons
 	return -1;
 }
 
-STATIC PURE int calc_loop_event(int event_cursor, int event_delta, const int max_samples)
+static PURE int calc_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int result;
 	if (event_cursor == 0) return 1;
 	if ((event_cursor - event_delta * max_samples) > 0) return -1;
 
 #ifdef TARGET_GBA
-	result = result = Div(event_cursor + event_delta - 1, event_delta);
+	{
+		int number = event_cursor + event_delta - 1;
+		int denom = event_delta;
+		
+		/* call BIOS-function to divide, as it's fast enough for our needs. */
+		asm (
+			"mov r0, %[number] \n"
+			"mov r1, %[denom]  \n"
+#ifdef __thumb__
+			"swi 0x6           \n"
+#else
+			"swi 0x60000       \n"
+#endif
+			"mov %[result], r0 \n"
+			: [result] "=r" (result) /* output */
+			: [number] "r" (number), [denom] "r" (denom) /* inputs */
+			: "r0","r1","r2","r3" /* clobbers */
+		);
+	}
 #else
 	result = (event_cursor + event_delta - 1) / event_delta;
 #endif
