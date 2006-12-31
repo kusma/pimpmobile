@@ -94,19 +94,44 @@ void pimp_frame()
 }
 
 #ifndef DEBUG
-void __pimp_mixer_clear(s32 *target, u32 samples)
+void fjall(void *src, void *dst, int mode);
+
+void __pimp_mixer_clear(s32 *target, const u32 samples)
 {
 	int i;
-	const u32 zero = 0;
+	static const u32 zero = 0;
+	const u32 *src = &zero;
 	u32 *dst = (u32*)target;
+	const int mode = DMA_SRC_FIXED | (samples & ~7);
 	
+	ASSERT(NULL != src);
 	ASSERT(NULL != dst);
-	
-	for (i = samples &7; i; --i)
+
+	for (i = samples & 7; i; --i)
 	{
 		*dst++ = 0;
 	}
+	if (0 == (samples & ~7)) return;
 	
-	CpuFastSet(&zero, dst, DMA_SRC_FIXED | (samples & ~7));
+	ASSERT(((int)src & 3) == 0);
+	ASSERT(((int)dst & 3) == 0);
+	
+	/* call BIOS-function CpuFastSet() to clear buffer */
+	asm (
+		"mov r0, %[src]  \n"
+		"mov r1, %[dst]  \n"
+		"mov r2, %[mode] \n"
+#ifdef __thumb__
+		"swi 0xC         \n"
+#else
+		"swi 0xC << 16   \n"
+#endif
+		: /* no output */
+		: /* inputs */
+			[src]  "r"(src),
+			[dst]  "r"(dst),
+			[mode] "r"(mode)
+		: "r0", "r1", "r2", "r3" /* clobbers */
+	);
 }
 #endif
