@@ -51,12 +51,14 @@ static PURE int calc_loop_event(int event_cursor, int event_delta, const int max
 #ifdef __thumb__
 			"swi 0x6           \n"
 #else
-			"swi 0x60000       \n"
+			"swi 0x6 << 16     \n"
 #endif
 			"mov %[result], r0 \n"
 			: [result] "=r" (result) /* output */
-			: [number] "r" (number), [denom] "r" (denom) /* inputs */
-			: "r0","r1","r2","r3" /* clobbers */
+			: /* inputs */
+				[number] "r" (number),
+				[denom] "r" (denom)
+			: "r0", "r1", "r2", "r3" /* clobbers */
 		);
 	}
 #else
