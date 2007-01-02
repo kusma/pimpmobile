@@ -9,15 +9,19 @@
 #include "pimp_base.h"
 #include "pimp_config.h"
 
-static INLINE void *get_ptr(const unsigned int *offset)
+static INLINE void *pimp_get_ptr(const unsigned int *offset)
 {
 	return (char*)offset + *offset;
 }
 
-static INLINE void set_ptr(unsigned int *dst, const void *ptr)
+#define PIMP_GET_PTR(offset) pimp_get_ptr(&offset)
+
+static INLINE void pimp_set_ptr(unsigned int *dst, const void *ptr)
 {
 	*dst = ((int)ptr) - (int)dst;
 }
+
+#define PIMP_SET_PTR(dst, ptr) pimp_set_ptr(&dst, ptr)
 
 
 #define KEY_OFF 121

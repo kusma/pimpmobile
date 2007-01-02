@@ -56,31 +56,31 @@ typedef struct
 static INLINE pimp_pattern_entry *get_pattern_data(const pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
-	return (pimp_pattern_entry*)get_ptr(&pat->data_ptr);
+	return (pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
 }
 
 static INLINE int __pimp_module_get_order(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return ((char*)get_ptr(&mod->order_ptr))[i];
+	return ((char*)PIMP_GET_PTR(mod->order_ptr))[i];
 }
 
 static INLINE pimp_pattern *__pimp_module_get_pattern(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((pimp_pattern*)get_ptr(&mod->pattern_ptr))[i];
+	return &((pimp_pattern*)PIMP_GET_PTR(mod->pattern_ptr))[i];
 }
 
 static INLINE pimp_channel *__pimp_module_get_channel(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((pimp_channel*)get_ptr(&mod->channel_ptr))[i];
+	return &((pimp_channel*)PIMP_GET_PTR(mod->channel_ptr))[i];
 }
 
 static INLINE pimp_instrument *__pimp_module_get_instrument(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((pimp_instrument*)get_ptr(&mod->instrument_ptr))[i];
+	return &((pimp_instrument*)PIMP_GET_PTR(mod->instrument_ptr))[i];
 }
 
 #endif /* PIMP_MODULE_H */
