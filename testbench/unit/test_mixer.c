@@ -92,9 +92,8 @@ static void test_looping(void)
 		for (i = 0; i < 1000000; ++i)
 		{
 			int max_samples = rand() % 1024;
-			max_samples = 1024;
-			int event_cursor = rand() * rand();
-			int event_delta = (rand() * rand()) % (1 << 20);
+			int event_cursor = abs(rand() * rand());
+			int event_delta = abs(rand() * rand()) % (1 << 19);
 			int correct = linear_search_loop_event(event_cursor, event_delta, max_samples);
 			int res = calc_loop_event(event_cursor, event_delta, max_samples);
 			TEST_INTS_EQUAL(res, correct);
