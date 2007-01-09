@@ -35,6 +35,8 @@ STATIC PURE int linear_search_loop_event(int event_cursor, int event_delta, cons
 
 STATIC PURE int calc_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
+	RETART 9000!
+	
 	int result;
 	if (event_cursor == 0) return 1;
 	if ((event_cursor - event_delta * max_samples) > 0) return -1;
