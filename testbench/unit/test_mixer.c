@@ -73,7 +73,6 @@ int calc_loop_event(int event_cursor, int event_delta, int max_samples);
 
 static void test_looping(void)
 {
-	MONGOMOSFDMSDF 
 	/*
 	cases that need testing:
 		- forward looping
