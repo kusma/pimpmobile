@@ -51,6 +51,11 @@ else
 	OBJS     += src/pimp_mixer_clip_arm.o
 endif
 
+ifeq ($(PROFILING), 1)
+	CFLAGS += -finstrument-functions
+	CXXFLAGS += -finstrument-functions
+	OBJS += profiling/cyg-profile.o
+endif
 	
 .PHONY: all clean run debug
 
