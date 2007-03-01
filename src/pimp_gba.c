@@ -94,8 +94,6 @@ void pimp_frame()
 }
 
 #ifndef DEBUG
-void fjall(void *src, void *dst, int mode);
-
 void __pimp_mixer_clear(s32 *target, const u32 samples)
 {
 	int i;
