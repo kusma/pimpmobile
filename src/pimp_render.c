@@ -113,7 +113,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		pimp_channel_state *chan = &ctx->channels[c];
 		pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
-		const pimp_pattern_entry *note = &__pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
+		const pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
 		
 #ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);
@@ -133,7 +133,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		{
 			if (note->instrument > 0)
 			{
-				chan->instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
+				chan->instrument = pimp_module_get_instrument(ctx->mod, note->instrument - 1);
 				
 				chan->vol_env.env = pimp_instrument_get_vol_env(chan->instrument);
 				pimp_envelope_reset(&chan->vol_env);

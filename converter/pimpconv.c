@@ -70,7 +70,7 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
 		int j;
-		pimp_instrument *instr = __pimp_module_get_instrument(mod, i);
+		pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		for (j = 0; j < instr->sample_count; ++j)
 		{
 			pimp_sample *samp = pimp_instrument_get_sample(instr, j);

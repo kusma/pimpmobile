@@ -25,7 +25,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	
 	ctx->next_row      = 0;
 	ctx->next_order    = 0;
-	ctx->next_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->next_order));
+	ctx->next_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->next_order));
 	
 	ctx->curr_bpm   = 125;
 	ctx->curr_tempo = 5;
@@ -33,7 +33,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	
 	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	
-	ctx->curr_pattern = __pimp_module_get_pattern(mod, __pimp_module_get_order(mod, ctx->curr_order));
+	ctx->curr_pattern = pimp_module_get_pattern(mod, pimp_module_get_order(mod, ctx->curr_order));
 	__pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
@@ -69,7 +69,7 @@ void __pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
 		ctx->curr_order = ctx->mod->order_repeat;
 	}
 	
-	ctx->curr_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->curr_order));
+	ctx->curr_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->curr_order));
 	__pimp_mod_context_update_next_pos(ctx);
 }
 
@@ -87,7 +87,7 @@ static void __pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
 	
 	if (ctx->next_order != ctx->curr_order)
 	{
-		ctx->next_pattern = __pimp_module_get_pattern(ctx->mod, __pimp_module_get_order(ctx->mod, ctx->next_order));
+		ctx->next_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->next_order));
 	}
 }
 

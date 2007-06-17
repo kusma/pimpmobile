@@ -58,7 +58,7 @@ void serialize_channels(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->channel_ptr), s->pos);
 	for (i = 0; i < mod->channel_count; ++i)
 	{
-		const pimp_channel *chan = __pimp_module_get_channel(mod, i);
+		const pimp_channel *chan = pimp_module_get_channel(mod, i);
 		serialize_byte(s, chan->pan);
 		serialize_byte(s, chan->volume);
 		serialize_byte(s, chan->mute);
@@ -78,14 +78,14 @@ void serialize_instruments(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->instrument_ptr), s->pos);
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
-		const pimp_instrument *instr = __pimp_module_get_instrument(mod, i);
+		const pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		serialize_instrument(s, instr);
 	}
 	
 	/* dump instrument data (samples, envelopes etc) */
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
-		const pimp_instrument *instr = __pimp_module_get_instrument(mod, i);
+		const pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		serialize_instrument_data(s, instr);
 	}
 }
@@ -102,7 +102,7 @@ void serialize_orders(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->order_ptr), s->pos);
 	for (i = 0; i < mod->order_count; ++i)
 	{
-		serialize_byte(s, __pimp_module_get_order(mod, i));
+		serialize_byte(s, pimp_module_get_order(mod, i));
 	}
 }
 
@@ -119,7 +119,7 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->pattern_ptr), s->pos);
 	for (i = 0; i < mod->pattern_count; ++i)
 	{
-		const pimp_pattern *pattern = __pimp_module_get_pattern(mod, i);
+		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		serializer_align(s, 4);
 		
 		serialize_pointer(s, pimp_get_ptr(&pattern->data_ptr)); // data_ptr
@@ -130,10 +130,10 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	for (i = 0; i < mod->pattern_count; ++i)
 	{
 		int j;
-		const pimp_pattern *pattern = __pimp_module_get_pattern(mod, i);
+		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		if (NULL == pattern) continue;
 		
-		const pimp_pattern_entry *pattern_data = __pimp_pattern_get_data(pattern);
+		const pimp_pattern_entry *pattern_data = pimp_pattern_get_data(pattern);
 		if (NULL == pattern_data) continue;
 		
 		serializer_set_pointer(s, pimp_get_ptr(&pattern->data_ptr), s->pos);
