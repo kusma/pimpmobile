@@ -48,9 +48,9 @@
 .word .mix6
 .word .mix7
 
-.global __pimp_mixer_mix_samples
-.type __pimp_mixer_mix_samples, %function
-__pimp_mixer_mix_samples:
+.global pimp_mixer_mix_samples
+.type pimp_mixer_mix_samples, %function
+pimp_mixer_mix_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack
 	
 #ifdef NO_MIXING

@@ -7,7 +7,7 @@
 #include <assert.h>
 #include "pimp_mixer.h"
 
-void __pimp_mixer_clear(s32 *target, u32 samples)
+void pimp_mixer_clear(s32 *target, u32 samples)
 {
 	int i;
 	assert(target != 0);
@@ -18,7 +18,7 @@ void __pimp_mixer_clear(s32 *target, u32 samples)
 	}
 }
 
-u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
+u32 pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	int i;
 	assert(target != 0);
@@ -34,7 +34,7 @@ u32 __pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u3
 	return sample_cursor;
 }
 
-void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
+void pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 {
 	int i;
 	assert(target != NULL);

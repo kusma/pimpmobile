@@ -94,7 +94,7 @@ void pimp_frame()
 }
 
 #ifndef DEBUG
-void __pimp_mixer_clear(s32 *target, const u32 samples)
+void pimp_mixer_clear(s32 *target, const u32 samples)
 {
 	int i;
 	static const u32 zero = 0;

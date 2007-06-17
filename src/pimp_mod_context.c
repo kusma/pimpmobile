@@ -53,7 +53,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	
 	ctx->callback = (pimp_callback)NULL;
 
-	__pimp_mixer_reset(ctx->mixer);
+	pimp_mixer_reset(ctx->mixer);
 }
 
 /* "hard" jump in a module */

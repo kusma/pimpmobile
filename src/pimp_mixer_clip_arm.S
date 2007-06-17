@@ -25,7 +25,7 @@
 .word .clip3
 
 
-@@ void __pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs);
+@@ void pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs);
 #define DST       r0
 #define SRC       r1
 #define COUNT     r2
@@ -34,9 +34,9 @@
 #define TEMP1     r8
 #define TEMP2     r9
 
-.global __pimp_mixer_clip_samples
-.type __pimp_mixer_clip_samples, %function
-__pimp_mixer_clip_samples:
+.global pimp_mixer_clip_samples
+.type pimp_mixer_clip_samples, %function
+pimp_mixer_clip_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack	
 	
 	rsb BIAS, BIAS, #128
@@ -133,9 +133,9 @@ __pimp_mixer_clip_samples:
 .word .clip3
 
 //	target, sound_mix_buffer, samples, dc_offs
-.global __pimp_mixer_clip_samples
-.type __pimp_mixer_clip_samples, %function
-__pimp_mixer_clip_samples:
+.global pimp_mixer_clip_samples
+.type pimp_mixer_clip_samples, %function
+pimp_mixer_clip_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack
 
 #ifdef NO_CLIPPING
