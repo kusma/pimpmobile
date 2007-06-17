@@ -12,7 +12,7 @@
 #include "pimp_math.h"
 #include "pimp_effects.h"
 
-static int __pimp_channel_get_volume(pimp_channel_state *chan)
+static int pimp_channel_get_volume(pimp_channel_state *chan)
 {
 	ASSERT(NULL != chan);
 	
@@ -456,7 +456,7 @@ static void pimp_mod_context_update_row(pimp_mod_context *ctx)
 		
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
-			mc->volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
+			mc->volume = (pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
 		}
 	}
 
@@ -621,7 +621,7 @@ static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
 		
 		if (volume_dirty || chan->vol_env.env != 0)
 		{
-			mc->volume = (__pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
+			mc->volume = (pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
 		}
 	}
 	
@@ -635,7 +635,7 @@ static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
 #endif
 
-void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
+void pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
 	while (TRUE)
 	{

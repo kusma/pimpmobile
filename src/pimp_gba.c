@@ -88,7 +88,7 @@ void pimp_frame()
 	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
 	locked = TRUE;
 	
-	__pimp_render(&__pimp_ctx, __pimp_sound_buffers[__pimp_sound_buffer_index], SOUND_BUFFER_SIZE);
+	pimp_render(&__pimp_ctx, __pimp_sound_buffers[__pimp_sound_buffer_index], SOUND_BUFFER_SIZE);
 	
 	locked = FALSE;
 }
