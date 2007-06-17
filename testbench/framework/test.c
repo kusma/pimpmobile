@@ -1,7 +1,10 @@
 #include "test.h"
 
-#define MAX_TEST_PRINTF_STRING_LEN 4096
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_TEST_PRINTF_STRING_LEN 4096
 
 char *test_printf(const char* fmt, ...)
 {

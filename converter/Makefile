@@ -15,17 +15,26 @@ LDFLAGS  =
 ASFLAGS  = 
 
 OBJS = \
-	converter.o \
-	converter_xm.o \
-	converter_s3m.o \
-	converter_mod.o \
-	dump_module.o \
-	dump_samples.o
+	pimpconv.o \
+	load_xm.o \
+	load_mod.o \
+	serialize_module.o \
+	serialize_instrument.o \
+	serializer.o \
+	convert_sample.o \
+	../src/pimp_sample_bank.o
 
-TARGET = ../bin/converter
+#	converter.o \
+#	converter_xm.o \
+#	converter_s3m.o \
+#	converter_mod.o \
+#	dump_module.o \
+#	dump_samples.o
+
+TARGET = ../bin/pimpconv
 
 ifeq ($(DEBUG), 1)
-	CPPFLAGS += -DDEBUG
+	CPPFLAGS += -DDEBUG -DASSERT_ENABLE
 	CXXFLAGS += -g3 -ggdb
 	CFLAGS   += -g3 -ggdb
 else

@@ -37,7 +37,7 @@ MODULES = $(shell ls data/*.xm)
 BIN_MODULES = $(MODULES:=.bin)
 
 TARGET = ../bin/example.gba
-CONVERTER = ../bin/converter
+CONVERTER = ../bin/pimpconv
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG

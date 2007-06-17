@@ -22,7 +22,7 @@ typedef struct __attribute__((packed))
 	u8 mute;
 } pimp_channel;
 
-typedef struct
+typedef struct pimp_module
 {
 	char name[32];
 	
@@ -53,7 +53,7 @@ typedef struct
 #include "pimp_internal.h"
 
 /* pattern entry */
-static INLINE pimp_pattern_entry *get_pattern_data(const pimp_pattern *pat)
+static INLINE pimp_pattern_entry *__pimp_pattern_get_data(const pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
 	return (pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
@@ -61,8 +61,13 @@ static INLINE pimp_pattern_entry *get_pattern_data(const pimp_pattern *pat)
 
 static INLINE int __pimp_module_get_order(const pimp_module *mod, int i)
 {
+	char *array;
 	ASSERT(mod != NULL);
-	return ((char*)PIMP_GET_PTR(mod->order_ptr))[i];
+
+	array = (char*)pimp_get_ptr(&mod->order_ptr);
+	if (NULL == array) return -1;
+
+	return array[i];
 }
 
 static INLINE pimp_pattern *__pimp_module_get_pattern(const pimp_module *mod, int i)
@@ -79,8 +84,13 @@ static INLINE pimp_channel *__pimp_module_get_channel(const pimp_module *mod, in
 
 static INLINE pimp_instrument *__pimp_module_get_instrument(const pimp_module *mod, int i)
 {
+	pimp_instrument *array;
 	ASSERT(mod != NULL);
-	return &((pimp_instrument*)PIMP_GET_PTR(mod->instrument_ptr))[i];
+	
+	array = (pimp_instrument*)pimp_get_ptr(&mod->instrument_ptr);
+	if (NULL == array) return NULL;
+	
+	return &(array[i]);
 }
 
 #endif /* PIMP_MODULE_H */

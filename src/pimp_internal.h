@@ -8,9 +8,12 @@
 
 #include "pimp_base.h"
 #include "pimp_config.h"
+#include "pimp_debug.h"
 
 static INLINE void *pimp_get_ptr(const unsigned int *offset)
 {
+	ASSERT(NULL != offset);
+	if (*offset == 0) return NULL;
 	return (char*)offset + *offset;
 }
 
@@ -18,7 +21,9 @@ static INLINE void *pimp_get_ptr(const unsigned int *offset)
 
 static INLINE void pimp_set_ptr(unsigned int *dst, const void *ptr)
 {
-	*dst = ((int)ptr) - (int)dst;
+	ASSERT(NULL != dst);
+	if (NULL == ptr) *dst = 0;
+	else *dst = ((int)ptr) - (int)dst;
 }
 
 #define PIMP_SET_PTR(dst, ptr) pimp_set_ptr(&dst, ptr)

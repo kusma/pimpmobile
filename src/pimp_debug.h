@@ -31,6 +31,7 @@
 			fflush(stdout); \
 			exit(1); \
 		} \
+		exit(1); \
 	} while(0)
 #else
  #define ASSERT(expr)

@@ -78,8 +78,8 @@ run:
 debug:
 	make -C example debug
 
-bin/converter:
-	make -C converter
+bin/pimpconv:
+	make -C converter bin/pimpconv
 
 bin/lut_gen: lut_gen.cpp src/pimp_math.c src/pimp_config.h
 	g++ $^ -o $@
