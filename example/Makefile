@@ -29,14 +29,18 @@ ARM   = -marm
 THUMB = -mthumb
 
 OBJS = \
-	example.o \
-	libgbfs.o
+	example2.o \
+	../converter/load_xm.o \
+	../converter/convert_sample.o \
+	../src/pimp_sample_bank.o \
+	libgbfs.o \
+	gbfs_stdio.o
 
 MODULES = $(shell ls data/*.xm)
 
 BIN_MODULES = $(MODULES:=.bin)
 
-TARGET = ../bin/example.gba
+TARGET = ../bin/example2.gba
 CONVERTER = ../bin/pimpconv
 
 ifeq ($(DEBUG), 1)
@@ -57,6 +61,9 @@ clean:
 	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) data.gbfs sample_bank.bin $(BIN_MODULES) *~
 
 data.gbfs: sample_bank.bin $(BIN_MODULES)
+
+data2.gbfs: $(MODULES)
+
 
 $(CONVERTER)::
 	make -C ../converter
@@ -80,7 +87,7 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	padbin 256 $@
 	gbafix $@ -t$(basename $@)
 
-%.gba: %.bin data.gbfs
+%.gba: %.bin data2.gbfs
 	cat $^ > $@
 
 %.o: %.cpp
