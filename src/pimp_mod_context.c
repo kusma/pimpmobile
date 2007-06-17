@@ -48,7 +48,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 		chan->loop_target_row   = 0;
 		chan->loop_counter      = 0;
 
-		__pimp_envelope_reset(&chan->vol_env);
+		pimp_envelope_reset(&chan->vol_env);
 	}
 	
 	ctx->callback = (pimp_callback)NULL;

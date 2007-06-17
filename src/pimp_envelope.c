@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-static int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
+static int pimp_envelope_find_node(const pimp_envelope *env, int tick)
 {
 	int i;
 	
@@ -26,7 +26,7 @@ static int __pimp_envelope_find_node(const pimp_envelope *env, int tick)
 	return env->node_count - 1;
 }
 
-int __pimp_envelope_sample(pimp_envelope_state *state)
+int pimp_envelope_sample(pimp_envelope_state *state)
 {
 	s32 delta;
 	u32 internal_tick;
@@ -48,7 +48,7 @@ int __pimp_envelope_sample(pimp_envelope_state *state)
 	return val << 2;
 }
 
-void __pimp_envelope_advance_tick(pimp_envelope_state *state, BOOL sustain)
+void pimp_envelope_advance_tick(pimp_envelope_state *state, BOOL sustain)
 {
 	ASSERT(NULL != state);
 	
@@ -77,8 +77,8 @@ void __pimp_envelope_advance_tick(pimp_envelope_state *state, BOOL sustain)
 	}
 }
 
-void __pimp_envelope_set_tick(pimp_envelope_state *state, int tick)
+void pimp_envelope_set_tick(pimp_envelope_state *state, int tick)
 {
-	state->current_node = __pimp_envelope_find_node(state->env, tick);
+	state->current_node = pimp_envelope_find_node(state->env, tick);
 	state->current_tick = tick;
 }

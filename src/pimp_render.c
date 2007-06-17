@@ -21,8 +21,8 @@ static int __pimp_channel_get_volume(pimp_channel_state *chan)
 	if (NULL != chan->vol_env.env)
 	{
 		/* envelope */
-		volume = (volume * __pimp_envelope_sample(&chan->vol_env)) >> 8;
-		__pimp_envelope_advance_tick(&chan->vol_env, chan->sustain);
+		volume = (volume * pimp_envelope_sample(&chan->vol_env)) >> 8;
+		pimp_envelope_advance_tick(&chan->vol_env, chan->sustain);
 		
 		/* fadeout  */
 		volume = (volume * chan->fadeout) >> 16;
@@ -136,7 +136,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 				chan->instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
 				
 				chan->vol_env.env = __pimp_instrument_get_vol_env(chan->instrument);
-				__pimp_envelope_reset(&chan->vol_env);
+				pimp_envelope_reset(&chan->vol_env);
 				chan->sustain = TRUE;
 				chan->fadeout = 1 << 16;
 				
