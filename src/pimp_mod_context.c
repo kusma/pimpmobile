@@ -5,7 +5,7 @@
 
 #include "pimp_mod_context.h"
 
-void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
+void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
 {
 	int i;
 	ASSERT(ctx != NULL);
@@ -34,7 +34,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 	ctx->global_volume = 1 << 9; /* 24.8 fixed point */
 	
 	ctx->curr_pattern = pimp_module_get_pattern(mod, pimp_module_get_order(mod, ctx->curr_order));
-	__pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
+	pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
 	
 	for (i = 0; i < CHANNELS; ++i)
@@ -57,7 +57,7 @@ void __pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, cons
 }
 
 /* "hard" jump in a module */
-void __pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
+void pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
 {
 	ASSERT(ctx != NULL);
 	
@@ -70,11 +70,11 @@ void __pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
 	}
 	
 	ctx->curr_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->curr_order));
-	__pimp_mod_context_update_next_pos(ctx);
+	pimp_mod_context_update_next_pos(ctx);
 }
 
 /* make sure next pos isn't outside a pattern or the order-list */
-static void __pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
+static void pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
 {
 	if (ctx->next_row == ctx->curr_pattern->row_count)
 	{
@@ -92,25 +92,25 @@ static void __pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
 }
 
 /* setup next position to be one row advanced in module */
-void __pimp_mod_context_update_next_pos(pimp_mod_context *ctx)
+void pimp_mod_context_update_next_pos(pimp_mod_context *ctx)
 {
 	ctx->next_row = ctx->curr_row + 1;
 	ctx->next_order = ctx->curr_order;
-	__pimp_mod_context_fix_next_pos(ctx);
+	pimp_mod_context_fix_next_pos(ctx);
 }
 
 /* setup next position to be a specific position. useful for jumping etc */
-void __pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order)
+void pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order)
 {
 	ASSERT(ctx != NULL);
 	
 	ctx->next_row = row;
 	ctx->next_order = order;
-	__pimp_mod_context_fix_next_pos(ctx);
+	pimp_mod_context_fix_next_pos(ctx);
 }
 
 
-void __pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
+void pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
 {
 	ASSERT(ctx != NULL);
 	ASSERT(bpm > 0);

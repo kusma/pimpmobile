@@ -94,7 +94,7 @@ static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, p
 	}                                                                     \
 } while(0)
 
-static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
+static void pimp_mod_context_update_row(pimp_mod_context *ctx)
 {
 	u32 c;
 	ASSERT(ctx != 0);
@@ -103,7 +103,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 	ctx->curr_row     = ctx->next_row;
 	ctx->curr_order   = ctx->next_order;
 	ctx->curr_pattern = ctx->next_pattern;
-	__pimp_mod_context_update_next_pos(ctx);
+	pimp_mod_context_update_next_pos(ctx);
 	
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
@@ -329,7 +329,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 			
 			case EFF_JUMP_ORDER:
 				/* go to order xy */
-				__pimp_mod_context_set_next_pos( ctx, 0, chan->effect_param );
+				pimp_mod_context_set_next_pos( ctx, 0, chan->effect_param );
 			break;
 
 			case EFF_SET_VOLUME:
@@ -343,7 +343,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 					/* go to next order, row xy (decimal) */
 					int new_row   = (chan->effect_param >> 4) * 10 + (chan->effect_param & 0xF);
 					int new_order = ctx->curr_order + 1;
-					__pimp_mod_context_set_next_pos(ctx, new_row, new_order);
+					pimp_mod_context_set_next_pos(ctx, new_row, new_order);
 				}
 			break;
 			
@@ -378,7 +378,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 							
 							if (0 < chan->loop_counter)
 							{
-								__pimp_mod_context_set_next_pos(ctx, chan->loop_target_row, chan->loop_target_order);
+								pimp_mod_context_set_next_pos(ctx, chan->loop_target_row, chan->loop_target_order);
 							}
 						}
 					break;
@@ -412,7 +412,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 			
 			case EFF_TEMPO:
 				if (note->effect_parameter < 0x20) ctx->curr_tempo = chan->effect_param;
-				else __pimp_mod_context_set_bpm(ctx, chan->effect_param);
+				else pimp_mod_context_set_bpm(ctx, chan->effect_param);
 			break;
 			
 			case EFF_SET_GLOBAL_VOLUME:     EFFECT_MISSING(ctx, chan->effect); break;
@@ -465,14 +465,14 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 #endif
 }
 
-static void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
+static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
 {
 	u32 c;
 	if (ctx->mod == NULL) return; /* no module active (sound-effects can still be playing, though) */
 
 	if (ctx->curr_tick == ctx->curr_tempo)
 	{
-		__pimp_mod_context_update_row(ctx);
+		pimp_mod_context_update_row(ctx);
 		ctx->curr_tick++;
 		return;
 	}
@@ -648,7 +648,7 @@ void __pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
 		
 		if (samples == 0) break;
 		
-		__pimp_mod_context_update_tick(ctx);
+		pimp_mod_context_update_tick(ctx);
 		
 		/* fixed point tick length */
 		ctx->curr_tick_len += ctx->tick_len;

@@ -31,7 +31,7 @@ s32        __pimp_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 void pimp_init(const void *module, const void *sample_bank)
 {
 	__pimp_mixer.mix_buffer = __pimp_mix_buffer;
-	__pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
+	pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
 
 	u32 zero = 0;
 	CpuFastSet(&zero, &__pimp_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
@@ -69,17 +69,17 @@ void pimp_set_callback(pimp_callback in_callback)
 
 void pimp_set_pos(int row, int order)
 {
-	__pimp_mod_context_set_pos(&__pimp_ctx, row, order);
+	pimp_mod_context_set_pos(&__pimp_ctx, row, order);
 }
 
 int pimp_get_row()
 {
-	return __pimp_mod_context_get_row(&__pimp_ctx);
+	return pimp_mod_context_get_row(&__pimp_ctx);
 }
 
 int pimp_get_order()
 {
-	return __pimp_mod_context_get_order(&__pimp_ctx);
+	return pimp_mod_context_get_order(&__pimp_ctx);
 }
 
 void pimp_frame()
