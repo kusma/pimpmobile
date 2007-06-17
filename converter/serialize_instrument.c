@@ -94,13 +94,13 @@ void serialize_instrument_data(struct serializer *s, const pimp_instrument *inst
 	
 	for (i = 0; i < instr->sample_count; ++i)
 	{
-		serialize_sample(s, __pimp_instrument_get_sample(instr, i));
+		serialize_sample(s, pimp_instrument_get_sample(instr, i));
 	}
 	
-	vol_env = __pimp_instrument_get_vol_env(instr);
+	vol_env = pimp_instrument_get_vol_env(instr);
 	if (NULL != vol_env) serializer_set_pointer(s, pimp_get_ptr(&instr->vol_env_ptr), serialize_envelope(s, vol_env));
 	
-	pan_env = __pimp_instrument_get_pan_env(instr);
+	pan_env = pimp_instrument_get_pan_env(instr);
 	if (NULL != pan_env) serializer_set_pointer(s, pimp_get_ptr(&instr->pan_env_ptr), serialize_envelope(s, pan_env));
 }
 

@@ -57,7 +57,7 @@ static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, p
 	}
 	else
 	{
-		chan->sample = __pimp_instrument_get_sample(chan->instrument, chan->instrument->sample_map[chan->note]);
+		chan->sample = pimp_instrument_get_sample(chan->instrument, chan->instrument->sample_map[chan->note]);
 		mc->sample_cursor = 0;
 		mc->sample_data = ctx->sample_bank + chan->sample->data_ptr;
 		mc->sample_length = chan->sample->length;
@@ -135,7 +135,7 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 			{
 				chan->instrument = __pimp_module_get_instrument(ctx->mod, note->instrument - 1);
 				
-				chan->vol_env.env = __pimp_instrument_get_vol_env(chan->instrument);
+				chan->vol_env.env = pimp_instrument_get_vol_env(chan->instrument);
 				pimp_envelope_reset(&chan->vol_env);
 				chan->sustain = TRUE;
 				chan->fadeout = 1 << 16;

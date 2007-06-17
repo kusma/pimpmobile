@@ -249,7 +249,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		sh->name[22] = '\0';
 		
 		/* fill converter-struct */
-		pimp_sample *samp = __pimp_instrument_get_sample(instr, s);
+		pimp_sample *samp = pimp_instrument_get_sample(instr, s);
 /*		sample_header_t &samp = instr->samples[s]; */
 /*		strcpy(samp->name, sh.name); */
 		
@@ -325,7 +325,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	for (s = 0; s < instr->sample_count; ++s)
 	{
 		xm_sample_header *sh = &sample_headers[s];
-		pimp_sample *samp = __pimp_instrument_get_sample(instr, s);
+		pimp_sample *samp = pimp_instrument_get_sample(instr, s);
 		enum pimp_sample_format src_format;
 		enum pimp_sample_format dst_format = PIMP_SAMPLE_U8;
 

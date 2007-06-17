@@ -73,7 +73,7 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 		pimp_instrument *instr = __pimp_module_get_instrument(mod, i);
 		for (j = 0; j < instr->sample_count; ++j)
 		{
-			pimp_sample *samp = __pimp_instrument_get_sample(instr, j);
+			pimp_sample *samp = pimp_instrument_get_sample(instr, j);
 			void *data = pimp_sample_bank_get_sample_data(src, samp->data_ptr);
 			
 			int pos = pimp_sample_bank_find_sample_data(dst, data, samp->length);
