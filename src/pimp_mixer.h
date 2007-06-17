@@ -39,7 +39,7 @@ typedef struct
 	pimp_mixer_channel_state channels[CHANNELS];
 	s32 *mix_buffer;
 } pimp_mixer;
-	
+
 void pimp_mixer_reset(pimp_mixer *mixer);
 void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples);

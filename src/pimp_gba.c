@@ -16,25 +16,25 @@
 
 #include <stdio.h>
 
-pimp_mixer       __pimp_mixer IWRAM_DATA;
-pimp_mod_context __pimp_ctx   EWRAM_DATA;
+static pimp_mixer       pimp_gba_mixer IWRAM_DATA;
+static pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
 #define SAMPLES_PR_FRAME  ((int)((1 << 24) / ((float)SAMPLERATE)))
 #define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PR_FRAME))
 
-static s8  __pimp_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
-static u32 __pimp_sound_buffer_index = 0;
-s32        __pimp_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+static u32 pimp_gba_sound_buffer_index = 0;
+static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void pimp_init(const void *module, const void *sample_bank)
 {
-	__pimp_mixer.mix_buffer = __pimp_mix_buffer;
-	pimp_mod_context_init(&__pimp_ctx, (const pimp_module*)module, (const u8*)sample_bank, &__pimp_mixer);
+	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
+	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer);
 
 	u32 zero = 0;
-	CpuFastSet(&zero, &__pimp_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
+	CpuFastSet(&zero, &pimp_gba_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
 	REG_SOUNDCNT_X = (1 << 7);
 	
@@ -52,34 +52,34 @@ void pimp_close()
 
 void pimp_vblank()
 {
-	if (__pimp_sound_buffer_index == 0)
+	if (pimp_gba_sound_buffer_index == 0)
 	{
 		REG_DMA1CNT = 0;
-		REG_DMA1SAD = (u32) &(__pimp_sound_buffers[0][0]);
+		REG_DMA1SAD = (u32) &(pimp_gba_sound_buffers[0][0]);
 		REG_DMA1DAD = (u32) &REG_FIFO_A;
 		REG_DMA1CNT = DMA_DST_FIXED | DMA_REPEAT | DMA32 | DMA_SPECIAL | DMA_ENABLE;
 	}
-	__pimp_sound_buffer_index ^= 1;
+	pimp_gba_sound_buffer_index ^= 1;
 }
 
 void pimp_set_callback(pimp_callback in_callback)
 {
-	__pimp_ctx.callback = in_callback;
+	pimp_gba_ctx.callback = in_callback;
 }
 
 void pimp_set_pos(int row, int order)
 {
-	pimp_mod_context_set_pos(&__pimp_ctx, row, order);
+	pimp_mod_context_set_pos(&pimp_gba_ctx, row, order);
 }
 
 int pimp_get_row()
 {
-	return pimp_mod_context_get_row(&__pimp_ctx);
+	return pimp_mod_context_get_row(&pimp_gba_ctx);
 }
 
 int pimp_get_order()
 {
-	return pimp_mod_context_get_order(&__pimp_ctx);
+	return pimp_mod_context_get_order(&pimp_gba_ctx);
 }
 
 void pimp_frame()
@@ -88,7 +88,7 @@ void pimp_frame()
 	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
 	locked = TRUE;
 	
-	pimp_render(&__pimp_ctx, __pimp_sound_buffers[__pimp_sound_buffer_index], SOUND_BUFFER_SIZE);
+	pimp_render(&pimp_gba_ctx, pimp_gba_sound_buffers[pimp_gba_sound_buffer_index], SOUND_BUFFER_SIZE);
 	
 	locked = FALSE;
 }
