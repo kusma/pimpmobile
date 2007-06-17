@@ -9,7 +9,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-const u8 __pimp_clz_lut[256] =
+const u8 pimp_clz_lut[256] =
 {
 	0x8, 0x7, 0x6, 0x6, 0x5, 0x5, 0x5, 0x5, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4,
 	0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3,
@@ -31,7 +31,7 @@ const u8 __pimp_clz_lut[256] =
 
 
 #ifndef NO_LINEAR_PERIODS
-unsigned __pimp_get_linear_period(int note, int fine_tune)
+unsigned pimp_get_linear_period(int note, int fine_tune)
 {
 	ASSERT(fine_tune >= -8);
 	ASSERT(fine_tune <   8);
@@ -43,7 +43,7 @@ unsigned __pimp_get_linear_period(int note, int fine_tune)
 }
 
 #include "linear_delta_lut.h"
-unsigned __pimp_get_linear_delta(unsigned period)
+unsigned pimp_get_linear_delta(unsigned period)
 {
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
@@ -59,7 +59,7 @@ unsigned __pimp_get_linear_delta(unsigned period)
 
 #ifndef NO_AMIGA_PERIODS
 #include "amiga_period_lut.h"
-unsigned __pimp_get_amiga_period(int note, int fine_tune)
+unsigned pimp_get_amiga_period(int note, int fine_tune)
 {
 	fine_tune /= 8; /* todo: interpolate instead? */
 	ASSERT(fine_tune >= -8);
@@ -89,7 +89,7 @@ unsigned __pimp_get_amiga_period(int note, int fine_tune)
 #include "amiga_delta_lut.h"
 #define AMIGA_DELTA_LUT_SIZE (1 << AMIGA_DELTA_LUT_LOG2_SIZE)
 #define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG2_SIZE)
-unsigned __pimp_get_amiga_delta(unsigned period)
+unsigned pimp_get_amiga_delta(unsigned period)
 {
 	unsigned shamt = clz16(period) - 1;
 	unsigned p = period << shamt;

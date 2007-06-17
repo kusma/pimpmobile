@@ -67,11 +67,11 @@ static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, p
 		
 		if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 		{
-			chan->period = __pimp_get_linear_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
+			chan->period = pimp_get_linear_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
 		}
 		else
 		{
-			chan->period = __pimp_get_amiga_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
+			chan->period = pimp_get_amiga_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
 		}
 		
 		chan->final_period = chan->period;
@@ -270,8 +270,8 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 				if (note->note > 0)
 				{
 					/* fine tune and relative note are taken into account */
-					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
-					else chan->porta_target = __pimp_get_amiga_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
+					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = pimp_get_linear_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
+					else chan->porta_target = pimp_get_amiga_period(note->note + chan->sample->rel_note, chan->sample->fine_tune);
 					
 					/* clamp porta-target period (should not be done for S3M) */
 					if (chan->porta_target > ctx->mod->period_high_clamp) chan->porta_target = ctx->mod->period_high_clamp;
@@ -289,8 +289,8 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 				if (note->note > 0)
 				{
 					/* no fine tune or relative note here, boooy */
-					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = __pimp_get_linear_period(note->note + chan->sample->rel_note, 0);
-					else chan->porta_target = __pimp_get_amiga_period(note->note, 0);
+					if (ctx->mod->flags & FLAG_LINEAR_PERIODS) chan->porta_target = pimp_get_linear_period(note->note + chan->sample->rel_note, 0);
+					else chan->porta_target = pimp_get_amiga_period(note->note, 0);
 					
 					/* clamp porta-target period (should not be done for S3M) */
 					if (chan->porta_target > ctx->mod->period_high_clamp) chan->porta_target = ctx->mod->period_high_clamp;
@@ -446,11 +446,11 @@ static void __pimp_mod_context_update_row(pimp_mod_context *ctx)
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc->sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period);
 			}
 			else
 			{
-				mc->sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period);
 			}
 		}
 		
@@ -611,11 +611,11 @@ static void __pimp_mod_context_update_tick(pimp_mod_context *ctx)
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc->sample_cursor_delta = __pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period);
 			}
 			else
 			{
-				mc->sample_cursor_delta = __pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period);
 			}
 		}
 		
