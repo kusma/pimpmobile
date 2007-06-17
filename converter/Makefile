@@ -24,13 +24,6 @@ OBJS = \
 	convert_sample.o \
 	../src/pimp_sample_bank.o
 
-#	converter.o \
-#	converter_xm.o \
-#	converter_s3m.o \
-#	converter_mod.o \
-#	dump_module.o \
-#	dump_samples.o
-
 TARGET = ../bin/pimpconv
 
 ifeq ($(DEBUG), 1)
