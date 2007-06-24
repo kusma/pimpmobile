@@ -2,6 +2,11 @@
 # Copyright (C) 2005-2007 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
+# configuration
+TARGET    ?= arm-gba
+HOST      ?= host
+BUILD_DIR ?= build
+
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
@@ -10,13 +15,10 @@ DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
 LIBNDS    = $(DEVKITPRO)/libnds
 
-TARGET   ?= arm-gba
-HOST     ?= $(shell unamme)
-
 ifeq ($(TARGET), arm-gba)
 TARGET_PREFIX ?= arm-eabi-
 else
-$(error TARGET is unknown)
+TARGET_PREFIX = $(TARGET)
 endif
 
 TARGET_CC      = $(TARGET_PREFIX)gcc
@@ -29,16 +31,22 @@ TARGET_AR      = $(TARGET_PREFIX)ar
 
 MKDIR = mkdir -p
 
-CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
-CFLAGS   = -mthumb-interwork -mlong-calls
-CXXFLAGS = -mthumb-interwork -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
-LDFLAGS  = -mthumb-interwork -Wl,--gc-section -Wl,-Map,$(basename $@).map
-ASFLAGS  = -mthumb-interwork
+TARGET_CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
+TARGET_CFLAGS   = -mthumb-interwork -mlong-calls
+TARGET_CXXFLAGS = -mthumb-interwork -mlong-calls
+TARGET_LDFLAGS  = -mthumb-interwork -Wl,--gc-section
+TARGET_ASFLAGS  = -mthumb-interwork
+
+CPPFLAGS = 
+CFLAGS   = 
+CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
+LDFLAGS  = -Wl,-Map,$(basename $@).map
+ASFLAGS  = 
 
 ARM   = -marm
 THUMB = -mthumb
 
-VPATH = src/
+VPATH = src/ converter/
 
 OBJS = \
 	pimp_gba.o          \
@@ -47,6 +55,16 @@ OBJS = \
 	pimp_mod_context.o  \
 	pimp_math.iwram.o   \
 	pimp_mixer.iwram.o
+
+PIMPCONV_OBJS = \
+	pimpconv.o \
+	serializer.o \
+	serialize_module.o \
+	serialize_instrument.o \
+	pimp_sample_bank.o \
+	convert_sample.o \
+	load_xm.o \
+	load_mod.o
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
@@ -68,51 +86,59 @@ ifeq ($(PROFILING), 1)
 	OBJS += profiling/cyg-profile.o
 endif
 
-BUILD_DIR = build
 TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)
+HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)
 
-REAL_OBJS = $(addprefix $(TARGET_BUILD_DIR)/, $(OBJS))
+make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(1))
+make-host-objs = $(addprefix $(HOST_BUILD_DIR)/, $(1))
+
+make-target-deps = $(addprefix $(TARGET_BUILD_DIR)/, $(1:.o=.d))
+make-host-deps = $(addprefix $(HOST_BUILD_DIR)/, $(1:.o=.d))
+
+
+REAL_OBJS =	$(call make-target-objs, $(OBJS))
 
 .PHONY: all clean run debug
 
 all: lib/libpimpmobile.a
 
 clean:
-	$(RM) bin/* $(REAL_OBJS) $(REAL_OBJS:.o=.d) lib/libpimpmobile.a
-	make -C converter clean
-	make -C example clean
+	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(OBJS)) $(call make-target-deps, $(OBJS))
+	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_OBJS)) $(call make-host-deps, $(PIMPCONV_OBJS))
 
-run:
-	make -C example run
+test:
+	@echo $(call make-host-objs, $(PIMPCONV_OBJS))
+	@echo $(call make-target-objs, $(OBJS))
 
-debug:
-	make -C example debug
-
-bin/pimpconv:
-	make -C converter bin/pimpconv
+bin/pimpconv: $(call make-host-objs, $(PIMPCONV_OBJS))
+	$(CXX) $^ $(LDFLAGS) -o $@
 
 lib/libpimpmobile.a: $(REAL_OBJS)
 	$(TARGET_AR) $(ARFLAGS) $@ $?
 
-### C
+#### C ####
 
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(CFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(CFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+
+$(HOST_BUILD_DIR)/%.o: %.c
+	@$(MKDIR) $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### C++
-
-$(TARGET_BUILD_DIR)/%.iwram.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	$(TARGET_CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
 	$(TARGET_CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+
+$(HOST_BUILD_DIR)/%.o: %.cpp
+	@$(MKDIR) $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 
