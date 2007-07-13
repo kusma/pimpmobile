@@ -1,7 +1,8 @@
+CC = g++
 CPPFLAGS = -I.. -DASSERT_ENABLE -DUNIT_TESTING -DDEBUG -g
 
 FRAMEWORK_SOURCES = \
-	framework/test.c \
+	framework/test_framework.c \
 	framework/test_helpers.c
 
 TEST_SOURCES = \

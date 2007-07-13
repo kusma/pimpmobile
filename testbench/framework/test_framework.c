@@ -1,4 +1,4 @@
-#include "test.h"
+#include "test_framework.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,7 +6,7 @@
 
 #define MAX_TEST_PRINTF_STRING_LEN 4096
 
-char *test_printf(const char* fmt, ...)
+char *test_printf(struct test_suite *suite, const char* fmt, ...)
 {
 	char temp[MAX_TEST_PRINTF_STRING_LEN];
 	char *string;
@@ -33,7 +33,7 @@ int test_test_count = 0;
 int test_fail_count = 0;
 int test_pass_count = 0;
 
-int test_fail(const char *error)
+int test_fail(struct test_suite *suite, const char *error)
 {
 	printf("TEST #%d FAILED: %s\n", test_test_count + 1, error);
 	test_test_count++;
@@ -41,14 +41,14 @@ int test_fail(const char *error)
 	return test_test_count;
 }
 
-int test_pass()
+int test_pass(struct test_suite *suite)
 {
 	test_test_count++;
 	test_pass_count++;
 	return test_test_count;
 }
 
-int test_report_file(FILE *fp)
+int test_report_file(struct test_suite *suite, FILE *fp)
 {
 	fprintf(fp, "%d/%d tests failed\n", test_fail_count, test_test_count);
 	return test_fail_count;

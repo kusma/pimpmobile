@@ -1,8 +1,9 @@
-#include "../framework/test.h"
+#include "../framework/test_framework.h"
 #include "../framework/test_helpers.h"
+
 #include "../../converter/serializer.h"
 
-static void test_serializer_basic(void)
+static void test_serializer_basic(struct test_suite *suite)
 {
 	struct serializer s;
 	
@@ -13,15 +14,15 @@ static void test_serializer_basic(void)
 	serialize_byte(&s, 0xbe);
 	serialize_byte(&s, 0xef);
 	
-	TEST_INTS_EQUAL(s.data[0], 0xde);
-	TEST_INTS_EQUAL(s.data[1], 0xad);
-	TEST_INTS_EQUAL(s.data[2], 0xbe);
-	TEST_INTS_EQUAL(s.data[3], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[0], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[1], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[2], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[3], 0xef);
 	
 	serializer_deinit(&s);
 }
 
-static void test_serializer_endianess(void)
+static void test_serializer_endianess(struct test_suite *suite)
 {
 	struct serializer s;
 	
@@ -30,20 +31,20 @@ static void test_serializer_endianess(void)
 	
 	/* assure that 32bit words are dumped in little endian format */
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[3], 0xde);
-	TEST_INTS_EQUAL(s.data[2], 0xad);
-	TEST_INTS_EQUAL(s.data[1], 0xbe);
-	TEST_INTS_EQUAL(s.data[0], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[3], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[2], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[1], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[0], 0xef);
 
 	/* assure that 16bit halfwords are dumped in little endian format */
 	serialize_halfword(&s, 0xb00b);
-	TEST_INTS_EQUAL(s.data[5], 0xb0);
-	TEST_INTS_EQUAL(s.data[4], 0x0b);
+	ASSERT_INTS_EQUAL(suite, s.data[5], 0xb0);
+	ASSERT_INTS_EQUAL(suite, s.data[4], 0x0b);
 	
 	serializer_deinit(&s);
 }
 
-static void test_serializer_align_word(void)
+static void test_serializer_align_word(struct test_suite *suite)
 {
 	struct serializer s;
 	
@@ -51,37 +52,37 @@ static void test_serializer_align_word(void)
 	
 	/* 0 bytes offset */
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[3], 0xde);
-	TEST_INTS_EQUAL(s.data[2], 0xad);
-	TEST_INTS_EQUAL(s.data[1], 0xbe);
-	TEST_INTS_EQUAL(s.data[0], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[3], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[2], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[1], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[0], 0xef);
 
 	/* 1 bytes offset */
 	serialize_byte(&s, 0x00);
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[11], 0xde);
-	TEST_INTS_EQUAL(s.data[10], 0xad);
-	TEST_INTS_EQUAL(s.data[9], 0xbe);
-	TEST_INTS_EQUAL(s.data[8], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[11], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[10], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[9], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[8], 0xef);
 
 	/* 2 bytes offset */
 	serialize_byte(&s, 0x00);
 	serialize_byte(&s, 0x00);
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[19], 0xde);
-	TEST_INTS_EQUAL(s.data[18], 0xad);
-	TEST_INTS_EQUAL(s.data[17], 0xbe);
-	TEST_INTS_EQUAL(s.data[16], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[19], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[18], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[17], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[16], 0xef);
 	
 	/* 3 bytes offset */
 	serialize_byte(&s, 0x00);
 	serialize_byte(&s, 0x00);
 	serialize_byte(&s, 0x00);
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[27], 0xde);
-	TEST_INTS_EQUAL(s.data[26], 0xad);
-	TEST_INTS_EQUAL(s.data[25], 0xbe);
-	TEST_INTS_EQUAL(s.data[24], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[27], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[26], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[25], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[24], 0xef);
 	
 	/* 4 bytes offset */
 	serialize_byte(&s, 0x00);
@@ -89,15 +90,15 @@ static void test_serializer_align_word(void)
 	serialize_byte(&s, 0x00);
 	serialize_byte(&s, 0x00);
 	serialize_word(&s, 0xdeadbeef);
-	TEST_INTS_EQUAL(s.data[35], 0xde);
-	TEST_INTS_EQUAL(s.data[34], 0xad);
-	TEST_INTS_EQUAL(s.data[33], 0xbe);
-	TEST_INTS_EQUAL(s.data[32], 0xef);
+	ASSERT_INTS_EQUAL(suite, s.data[35], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[34], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[33], 0xbe);
+	ASSERT_INTS_EQUAL(suite, s.data[32], 0xef);
 	
 	serializer_deinit(&s);
 }
 
-static void test_serializer_align_halfword(void)
+static void test_serializer_align_halfword(struct test_suite *suite)
 {
 	struct serializer s;
 	
@@ -105,27 +106,27 @@ static void test_serializer_align_halfword(void)
 	
 	/* 0 bytes offset */
 	serialize_halfword(&s, 0xdead);
-	TEST_INTS_EQUAL(s.data[1], 0xde);
-	TEST_INTS_EQUAL(s.data[0], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[1], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[0], 0xad);
 
 	/* 1 bytes offset */
 	serialize_byte(&s, 0x00);
 	serialize_halfword(&s, 0xdead);
-	TEST_INTS_EQUAL(s.data[5], 0xde);
-	TEST_INTS_EQUAL(s.data[4], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[5], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[4], 0xad);
 	
 	/* 2 bytes offset */
 	serialize_byte(&s, 0x00);
 	serialize_byte(&s, 0x00);
 	serialize_halfword(&s, 0xdead);
-	TEST_INTS_EQUAL(s.data[9], 0xde);
-	TEST_INTS_EQUAL(s.data[8], 0xad);
+	ASSERT_INTS_EQUAL(suite, s.data[9], 0xde);
+	ASSERT_INTS_EQUAL(suite, s.data[8], 0xad);
 	
 	serializer_deinit(&s);
 }
 
 
-static void test_serializer_find(void)
+static void test_serializer_find(struct test_suite *suite)
 {
 	struct serializer s;
 	serializer_init(&s);
@@ -138,19 +139,19 @@ static void test_serializer_find(void)
 	serialize_byte(&s, data[0]);
 	serialize_byte(&s, data[1]);
 	serialize_byte(&s, data[2]);
-	TEST_INTS_EQUAL(serializer_find_data(&s, data, 4), -1);
+	ASSERT_INTS_EQUAL(suite, serializer_find_data(&s, data, 4), -1);
 	
 	serialize_byte(&s, data[3]);
-	TEST_INTS_EQUAL(serializer_find_data(&s, data, 4), 1);
+	ASSERT_INTS_EQUAL(suite, serializer_find_data(&s, data, 4), 1);
 	
 	serializer_deinit(&s);
 }
 
-void test_serializer(void)
+void test_serializer(struct test_suite *suite)
 {
-	test_serializer_basic();
-	test_serializer_endianess();
-	test_serializer_align_word();
-	test_serializer_align_halfword();
-	test_serializer_find();
+	test_serializer_basic(suite);
+	test_serializer_endianess(suite);
+	test_serializer_align_word(suite);
+	test_serializer_align_halfword(suite);
+	test_serializer_find(suite);
 }

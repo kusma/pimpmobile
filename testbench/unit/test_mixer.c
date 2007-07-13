@@ -1,6 +1,8 @@
-#include <src/pimp_mixer.h>
-#include "../framework/test.h"
-#include "../framework/helpers.h"
+#include "../framework/test_framework.h"
+#include "../framework/test_helpers.h"
+
+#include "src/pimp_mixer.h"
+#include <memory.h>
 
 /*
 
@@ -23,7 +25,7 @@ typedef struct
 	s32 *mix_buffer;
 } pimp_mixer;
 
-void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
+void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 */
 
 
@@ -31,7 +33,7 @@ void __pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
 s8  target[MAX_TARGET_SIZE + 2];
 s32 mix_buffer[MAX_TARGET_SIZE + 2];
 
-static void test_mixer_basic(void)
+static void test_mixer_basic(struct test_suite *suite)
 {
 	/*
 		cases that need testing:
@@ -41,7 +43,7 @@ static void test_mixer_basic(void)
 	int target_size;
 	
 	pimp_mixer mixer;
-	__pimp_mixer_reset(&mixer);
+	pimp_mixer_reset(&mixer);
 	mixer.mix_buffer = mix_buffer + 1;
 	
 	/* try all buffer sizes */	
@@ -54,15 +56,15 @@ static void test_mixer_basic(void)
 		mix_buffer[0] = rnd;
 		mix_buffer[target_size + 1] = rnd;
 		
-		__pimp_mixer_mix(&mixer, target + 1, target_size);
+		pimp_mixer_mix(&mixer, target + 1, target_size);
 		
 		/* test that values outside the buffer haven't been written */
 		/* target */
-		TEST_INTS_EQUAL(target[0], rnd);
-		TEST_INTS_EQUAL(target[target_size + 1], rnd);	
+		ASSERT_INTS_EQUAL(suite, target[0], rnd);
+		ASSERT_INTS_EQUAL(suite, target[target_size + 1], rnd);	
 		/* mix_buffer */
-		TEST_INTS_EQUAL(mix_buffer[target_size + 1], rnd);	
-		TEST_INTS_EQUAL(mix_buffer[0], rnd);
+		ASSERT_INTS_EQUAL(suite, mix_buffer[target_size + 1], rnd);	
+		ASSERT_INTS_EQUAL(suite, mix_buffer[0], rnd);
 	}
 }
 
@@ -71,7 +73,7 @@ static void test_mixer_basic(void)
 int linear_search_loop_event(int event_cursor, int event_delta, int max_samples);
 int calc_loop_event(int event_cursor, int event_delta, int max_samples);
 
-static void test_looping(void)
+static void test_looping(struct test_suite *suite)
 {
 	/*
 	cases that need testing:
@@ -96,7 +98,7 @@ static void test_looping(void)
 			int event_delta = abs(rand() * rand()) % (1 << 19);
 			int correct = linear_search_loop_event(event_cursor, event_delta, max_samples);
 			int res = calc_loop_event(event_cursor, event_delta, max_samples);
-			TEST_INTS_EQUAL(res, correct);
+			ASSERT_INTS_EQUAL(suite, res, correct);
 		}
 		
 		chan.loop_type           = LOOP_TYPE_FORWARD;
@@ -106,29 +108,29 @@ static void test_looping(void)
 		chan.sample_cursor_delta = 1 << 12;
 
 		/* test that the clamp to buffer size happens at the right place */
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 1), -1);
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 2), -1);
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 3), -1);
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 4), 4);
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 1), -1);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 2), -1);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 3), -1);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 4), 4);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 5), 4);
 #if 0
 #define CLAMP 4
 		for (i = 1; i < CLAMP; ++i)
 		{
-			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), i);
+			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), i);
 		}
 		
 		for (i = CLAMP; i < 1024; ++i)
 		{
-			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), CLAMP);
-			TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, i), CLAMP);
+			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), CLAMP);
+			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), CLAMP);
 		}
 #endif
 		/* see that the correct amount of samples are mixed event at the border values */
 		chan.sample_cursor       = (0 << 12) + 1;
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 5), 4);
 		chan.sample_cursor       = (1 << 12) - 1;
-		TEST_INTS_EQUAL(pimp_mixer_detect_loop_event(&chan, 5), 4);
+		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 5), 4);
 	}
 
 	
@@ -152,22 +154,22 @@ static void test_looping(void)
 	chan.sample_cursor       = 0 << 12;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
 
 	/* loop should happen right after loop-end */
 	chan.sample_cursor       = (0 << 12) + 1;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
 
 	/* loop should happen way after loop-end */
 	chan.sample_cursor       = (1 << 12) - 1;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, forward_loop_ref, ARRAY_SIZE(forward_loop_ref));
 
 	const s32 pingpong_loop_ref[] = {
 		0x00, 0x01, 0x02, 0x03, /* change direction */
@@ -180,28 +182,28 @@ static void test_looping(void)
 	chan.sample_cursor       = 0 << 12;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 
 	/* loop should happen right after loop-end */
 	chan.loop_type           = LOOP_TYPE_PINGPONG;
 	chan.sample_cursor       = (0 << 12) + 1;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 
 	/* loop should happen way after loop-end */
 	chan.loop_type           = LOOP_TYPE_PINGPONG;
 	chan.sample_cursor       = (1 << 12) - 1;
 	chan.sample_cursor_delta = 1 << 12;
 	memset(mix_buffer, 0, target_size * sizeof(u32));
-	__pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
-	TEST_INT_ARRAYS_EQUAL(mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
+	pimp_mixer_mix_channel(&chan, mix_buffer, target_size);
+	ASSERT_INT_ARRAYS_EQUAL(suite, mix_buffer, pingpong_loop_ref, ARRAY_SIZE(pingpong_loop_ref));
 }
 
-void test_mixer(void)
+void test_mixer(struct test_suite *suite)
 {
-	test_mixer_basic();
-	test_looping();
+	test_mixer_basic(suite);
+	test_looping(suite);
 }

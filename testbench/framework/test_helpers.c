@@ -1,10 +1,10 @@
 #include "test_helpers.h"
-#include "test.h"
+#include "test_framework.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-void test_int_array(const int *array, const int *reference, int size, const char *file, int line)
+void test_int_array(struct test_suite *suite, const int *array, const int *reference, int size, const char *file, int line)
 {
 	char temp[1024];
 	int err = 0;
@@ -22,6 +22,6 @@ void test_int_array(const int *array, const int *reference, int size, const char
 		}
 	}
 	
-	if (0 != err) test_fail(temp);
-	else test_pass();
+	if (0 != err) test_fail(suite, temp);
+	else test_pass(suite);
 }

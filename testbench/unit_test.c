@@ -1,12 +1,15 @@
-#include "framework/test.h"
+#include "framework/test_framework.h"
 #include <stdio.h>
 
-void test_mixer(void);
-void test_serializer(void);
+void test_mixer(struct test_suite *suite);
+void test_serializer(struct test_suite *suite);
 
 int main(int argc, char *argv[])
 {
-	test_mixer();
-	test_serializer();
-	return test_report_file(stdout);
+	struct test_suite suite;
+	
+	test_mixer(&suite);
+	test_serializer(&suite);
+	
+	return test_report_file(&suite, stderr);
 }
