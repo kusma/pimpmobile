@@ -4,7 +4,7 @@
 
 # configuration
 TARGET    ?= arm-gba
-HOST      ?= host
+HOST      ?= $(shell $(HOST_CC) -dumpmachine)
 BUILD_DIR ?= build
 
 ifeq ($(strip $(DEVKITPRO)),)
@@ -21,21 +21,28 @@ else
 TARGET_PREFIX = $(TARGET)
 endif
 
-TARGET_CC      = $(TARGET_PREFIX)gcc
-TARGET_CXX     = $(TARGET_PREFIX)g++
-TARGET_OBJCOPY = $(TARGET_PREFIX)objcopy
-TARGET_STRIP   = $(TARGET_PREFIX)strip
-TARGET_LD      = $(TARGET_PREFIX)ld
-TARGET_AS      = $(TARGET_PREFIX)as
-TARGET_AR      = $(TARGET_PREFIX)ar
+define setup-gcc
+	$(1)CC      = $(2)gcc
+	$(1)CXX     = $(2)g++
+	$(1)OBJCOPY = $(2)objcopy
+	$(1)STRIP   = $(2)strip
+	$(1)LD      = $(2)ld
+	$(1)AS      = $(2)as
+	$(1)AR      = $(2)ar
+endef
+
+$(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
+$(eval $(call setup-gcc,HOST_,))
 
 MKDIR = mkdir -p
 
-TARGET_CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
-TARGET_CFLAGS   = -mthumb-interwork -mlong-calls
-TARGET_CXXFLAGS = -mthumb-interwork -mlong-calls
-TARGET_LDFLAGS  = -mthumb-interwork -Wl,--gc-section
-TARGET_ASFLAGS  = -mthumb-interwork
+ifeq ($(TARGET), arm-gba)
+	TARGET_CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
+	TARGET_CFLAGS   = -mthumb-interwork -mlong-calls
+	TARGET_CXXFLAGS = -mthumb-interwork -mlong-calls
+	TARGET_LDFLAGS  = -mthumb-interwork -Wl,--gc-section
+	TARGET_ASFLAGS  = -mthumb-interwork
+endif
 
 CPPFLAGS = 
 CFLAGS   = 
@@ -128,7 +135,7 @@ $(TARGET_BUILD_DIR)/%.o: %.c
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(HOST_CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### C++
 
@@ -138,7 +145,7 @@ $(TARGET_BUILD_DIR)/%.o: %.cpp
 
 $(HOST_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(HOST_CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 
