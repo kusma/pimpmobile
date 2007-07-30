@@ -31,12 +31,14 @@ THUMB = -mthumb
 OBJS = \
 	example2.o \
 	../converter/load_xm.o \
+	../converter/load_mod.o \
 	../converter/convert_sample.o \
 	../src/pimp_sample_bank.o \
 	libgbfs.o \
 	gbfs_stdio.o
 
-MODULES = $(shell ls data/*.xm)
+MODULES  = $(shell ls data/*.xm)
+MODULES += $(shell ls data/*.mod)
 
 BIN_MODULES = $(MODULES:=.bin)
 

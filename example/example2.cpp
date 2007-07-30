@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../include/pimpmobile.h"
+#include "../include/pimp_gba.h"
 #include "../converter/load_module.h"
 #include "../src/pimp_sample_bank.h"
 #include "gbfs_stdio.h"
@@ -85,13 +85,14 @@ int main()
 	gbfs_init(1);
 	
 	pimp_sample_bank sb;
-	FILE *fp = fopen("dxn-oopk.xm", "rb");
+//	FILE *fp = fopen("dxn-oopk.xm", "rb");
+	FILE *fp = fopen("biomech.mod", "rb");
 	if (!fp)
 	{
 		fprintf(stderr, "file not found\n");
 		return 1;
 	}
-	pimp_module *mod = load_module_xm(fp, &sb);
+	pimp_module *mod = load_module_mod(fp, &sb);
 	fclose(fp);
 	fp = NULL;
 	

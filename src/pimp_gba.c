@@ -24,11 +24,12 @@ static pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 #define SAMPLES_PR_FRAME  ((int)((1 << 24) / ((float)SAMPLERATE)))
 #define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PR_FRAME))
 
+/* mix and playback-buffers */
 static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 pimp_gba_sound_buffer_index = 0;
 static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
-void pimp_init(const void *module, const void *sample_bank)
+void pimp_init(const struct pimp_module *module, const void *sample_bank)
 {
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
 	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer);

@@ -364,15 +364,15 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		}
 		
 		/* calculate length of sample in native format */
-		samp->length = sh->length / _pimp_sample_format_get_size(src_format);
-		ASSERT((sh->length % _pimp_sample_format_get_size(src_format)) == 0);
+		samp->length = sh->length / pimp_sample_format_get_size(src_format);
+		ASSERT((sh->length % pimp_sample_format_get_size(src_format)) == 0);
 		
 		/* allocate memory for converted sample */
-		dst_waveform = malloc(samp->length * _pimp_sample_format_get_size(dst_format));
+		dst_waveform = malloc(samp->length * pimp_sample_format_get_size(dst_format));
 		if (NULL == dst_waveform) return FALSE;
 
 		/* convert the actual sample */
-		_pimp_convert_sample(dst_waveform, dst_format, src_waveform, src_format, samp->length);
+		pimp_convert_sample(dst_waveform, dst_format, src_waveform, src_format, samp->length);
 
 		/* we're done with src_waveform */
 		free(src_waveform);

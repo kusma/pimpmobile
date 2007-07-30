@@ -10,7 +10,7 @@
 
 void print_usage()
 {
-	printf("usage: converter filenames\n");
+	fprintf(stderr, "usage: converter filenames\n");
 	exit(1);
 }
 
@@ -28,8 +28,8 @@ static struct pimp_module *load_module(const char *filename, struct pimp_sample_
 	
 	/* try to load */
 	mod = load_module_xm(fp, sample_bank);
-	if (NULL == mod) mod = load_module_mod(fp);
-	if (NULL == mod) printf("failed to load module!\n");
+	if (NULL == mod) mod = load_module_mod(fp, sample_bank);
+	if (NULL == mod) fprintf(stderr, "failed to load module!\n");
 	
 	/* close file */
 	fclose(fp);
@@ -51,7 +51,7 @@ static void dump_module(struct pimp_module *mod, const char *filename)
 	FILE *fp = fopen(filename, "wb");
 	if (NULL == fp)
 	{
-		printf("failed to open output file\n");
+		fprintf(stderr, "failed to open output file\n");
 		return;
 	}
 	
@@ -74,7 +74,10 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 		for (j = 0; j < instr->sample_count; ++j)
 		{
 			pimp_sample *samp = pimp_instrument_get_sample(instr, j);
+			ASSERT(NULL != samp);
+			
 			void *data = pimp_sample_bank_get_sample_data(src, samp->data_ptr);
+			ASSERT(NULL != data);
 			
 			int pos = pimp_sample_bank_find_sample_data(dst, data, samp->length);
 			if (pos < 0)
@@ -149,7 +152,7 @@ int main(int argc, char *argv[])
 	FILE *fp = fopen("sample_bank.bin", "wb");
 	if (NULL == fp)
 	{
-		printf("failed to open output file\n");
+		fprintf(stderr, "failed to open output file\n");
 		return 1;
 	}
 	

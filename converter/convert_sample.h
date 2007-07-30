@@ -17,7 +17,7 @@ enum pimp_sample_format
 	PIMP_SAMPLE_S16,
 };
 
-static inline size_t _pimp_sample_format_get_size(enum pimp_sample_format format)
+static INLINE size_t pimp_sample_format_get_size(enum pimp_sample_format format)
 {
 	switch (format)
 	{
@@ -29,9 +29,7 @@ static inline size_t _pimp_sample_format_get_size(enum pimp_sample_format format
 	}
 }
 
-#include <stddef.h>
-
-void _pimp_convert_sample(void *dst, enum pimp_sample_format dst_format, void *src, enum pimp_sample_format src_format, size_t size);
+void pimp_convert_sample(void *dst, enum pimp_sample_format dst_format, void *src, enum pimp_sample_format src_format, size_t size);
 
 #ifdef __cplusplus
 }

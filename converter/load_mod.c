@@ -10,6 +10,7 @@
 #include <math.h>
 #include <float.h>
 
+#include "load_module.h"
 #include "convert_sample.h"
 #include "../src/pimp_module.h"
 #include "../src/pimp_mixer.h" /* for pimp_loop_type enum */
@@ -30,14 +31,18 @@ int return_nearest_note(int p)
 	return note_int;
 }
 
-static BOOL load_instrument(FILE *fp, pimp_instrument *instr)
+static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
 {
 	unsigned char buf[256];
-	pimp_sample *samp;
+	pimp_sample *sample;
 		
 	fread(buf, 1, 22, fp);
 	buf[22] = '\0';
 //	printf("sample-name: '%s' ", buf);
+
+	sample = (pimp_sample *)malloc(sizeof(pimp_sample));
+	if (NULL == sample) return FALSE;
+	pimp_set_ptr(&instr->sample_ptr, sample);
 	
 	
 	// fill out the instrument-data. this is not stored in the module at all.
@@ -55,40 +60,42 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr)
 	memset(instr->sample_map, 0, 120);
 	
 /*	strcpy(samp->name, (const char*)buf); */
-/*	samp->sustain_loop_type  = LOOP_NONE;
-	samp->sustain_loop_start = 0;
-	samp->sustain_loop_end   = 0; */
-	samp->pan = 0;
-/*	samp->ignore_default_pan_position = true; */
-	samp->rel_note = 0;
-	samp->vibrato_speed = 0;
-	samp->vibrato_depth = 0;
-	samp->vibrato_sweep = 0;
-	samp->vibrato_waveform = SAMPLE_VIBRATO_SINE; /* just a dummy */
+/*	sample->sustain_loop_type  = LOOP_NONE;
+	sample->sustain_loop_start = 0;
+	sample->sustain_loop_end   = 0; */
+	sample->pan = 0;
+/*	sample->ignore_default_pan_position = true; */
+	sample->rel_note = 0;
+	sample->vibrato_speed = 0;
+	sample->vibrato_depth = 0;
+	sample->vibrato_sweep = 0;
+	sample->vibrato_waveform = SAMPLE_VIBRATO_SINE; /* just a dummy */
 	
 	fread(buf, 1, 2, fp);
-	samp->length = ((buf[0] << 8) | buf[1]) << 1;
+	sample->length = ((buf[0] << 8) | buf[1]) << 1;
 	
 	fread(buf, 1, 1, fp);
-	if (buf[0] > 7) samp->fine_tune = (buf[0] - 16) << 4;
-	else samp->fine_tune = buf[0] << 4;
+	if (buf[0] > 7) sample->fine_tune = (buf[0] - 16) << 4;
+	else sample->fine_tune = buf[0] << 4;
 	
-	fread(&samp->volume, 1, 1, fp);
-	
-	fread(buf, 1, 2, fp);
-	samp->loop_start = ((buf[0] << 8) | buf[1]) << 1;
-	if (samp->loop_start > samp->length) samp->loop_start = 0;
+	fread(&sample->volume, 1, 1, fp);
 	
 	fread(buf, 1, 2, fp);
-	samp->loop_length = ((buf[0] << 8) | buf[1]) << 1;
-	if (samp->loop_start + samp->loop_length > samp->length) samp->loop_length = samp->length - samp->loop_start;
+	sample->loop_start = ((buf[0] << 8) | buf[1]) << 1;
+	if (sample->loop_start > sample->length) sample->loop_start = 0;
+	
+	fread(buf, 1, 2, fp);
+	sample->loop_length = ((buf[0] << 8) | buf[1]) << 1;
+	if (sample->loop_start + sample->loop_length > sample->length) sample->loop_length = sample->length - sample->loop_start;
 /*		
 	printf("sample: %02X - ", i + 1);
 	printf("loop start: %d ", samp.loop_start);
 	printf("loop end: %d ", samp.loop_end);
 */	
-	if ((samp->loop_start <= 2) && (samp->loop_length <= 4)) samp->loop_type = LOOP_TYPE_NONE;
-	else samp->loop_type = LOOP_TYPE_FORWARD;
+	if ((sample->loop_start <= 2) && (sample->loop_length <= 4)) sample->loop_type = LOOP_TYPE_NONE;
+	else sample->loop_type = LOOP_TYPE_FORWARD;
+		
+	return TRUE;
 }
 
 
@@ -136,7 +143,7 @@ static int get_channel_count(u32 sig)
 	return c;
 }
 
-pimp_module *load_module_mod(FILE *fp)
+pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 {
 	int i, p;
 	pimp_module *mod;
@@ -151,7 +158,7 @@ pimp_module *load_module_mod(FILE *fp)
 	fread(&sig_data, 1, 4, fp);
 	sig = MAKE_WORD(sig_data[0], sig_data[1], sig_data[2], sig_data[3]);
 	channels = get_channel_count(sig);
-	if (channels > 0) return NULL;
+	if (channels <= 0) return NULL;
 	
 	mod = (pimp_module *)malloc(sizeof(pimp_module));
 	if (NULL == mod) return NULL;
@@ -171,6 +178,7 @@ pimp_module *load_module_mod(FILE *fp)
 	
 	mod->flags = FLAG_TEMOR_EXTRA_DELAY | FLAG_TEMOR_MEMORY | FLAG_PORTA_NOTE_MEMORY;
 	
+	
 	// song name
 	char name[20 + 1];
 	rewind(fp);
@@ -184,6 +192,7 @@ pimp_module *load_module_mod(FILE *fp)
 		mod->channel_count = channels;
 		pimp_channel *channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
+		memset(channels, 0, sizeof(pimp_channel) * mod->channel_count);
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
 		
@@ -200,17 +209,20 @@ pimp_module *load_module_mod(FILE *fp)
 	pimp_instrument *instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
 	if (NULL == instruments) return NULL;
 		
+	memset(instruments, 0, sizeof(pimp_instrument) * mod->instrument_count);
+		
 	pimp_set_ptr(&mod->instrument_ptr, instruments);
-	
+#if 1
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
-		BOOL ret = load_instrument(fp, &instruments[i]);
+		BOOL ret = load_instrument(fp, &instruments[i], sample_bank);
 		if (FALSE == ret)
 		{
 			/* TODO: cleanup */
 			return NULL;
 		}
 	}
+#endif
 
 	static unsigned char buf[256];
 
@@ -262,7 +274,6 @@ pimp_module *load_module_mod(FILE *fp)
 	
 	memset(patterns, 0, sizeof(pimp_pattern) * mod->pattern_count);
 	pimp_set_ptr(&mod->pattern_ptr, patterns);
-
 	
 	/* load patterns and track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
 	int min_period =  99999;
@@ -319,7 +330,8 @@ pimp_module *load_module_mod(FILE *fp)
 		instr->sample_count = 1;
 		samp = (pimp_sample *)malloc(sizeof(pimp_sample));
 		if (NULL == samp) return FALSE;
-	/*	PIMP_SET_PTR(instr->sample_ptr, samp); */
+		
+		memset(samp, 0, sizeof(pimp_sample));
 		pimp_set_ptr(&instr->sample_ptr, samp);
 
 		if (samp->length > 0 && samp->length > 2)
@@ -333,39 +345,35 @@ pimp_module *load_module_mod(FILE *fp)
 			if (NULL == src_waveform) return FALSE;
 			fread(src_waveform, 1, samp->length, fp);
 			
-			ASSERT(_pimp_sample_format_get_size(src_format) == _pimp_sample_format_get_size(dst_format));
+			ASSERT(pimp_sample_format_get_size(src_format) == pimp_sample_format_get_size(dst_format));
 			
-			dst_waveform = malloc(samp->length * _pimp_sample_format_get_size(dst_format));
+			dst_waveform = malloc(samp->length * pimp_sample_format_get_size(dst_format));
 			if (NULL == dst_waveform) return FALSE;
 			
-			_pimp_convert_sample(dst_waveform, dst_format, src_waveform, src_format, samp->length);
+			pimp_convert_sample(dst_waveform, dst_format, src_waveform, src_format, samp->length);
 			
-			/* TODO: insert into sample bank. */
-			samp->data_ptr = 0;
-			free(src_waveform);
+			/* insert into sample bank. */
+			{
+				int pos = pimp_sample_bank_insert_sample_data(sample_bank, dst_waveform, samp->length);
+				if (pos < 0)
+				{
+					free(dst_waveform);
+					dst_waveform = NULL;
+					return FALSE;
+				}
+				samp->data_ptr = pos;
+			}
+
+			free(dst_waveform);
+			dst_waveform = NULL;
 		}
 		else
 		{
-			/* no sample (WHAT TO DOO?!) */
+			ASSERT(0); /* This is a bad fix */
+			/* TODO: Handle no sample case */
 			samp->data_ptr = 0;
 		}
 	}
-	
-	
-#if 0	
-	/* check file length */
-	int eof1 = feof(fp);
-	fread(buf, 1, 1, fp);	
-	int eof2 = feof(fp);
-	if ((eof1 != 0) == (eof2 != 0))
-	{
-		/* uhm, still need to free the rest later. */
-		free(mod);
-		mod = NULL;
-		
-		return NULL;
-	}
-#endif
 	
 	return mod;
 }

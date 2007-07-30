@@ -6,6 +6,7 @@
 TARGET    ?= arm-gba
 HOST      ?= $(shell $(HOST_CC) -dumpmachine)
 BUILD_DIR ?= build
+CONFIG    ?= release
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
@@ -73,7 +74,7 @@ PIMPCONV_OBJS = \
 	load_xm.o \
 	load_mod.o
 
-ifeq ($(DEBUG), 1)
+ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g3 -ggdb
 	CFLAGS   += -g3 -ggdb
@@ -93,8 +94,8 @@ ifeq ($(PROFILING), 1)
 	OBJS += profiling/cyg-profile.o
 endif
 
-TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)
-HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)
+TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)/$(CONFIG)
+HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)/$(CONFIG)
 
 make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(1))
 make-host-objs = $(addprefix $(HOST_BUILD_DIR)/, $(1))

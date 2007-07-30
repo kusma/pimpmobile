@@ -34,7 +34,9 @@ extern "C"
 {
 #endif
 
-void pimp_init(const void *module, const void *sample_bank);
+struct pimp_module;
+
+void pimp_init(const struct pimp_module *module, const void *sample_bank);
 void pimp_close();
 
 void pimp_vblank(); /* call this on the beginning of each vsync */

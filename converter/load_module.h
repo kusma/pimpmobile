@@ -10,7 +10,7 @@ extern "C" {
 struct pimp_module;
 struct pimp_sample_bank;
 
-struct pimp_module *load_module_mod(FILE *fp);
+struct pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank);
 struct pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank);
 
 #ifdef __cplusplus
