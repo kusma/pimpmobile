@@ -38,10 +38,14 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		
 	fread(buf, 1, 22, fp);
 	buf[22] = '\0';
-//	printf("sample-name: '%s' ", buf);
 
 	sample = (pimp_sample *)malloc(sizeof(pimp_sample));
 	if (NULL == sample) return FALSE;
+
+	/* only one sample per instrument in MOD */
+	instr->sample_count = 1;
+	
+	memset(sample, 0, sizeof(pimp_sample));
 	pimp_set_ptr(&instr->sample_ptr, sample);
 	
 	
@@ -87,11 +91,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	fread(buf, 1, 2, fp);
 	sample->loop_length = ((buf[0] << 8) | buf[1]) << 1;
 	if (sample->loop_start + sample->loop_length > sample->length) sample->loop_length = sample->length - sample->loop_start;
-/*		
-	printf("sample: %02X - ", i + 1);
-	printf("loop start: %d ", samp.loop_start);
-	printf("loop end: %d ", samp.loop_end);
-*/	
+	
 	if ((sample->loop_start <= 2) && (sample->loop_length <= 4)) sample->loop_type = LOOP_TYPE_NONE;
 	else sample->loop_type = LOOP_TYPE_FORWARD;
 		
@@ -267,7 +267,6 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	fseek(fp, 128 - mod->order_count, SEEK_CUR); /* discard unused orders */
 	fseek(fp, 4, SEEK_CUR); /* discard mod-signature (already loaded) */
 	
-	
 	mod->pattern_count = max_pattern + 1;
 	pimp_pattern *patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
 	if (NULL == patterns) return NULL;
@@ -326,24 +325,18 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		pimp_sample *samp;
 		pimp_instrument *instr = &instruments[i];
 		
-		/* only one sample per instrument in MOD */
-		instr->sample_count = 1;
-		samp = (pimp_sample *)malloc(sizeof(pimp_sample));
-		if (NULL == samp) return FALSE;
+		samp = pimp_instrument_get_sample(instr, 0);
 		
-		memset(samp, 0, sizeof(pimp_sample));
-		pimp_set_ptr(&instr->sample_ptr, samp);
-
 		if (samp->length > 0 && samp->length > 2)
 		{
 			enum pimp_sample_format src_format = PIMP_SAMPLE_S8;
 			enum pimp_sample_format dst_format = PIMP_SAMPLE_U8;
 			
 			void *dst_waveform;
-			void *src_waveform = malloc(samp->length);
+			void *src_waveform = malloc(samp->length * pimp_sample_format_get_size(src_format));
 
 			if (NULL == src_waveform) return FALSE;
-			fread(src_waveform, 1, samp->length, fp);
+			fread(src_waveform, 1, samp->length * pimp_sample_format_get_size(src_format), fp);
 			
 			ASSERT(pimp_sample_format_get_size(src_format) == pimp_sample_format_get_size(dst_format));
 			
@@ -359,11 +352,19 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 				{
 					free(dst_waveform);
 					dst_waveform = NULL;
+
+					free(src_waveform);
+					src_waveform = NULL;
+					
+					fprintf(stderr, "failed to insert module into sample bank\n");
 					return FALSE;
 				}
 				samp->data_ptr = pos;
 			}
 
+			free(src_waveform);
+			src_waveform = NULL;
+			
 			free(dst_waveform);
 			dst_waveform = NULL;
 		}
@@ -374,6 +375,5 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 			samp->data_ptr = 0;
 		}
 	}
-	
 	return mod;
 }

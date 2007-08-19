@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			char *ofn;
 			struct pimp_module *mod;
 			const char *ifn = arg;
 			
@@ -132,8 +131,9 @@ int main(int argc, char *argv[])
 			if (NULL != mod)
 			{	
 				/* generate output filename */
-				ofn = strdup(ifn);
-				ofn = strcat(ofn, ".bin");
+				char ofn[256];
+				strncpy(ofn, ifn, 256);
+				strncat(ofn, ".bin", 256);
 				
 				/* dump sample data */
 				merge_samples(&master_sample_bank, &sample_bank, mod);
