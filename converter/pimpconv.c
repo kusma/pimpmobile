@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 			mod = load_module(ifn, &sample_bank);
 			
 			if (NULL != mod)
-			{	
+			{
 				/* generate output filename */
 				char ofn[256];
 				strncpy(ofn, ifn, 256);
