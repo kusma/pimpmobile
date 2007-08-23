@@ -76,8 +76,8 @@ PIMPCONV_OBJS = \
 
 ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
-	CXXFLAGS += -g3 -ggdb
-	CFLAGS   += -g3 -ggdb
+	CXXFLAGS += -g -ggdb
+	CFLAGS   += -g -ggdb
 	OBJS     += pimp_mixer_portable.o
 	OBJS     += pimp_debug.o 
 else

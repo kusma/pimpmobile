@@ -19,7 +19,7 @@ void pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
-STATIC PURE int linear_search_loop_event(int event_cursor, int event_delta, const int max_samples)
+STATIC PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int i;
 	for (i = 0; i < max_samples; ++i)
@@ -33,7 +33,7 @@ STATIC PURE int linear_search_loop_event(int event_cursor, int event_delta, cons
 	return -1;
 }
 
-STATIC PURE int calc_loop_event(int event_cursor, int event_delta, const int max_samples)
+STATIC PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int result;
 	if (event_cursor == 0) return 1;
@@ -115,14 +115,14 @@ PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, cons
 	ASSERT((event_cursor > 0) && (event_delta > 0));
 	
 #if 1
-	return calc_loop_event(event_cursor, event_delta, max_samples);
+	return pimp_calc_loop_event(event_cursor, event_delta, max_samples);
 #else
-	return linear_search_loop_event(event_cursor, event_delta, max_samples);
+	return pimp_linear_search_loop_event(event_cursor, event_delta, max_samples);
 #endif
 }
 
 /* returns false if we hit sample-end */
-STATIC BOOL process_loop_event(pimp_mixer_channel_state *chan)
+STATIC BOOL pimp_process_loop_event(pimp_mixer_channel_state *chan)
 {
 	ASSERT(NULL != chan);
 	switch (chan->loop_type)
@@ -181,7 +181,6 @@ void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 sam
 		int safe_samples = pimp_mixer_detect_loop_event(chan, samples);
 		ASSERT(samples >= safe_samples);
 		
-		
 		int mix_samples = safe_samples;
 		if (safe_samples < 0) mix_samples = samples;
 		
@@ -193,7 +192,7 @@ void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 sam
 		target  += safe_samples; /* move target pointer */
 		samples -= safe_samples;
 		
-		if (FALSE == process_loop_event(chan))
+		if (FALSE == pimp_process_loop_event(chan))
 		{
 			/* the sample has stopped, we need to fill the rest of the buffer with the dc-offset, so it doesn't ruin our unsigned mixing-thing */
 			while (samples--)
