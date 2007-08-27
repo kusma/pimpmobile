@@ -1,6 +1,6 @@
 /*
 
-pimpmobile.h -- The interface of Pimpmobile, a module playback library
+pimp_gba.h -- The interface of Pimpmobile, a module playback library
 targeting the Nintendo GameBoy Advance
 
 
