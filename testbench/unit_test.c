@@ -1,3 +1,8 @@
+/* pimp_math.c -- Math routines for use in Pimpmobile
+ * Copyright (C) 2007 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include "framework/test_framework.h"
 #include <stdio.h>
 
