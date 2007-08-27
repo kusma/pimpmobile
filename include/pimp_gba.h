@@ -37,14 +37,14 @@ extern "C"
 struct pimp_module;
 
 void pimp_init(const struct pimp_module *module, const void *sample_bank);
-void pimp_close();
+void pimp_close(void);
 
-void pimp_vblank(); /* call this on the beginning of each vsync */
-void pimp_frame(); /* call once each frame. doesn't need to be called in precious vblank time */
+void pimp_vblank(void); /* call this on the beginning of each vsync */
+void pimp_frame(void); /* call once each frame. doesn't need to be called in precious vblank time */
 
 /* get information about playback */
-int pimp_get_row();
-int pimp_get_order();
+int pimp_get_row(void);
+int pimp_get_order(void);
 void pimp_set_pos(int row, int order);
 
 enum pimp_callback_type

@@ -30,6 +30,7 @@ int pimp_envelope_sample(pimp_envelope_state *state)
 {
 	s32 delta;
 	u32 internal_tick;
+	int val;
 	
 	ASSERT(NULL != state);
 
@@ -42,7 +43,7 @@ int pimp_envelope_sample(pimp_envelope_state *state)
 	delta = state->env->node_delta[state->current_node];
 	internal_tick = state->current_tick - state->env->node_tick[state->current_node];
 	
-	int val = state->env->node_magnitude[state->current_node];
+	val = state->env->node_magnitude[state->current_node];
 	val += ((long long)delta * internal_tick) >> 9;
 	
 	return val << 2;

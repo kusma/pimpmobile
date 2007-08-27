@@ -14,9 +14,10 @@
 
 static int pimp_channel_get_volume(pimp_channel_state *chan)
 {
+	int volume;
 	ASSERT(NULL != chan);
 	
-	int volume = chan->volume;
+	volume = chan->volume;
 	
 	if (NULL != chan->vol_env.env)
 	{

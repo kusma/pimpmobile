@@ -33,10 +33,11 @@ const u8 pimp_clz_lut[256] =
 #ifndef NO_LINEAR_PERIODS
 unsigned pimp_get_linear_period(int note, int fine_tune)
 {
+	int xm_note;
 	ASSERT(fine_tune >= -8);
 	ASSERT(fine_tune <   8);
 	
-	int xm_note = note - (12 * 1) - 1; /* we extended our note-range with one octave. */
+	xm_note = note - (12 * 1) - 1; /* we extended our note-range with one octave. */
 	
 	return (10 * 12 * 16 * 4 - xm_note * 16 * 4 - fine_tune / 2);
 /*	return 10 * 12 * 16 * 4 - note * 16 * 4 - fine_tune / 2; */
@@ -45,13 +46,14 @@ unsigned pimp_get_linear_period(int note, int fine_tune)
 #include "linear_delta_lut.h"
 unsigned pimp_get_linear_delta(unsigned period)
 {
+	const unsigned int scale = (unsigned int)((1.0 / (SAMPLERATE)) * (1 << 3) * (1ULL << 32));
+	
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
 	unsigned octave_period = p % (12 * 16 * 4);
 	unsigned delta = linear_delta_lut[octave_period] << octave;
 
 	/* BEHOLD: the expression of the devil (this compiles to one arm-instruction) */
-	const unsigned int scale = (unsigned int)((1.0 / (SAMPLERATE)) * (1 << 3) * (1ULL << 32));
 	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
 	return delta;
 }
@@ -61,25 +63,26 @@ unsigned pimp_get_linear_delta(unsigned period)
 #include "amiga_period_lut.h"
 unsigned pimp_get_amiga_period(int note, int fine_tune)
 {
+	unsigned int index;
 	fine_tune /= 8; /* todo: interpolate instead? */
 	ASSERT(fine_tune >= -8);
 	ASSERT(fine_tune <=  8);
 	
 	/* bias up one octave to prevent from negative values due to fine tune*/
-	unsigned index = 12 * 8 + note * 8 + fine_tune;
+	index = 12 * 8 + note * 8 + fine_tune;
 	
 	/* handle notes outside of the mod-range by shifting up or down */
 	if (index < (12 * 8 * 5))
 	{
-		unsigned octave       = index / (12 * 8);
-		unsigned octave_index = index % (12 * 8);
+		unsigned int octave       = index / (12 * 8);
+		unsigned int octave_index = index % (12 * 8);
 		return (((u32)amiga_period_lut[octave_index]) * 4) << (5 - octave);
 	}
 
 	if (index >= ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
 	{
-		unsigned octave       = index / (12 * 8);
-		unsigned octave_index = index % (12 * 8);
+		unsigned int octave       = index / (12 * 8);
+		unsigned int octave_index = index % (12 * 8);
 		return (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5);
 	}
 
@@ -91,23 +94,25 @@ unsigned pimp_get_amiga_period(int note, int fine_tune)
 #define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG2_SIZE)
 unsigned pimp_get_amiga_delta(unsigned period)
 {
-	unsigned shamt = clz16(period) - 1;
-	unsigned p = period << shamt;
-	unsigned p_frac = p & ((1 << AMIGA_DELTA_LUT_FRAC_BITS) - 1);
+	const unsigned int scale = (unsigned int)(((1.0 / (SAMPLERATE)) * (1 << 6)) * (1LL << 32));
+
+	int d1, d2;
+	unsigned int delta;
+	unsigned int shamt = clz16(period) - 1;
+	unsigned int p = period << shamt;
+	unsigned int p_frac = p & ((1 << AMIGA_DELTA_LUT_FRAC_BITS) - 1);
 	p >>= AMIGA_DELTA_LUT_FRAC_BITS;
 
 	/* interpolate table-entries for better result */
-	int d1 = amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p) */
-	int d2 = amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p + 1) */
-	unsigned delta = (d1 << AMIGA_DELTA_LUT_FRAC_BITS) + (d2 - d1) * p_frac;
+	d1 = amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p) */
+	d2 = amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p + 1) */
+	delta = (d1 << AMIGA_DELTA_LUT_FRAC_BITS) + (d2 - d1) * p_frac;
 
 	if (shamt > AMIGA_DELTA_LUT_FRAC_BITS) delta <<= shamt - AMIGA_DELTA_LUT_FRAC_BITS;
 	else delta >>= AMIGA_DELTA_LUT_FRAC_BITS - shamt;
 
 	/* BEHOLD: the expression of the devil 2.0 (this compiles to one arm-instruction) */
-	const unsigned int scale = (unsigned int)(((1.0 / (SAMPLERATE)) * (1 << 6)) * (1LL << 32));
 	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
-	
 	return delta;
 }
 #endif /* NO_AMIGA_PERIODS */

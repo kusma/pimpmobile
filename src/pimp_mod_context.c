@@ -112,10 +112,11 @@ void pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order)
 
 void pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
 {
+	/* we're using 8 fractional-bits for the tick-length */
+	const int temp = (int)(((SAMPLERATE) * 5) * (1 << 8));
+	
 	ASSERT(ctx != NULL);
 	ASSERT(bpm > 0);
 	
-	/* we're using 8 fractional-bits for the tick-length */
-	const int temp = (int)(((SAMPLERATE) * 5) * (1 << 8));
 	ctx->tick_len = temp / (bpm * 2);
 }

@@ -64,8 +64,8 @@ typedef struct
 	u32 curr_tick_len;
 	u32 remainder;
 
-	u32 curr_row;
-	u32 curr_order;
+	s32 curr_row;
+	s32 curr_order;
 	
 	u32 next_row;
 	u32 next_order;

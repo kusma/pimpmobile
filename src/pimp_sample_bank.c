@@ -2,6 +2,7 @@
 #include "pimp_debug.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 void pimp_sample_bank_init(pimp_sample_bank *sample_bank)
 {

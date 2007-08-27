@@ -33,7 +33,7 @@
 #endif
 
 #ifndef INLINE
-#define INLINE inline
+#define INLINE __inline
 #endif
 
 #ifndef UNIT_TESTING

@@ -19,6 +19,10 @@ void pimp_mixer_reset(pimp_mixer *mixer)
 	}
 }
 
+#define CALC_LOOP_EVENT
+
+#ifndef CALC_LOOP_EVENT
+
 STATIC PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int i;
@@ -32,6 +36,8 @@ STATIC PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta,
 	}
 	return -1;
 }
+
+#else /* CALC_LOOP_EVENT */
 
 STATIC PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
@@ -69,15 +75,15 @@ STATIC PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const in
 	return result;
 }
 
+#endif
+
 /* returns the number of samples that can be mixed before a loop event occurs */
 PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, const int max_samples)
 {
+	int event_delta, event_cursor;
+	
 	ASSERT(max_samples > 0);
 	ASSERT(NULL != chan);
-	
-	int safe_samples;
-	int samples_left;
-	int event_delta, event_cursor = 0;
 	
 	switch (chan->loop_type)
 	{
@@ -109,15 +115,18 @@ PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, cons
 				event_cursor = -((chan->loop_start << 12) - chan->sample_cursor - 1);
 			}
 		break;
-		default: ASSERT(FALSE); /* should never happen */
+		default:
+			/* should never happen */
+			ASSERT(FALSE);
+			return 0;
 	}
 	
 	ASSERT((event_cursor > 0) && (event_delta > 0));
 	
-#if 1
-	return pimp_calc_loop_event(event_cursor, event_delta, max_samples);
-#else
+#ifndef CALC_LOOP_EVENT
 	return pimp_linear_search_loop_event(event_cursor, event_delta, max_samples);
+#else
+	return pimp_calc_loop_event(event_cursor, event_delta, max_samples);
 #endif
 }
 
@@ -127,9 +136,7 @@ STATIC BOOL pimp_process_loop_event(pimp_mixer_channel_state *chan)
 	ASSERT(NULL != chan);
 	switch (chan->loop_type)
 	{
-		case LOOP_TYPE_NONE:
-			return FALSE;
-		break;
+		case LOOP_TYPE_NONE: return FALSE;
 		
 		case LOOP_TYPE_FORWARD:
 			do
@@ -179,9 +186,10 @@ void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 sam
 	while (samples > 0)
 	{
 		int safe_samples = pimp_mixer_detect_loop_event(chan, samples);
+		int mix_samples = safe_samples;
+		
 		ASSERT(samples >= safe_samples);
 		
-		int mix_samples = safe_samples;
 		if (safe_samples < 0) mix_samples = samples;
 		
 		pimp_mixer_mix_samples(target, mix_samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
