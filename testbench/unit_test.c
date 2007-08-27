@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 {
 	struct test_suite suite;
 	
-	test_mixer(&suite);
+	asdtest_mixer(&suite);
 	test_serializer(&suite);
 	
 	return test_report_file(&suite, stderr);
