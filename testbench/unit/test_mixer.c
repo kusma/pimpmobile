@@ -70,8 +70,23 @@ static void test_mixer_basic(struct test_suite *suite)
 
 #define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
-int linear_search_loop_event(int event_cursor, int event_delta, int max_samples);
-int calc_loop_event(int event_cursor, int event_delta, int max_samples);
+int pimp_linear_search_loop_event(int event_cursor, int event_delta, int max_samples);
+int pimp_calc_loop_event(int event_cursor, int event_delta, int max_samples);
+
+/* reference implementation */
+STATIC PURE int ref_search_loop_event(int event_cursor, int event_delta, const int max_samples)
+{
+	int i;
+	for (i = 0; i < max_samples; ++i)
+	{
+		event_cursor -= event_delta;
+		if (event_cursor <= 0)
+		{
+			return i + 1;
+		}
+	}
+	return -1;
+}
 
 static void test_looping(struct test_suite *suite)
 {
@@ -96,8 +111,8 @@ static void test_looping(struct test_suite *suite)
 			int max_samples = rand() % 1024;
 			int event_cursor = abs(rand() * rand());
 			int event_delta = abs(rand() * rand()) % (1 << 19);
-			int correct = linear_search_loop_event(event_cursor, event_delta, max_samples);
-			int res = calc_loop_event(event_cursor, event_delta, max_samples);
+			int correct = ref_search_loop_event(event_cursor, event_delta, max_samples);
+			int res = pimp_calc_loop_event(event_cursor, event_delta, max_samples);
 			ASSERT_INTS_EQUAL(suite, res, correct);
 		}
 		

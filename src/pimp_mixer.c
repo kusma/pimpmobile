@@ -23,7 +23,7 @@ void pimp_mixer_reset(pimp_mixer *mixer)
 
 #ifndef CALC_LOOP_EVENT
 
-STATIC PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta, const int max_samples)
+PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int i;
 	for (i = 0; i < max_samples; ++i)
@@ -39,7 +39,7 @@ STATIC PURE int pimp_linear_search_loop_event(int event_cursor, int event_delta,
 
 #else /* CALC_LOOP_EVENT */
 
-STATIC PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_samples)
+PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_samples)
 {
 	int result;
 	if (event_cursor == 0) return 1;
