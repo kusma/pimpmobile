@@ -1,3 +1,7 @@
+# Makefile for pimpmobile module player
+# Copyright (C) 2005-2007 Jørn Nystad and Erik Faye-Lund
+# For conditions of distribution and use, see copyright notice in LICENSE.TXT
+
 CC = g++
 CPPFLAGS = -I.. -DASSERT_ENABLE -DUNIT_TESTING -DDEBUG -g
 
