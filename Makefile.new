@@ -152,7 +152,7 @@ $(HOST_BUILD_DIR)/%.o: %.cpp
 
 $(TARGET_BUILD_DIR)/%.o: %.S
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) -MMD -MF $(DEPSDIR)/$(basename $(@F)).d -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
+	$(TARGET_CC) -MMD -MF $(@:.o=.d) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
 
 # deps
--include $(REAL_OBJS:.o=.d)
+# -include $(call make-target-deps, $(OBJS))
