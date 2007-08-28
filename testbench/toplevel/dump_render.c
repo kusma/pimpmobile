@@ -48,17 +48,19 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 #else
-	static u32 mixbuf[304];
+	static u32 mixbuf[304*10];
 	mixer.mix_buffer = mixbuf;
+
 	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
 	
-	fp = fopen("output.bin", "wb");
+	fp = fopen("output.sb", "wb");
 	if (NULL != fp)
 	{
-		int i;
-		for (i = 0; i < 100; ++i)
+		int i, j;
+		for (i = 0; i < 1000; ++i)
 		{
 			static signed char buf[304];
+			pimp_mixer_reset(&mixer);
 			pimp_render(&ctx, buf, 304);
 			fwrite(buf, 1, 304, fp);
 		}

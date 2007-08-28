@@ -3,7 +3,7 @@
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
 CC = gcc
-CPPFLAGS = -I.. -DASSERT_ENABLE -DUNIT_TESTING -DDEBUG -g
+CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG -g
 
 FRAMEWORK_SOURCES = \
 	framework/test_framework.c \
@@ -37,3 +37,9 @@ run: unit_test
 unit_test: $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES)
 
 toplevel/dump_render: $(TEST_DEPS_SOURCES)
+
+%.wav : %.sb
+	sox -r 18157 $< $@
+
+%.wav : %.ub
+	sox -r 18157 $< $@
