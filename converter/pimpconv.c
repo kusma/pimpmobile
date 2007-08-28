@@ -141,9 +141,6 @@ int main(int argc, char *argv[])
 				/* dump module */
 				printf("dumping %s...\n", ofn);
 				dump_module(mod, ofn);
-				
-				/* cleanup */
-				free(ofn);
 			}
 		}
 	}
