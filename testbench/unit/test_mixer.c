@@ -3,6 +3,7 @@
 
 #include "src/pimp_mixer.h"
 #include <memory.h>
+#include <stdlib.h>
 
 /*
 
