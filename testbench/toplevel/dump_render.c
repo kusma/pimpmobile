@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 #else
-	static u32 mixbuf[304*10];
+	static s32 mixbuf[304*10];
 	mixer.mix_buffer = mixbuf;
 
 	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);

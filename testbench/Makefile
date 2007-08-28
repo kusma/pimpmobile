@@ -2,7 +2,7 @@
 # Copyright (C) 2005-2007 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
-CC = gcc
+CC = g++
 CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG -g
 
 FRAMEWORK_SOURCES = \
@@ -34,7 +34,7 @@ clean:
 run: unit_test
 	./unit_test
 
-unit_test: $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES)
+unit_test: $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) ../converter/serializer.cpp
 
 toplevel/dump_render: $(TEST_DEPS_SOURCES)
 

@@ -6,6 +6,7 @@
 #ifndef PIMP_MODULE_H
 #define PIMP_MODULE_H
 
+#include "pimp_base.h"
 #include "pimp_instrument.h"
 
 typedef struct
@@ -88,7 +89,7 @@ static INLINE pimp_instrument *pimp_module_get_instrument(const pimp_module *mod
 	ASSERT(mod != NULL);
 	
 	array = (pimp_instrument*)pimp_get_ptr(&mod->instrument_ptr);
-	if (NULL == array) return NULL;
+	if (NULL == array) return (pimp_instrument*)NULL;
 	
 	return &(array[i]);
 }
