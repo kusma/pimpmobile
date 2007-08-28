@@ -3,6 +3,9 @@
 #include "../../src/pimp_render.h"
 #include "../../converter/load_module.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 int main(int argc, char *argv[])
 {
 	pimp_mixer mixer;

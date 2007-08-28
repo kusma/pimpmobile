@@ -18,8 +18,8 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 	ctx->tick_len      = 0;
 	ctx->curr_tick_len = 0;
 
-	ctx->curr_row      = -1;
-	ctx->curr_order    = -1;
+	ctx->curr_row      = 0;
+	ctx->curr_order    = 0;
 	ctx->curr_pattern  = NULL;
 	ctx->curr_tick     = 0;
 	
@@ -43,6 +43,18 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 		chan->instrument  = (const pimp_instrument*)NULL;
 		chan->sample      = (const pimp_sample*)    NULL;
 		chan->vol_env.env = (const pimp_envelope*)  NULL;
+
+		chan->volume_command = 0;
+		chan->effect = 0;
+		chan->effect_param = 0;
+		
+		chan->note_delay = 0;
+		chan->note_retrig = 0;
+		chan->retrig_tick = 0;
+		chan->porta_target = 0;
+		chan->porta_speed = 0;
+		chan->fadeout = 0;
+		chan->volume_slide_speed = 0;
 		
 		chan->loop_target_order = 0;
 		chan->loop_target_row   = 0;
