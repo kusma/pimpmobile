@@ -25,7 +25,7 @@ TEST_DEPS_SOURCES = \
 	../converter/convert_sample.c \
 	../src/pimp_sample_bank.c
 
-.PHONY: clean all
+.PHONY: clean all run
 all: unit_test
 
 clean:
