@@ -3,7 +3,7 @@
 
 struct test_suite
 {
-	
+	int dummy;
 };
 
 #endif /* TEST_SUITE_H */

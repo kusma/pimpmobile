@@ -25,7 +25,9 @@ static INLINE size_t pimp_sample_format_get_size(enum pimp_sample_format format)
 		case PIMP_SAMPLE_S8: return sizeof(s8);
 		case PIMP_SAMPLE_U16: return sizeof(u16);
 		case PIMP_SAMPLE_S16: return sizeof(s16);
-		default: ASSERT(FALSE); break;
+		default:
+			ASSERT(FALSE);
+			return 0;
 	}
 }
 

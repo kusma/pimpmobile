@@ -14,6 +14,12 @@
 #include "convert_sample.h"
 #include "../src/pimp_module.h"
 #include "../src/pimp_mixer.h" /* for pimp_loop_type enum */
+#include "../src/pimp_sample_bank.h"
+
+float log2(float f)
+{
+	return log(f) / log(2.0f);
+}
 
 int return_nearest_note(int p)
 {
@@ -147,7 +153,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 {
 	int i, p;
 	pimp_module *mod;
-	int channels;
+	int channel_count;
 	int max_pattern;
 	
 	u8 sig_data[4];
@@ -157,8 +163,8 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	fread(&sig_data, 1, 4, fp);
 	sig = MAKE_WORD(sig_data[0], sig_data[1], sig_data[2], sig_data[3]);
-	channels = get_channel_count(sig);
-	if (channels <= 0) return NULL;
+	channel_count = get_channel_count(sig);
+	if (channel_count <= 0) return NULL;
 	
 	mod = (pimp_module *)malloc(sizeof(pimp_module));
 	if (NULL == mod) return NULL;
@@ -180,18 +186,23 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	
 	// song name
-	char name[20 + 1];
 	rewind(fp);
-	fread(name, 20, 1, fp);
-	name[20] = '\0';
-
-	strcpy(mod->name, name);
+	{
+		char name[20 + 1];
+		fread(name, 20, 1, fp);
+		name[20] = '\0'; /* make sure name is zero-terminated */
+		strcpy(mod->name, name);
+	}
 
 	/* setup channel-settings */
 	{
-		mod->channel_count = channels;
-		pimp_channel *channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
+		pimp_channel *channels;
+		mod->channel_count = channel_count;
+		
+		/* allocate channel array */
+		channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
+		
 		memset(channels, 0, sizeof(pimp_channel) * mod->channel_count);
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
@@ -205,41 +216,48 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		}
 	}
 	
-	mod->instrument_count = 31;
-	pimp_instrument *instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
-	if (NULL == instruments) return NULL;
-		
-	memset(instruments, 0, sizeof(pimp_instrument) * mod->instrument_count);
-		
-	pimp_set_ptr(&mod->instrument_ptr, instruments);
-#if 1
-	for (i = 0; i < mod->instrument_count; ++i)
+	/* load instruments */
 	{
-		BOOL ret = load_instrument(fp, &instruments[i], sample_bank);
-		if (FALSE == ret)
+		pimp_instrument *instruments;
+		mod->instrument_count = 31;
+		instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
+		if (NULL == instruments) return NULL;
+			
+		memset(instruments, 0, sizeof(pimp_instrument) * mod->instrument_count);
+			
+		pimp_set_ptr(&mod->instrument_ptr, instruments);
+		for (i = 0; i < mod->instrument_count; ++i)
 		{
-			/* TODO: cleanup */
-			return NULL;
+			BOOL ret = load_instrument(fp, &instruments[i], sample_bank);
+			if (FALSE == ret)
+			{
+				/* TODO: cleanup */
+				return NULL;
+			}
 		}
 	}
-#endif
 
-	static unsigned char buf[256];
-
-	/* order count */
-	fread(buf, 1, 1, fp);
-	mod->order_count = buf[0];
-	
-	if (mod->order_count > 128)
+	/* read order count */
 	{
-		fprintf(stderr, "warning: excessive orders in module, discarding.\n");
-		mod->order_count = 128;
+		/* read byte */
+		unsigned char order_count;
+		fread(&order_count, 1, 1, fp);
+		
+		/* clamp and warn */
+		if (order_count > 128)
+		{
+			fprintf(stderr, "warning: excessive orders in module, discarding.\n");
+			order_count = 128;
+		}
+		
+		mod->order_count = order_count;
 	}
-
-	/* allocate memory */
+	
 	{
+		/* allocate memory */
 		unsigned char *orders = (unsigned char *)malloc(mod->order_count);
 		if (NULL == orders) return NULL;
+		
 		memset(orders, 0, mod->order_count);
 		pimp_set_ptr(&mod->order_ptr, orders);
 
@@ -267,64 +285,75 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	fseek(fp, 128 - mod->order_count, SEEK_CUR); /* discard unused orders */
 	fseek(fp, 4, SEEK_CUR); /* discard mod-signature (already loaded) */
 	
-	mod->pattern_count = max_pattern + 1;
-	pimp_pattern *patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
-	if (NULL == patterns) return NULL;
-	
-	memset(patterns, 0, sizeof(pimp_pattern) * mod->pattern_count);
-	pimp_set_ptr(&mod->pattern_ptr, patterns);
-	
-	/* load patterns and track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
-	int min_period =  99999;
-	int max_period = -99999;
-	for (p = 0; p < mod->pattern_count; ++p)
+	/* load patterns */
 	{
-		pimp_pattern *pat = &patterns[p];
-		pat->row_count = 64;
+		/* track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
+		int min_period =  99999;
+		int max_period = -99999;
 
-		pimp_pattern_entry *pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
-		if (NULL == pattern_data)
-		{
-			return NULL;
-		}
-		pimp_set_ptr(&pat->data_ptr, pattern_data);
-
-		/* clear memory */
-		memset(pattern_data, 0, sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+		pimp_pattern *patterns;
+		mod->pattern_count = max_pattern + 1;
 		
-		for (i = 0; i < 64; ++i)
+		patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
+		if (NULL == patterns) return NULL;
+		
+		memset(patterns, 0, sizeof(pimp_pattern) * mod->pattern_count);
+		pimp_set_ptr(&mod->pattern_ptr, patterns);
+		
+		/* load patterns  */
+		for (p = 0; p < mod->pattern_count; ++p)
 		{
-			int j;
-			for (j = 0; j < channels; ++j)
+			pimp_pattern_entry *pattern_data;
+			
+			pimp_pattern *pat = &patterns[p];
+			pat->row_count = 64;
+	
+			pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			if (NULL == pattern_data)
 			{
-				pimp_pattern_entry *pe = &pattern_data[i * channels + j];
-				fread(buf, 1, 4, fp);
-				int period = ((buf[0] & 0x0F) << 8) + buf[1];
-				
-				pe->instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
-				pe->note             = return_nearest_note(period); // - 12;
-				pe->effect_byte      = buf[2] & 0xF;
-				pe->effect_parameter = buf[3];
-				
-				if (period > max_period) max_period = period;
-				if (period < min_period) min_period = period;
+				return NULL;
+			}
+			pimp_set_ptr(&pat->data_ptr, pattern_data);
+	
+			/* clear memory */
+			memset(pattern_data, 0, sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			
+			for (i = 0; i < 64; ++i)
+			{
+				int j;
+				for (j = 0; j < mod->channel_count; ++j)
+				{
+					unsigned char buf[4];
+					int period;
+					
+					pimp_pattern_entry *pe = &pattern_data[i * mod->channel_count + j];
+					fread(buf, 1, 4, fp);
+					period = ((buf[0] & 0x0F) << 8) + buf[1];
+					
+					pe->instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
+					pe->note             = return_nearest_note(period); // - 12;
+					pe->effect_byte      = buf[2] & 0xF;
+					pe->effect_parameter = buf[3];
+					
+					if (period > max_period) max_period = period;
+					if (period < min_period) min_period = period;
+				}
 			}
 		}
-	}
-	
-	// if there are periods in the file outside the default pt2-range, assume ft2-range
-	if (min_period < mod->period_low_clamp || max_period > mod->period_high_clamp)
-	{
-		mod->period_low_clamp = 1;
-		mod->period_high_clamp = 32767;
+		
+		/* if there are periods in the file outside the default pt2-range, assume ft2-range */
+		if (min_period < mod->period_low_clamp || max_period > mod->period_high_clamp)
+		{
+			mod->period_low_clamp = 1;
+			mod->period_high_clamp = 32767;
+		}
 	}
 
 	/* load samples */
 	for (i = 0; i < 31; ++i)
 	{
 		pimp_sample *samp;
-		pimp_instrument *instr = &instruments[i];
-		
+		pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		samp = pimp_instrument_get_sample(instr, 0);
 		
 		if (samp->length > 0 && samp->length > 2)

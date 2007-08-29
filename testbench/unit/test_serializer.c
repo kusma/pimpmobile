@@ -128,11 +128,11 @@ static void test_serializer_align_halfword(struct test_suite *suite)
 
 static void test_serializer_find(struct test_suite *suite)
 {
-	struct serializer s;
-	serializer_init(&s);
-	
 	const unsigned char data[4] = { 0xde, 0xad, 0xbe, 0xef };
 	
+	struct serializer s;
+	serializer_init(&s);
+		
 	serialize_byte(&s, 0xFF);
 	
 	/* assure that 32bit words are dumped in little endian format */
