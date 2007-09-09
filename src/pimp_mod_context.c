@@ -36,6 +36,7 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 	ctx->curr_pattern = pimp_module_get_pattern(mod, pimp_module_get_order(mod, ctx->curr_order));
 	pimp_mod_context_set_bpm(ctx, ctx->mod->bpm);
 	ctx->curr_tempo = mod->tempo;
+	ctx->curr_tick  = ctx->curr_tempo; /* make sure we skip to the next row right away */
 	
 	for (i = 0; i < CHANNELS; ++i)
 	{

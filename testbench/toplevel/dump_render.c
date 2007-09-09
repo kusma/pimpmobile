@@ -35,23 +35,24 @@ int main(int argc, char *argv[])
 	}
 
 #if 0
-#define SAMPLES 10000
+#define SAMPLES 100000
 
-	u32 mixbuf[SAMPLES];
+	s32 mixbuf[SAMPLES];
 	mixer.mix_buffer = mixbuf;
 	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
 	
 	signed char buf[SAMPLES];
 	pimp_render(&ctx, buf, SAMPLES);
 
-	fp = fopen("output.bin", "wb");
+	fp = fopen("output.sb", "wb");
 	if (NULL != fp)
 	{
 		fwrite(buf, 1, SAMPLES, fp);
 		fclose(fp);
 	}
 #else
-	static s32 mixbuf[304*10];
+#define BUFFER_SIZE 304
+	static s32 mixbuf[BUFFER_SIZE];
 	mixer.mix_buffer = mixbuf;
 
 	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
@@ -62,10 +63,10 @@ int main(int argc, char *argv[])
 		int i, j;
 		for (i = 0; i < 1000; ++i)
 		{
-			static signed char buf[304];
-			pimp_mixer_reset(&mixer);
-			pimp_render(&ctx, buf, 304);
-			fwrite(buf, 1, 304, fp);
+			static signed char buf[BUFFER_SIZE];
+/*			pimp_mixer_reset(&mixer); */
+			pimp_render(&ctx, buf, BUFFER_SIZE);
+			fwrite(buf, 1, BUFFER_SIZE, fp);
 		}
 		fclose(fp);
 	}
