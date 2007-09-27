@@ -25,14 +25,23 @@ endif
 define setup-gcc
 	$(1)CC      = $(2)gcc
 	$(1)CXX     = $(2)g++
-	$(1)OBJCOPY = $(2)objcopy
 	$(1)STRIP   = $(2)strip
 	$(1)LD      = $(2)ld
 	$(1)AS      = $(2)as
 	$(1)AR      = $(2)ar
 endef
 
+define setup-armcc
+	$(1)CC      = armcc
+	$(1)CXX     = armcpp
+	$(1)STRIP   = strip
+	$(1)LD      = armlink
+	$(1)AS      = armasm
+	$(1)AR      = armar
+endef
+
 $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
+# $(eval $(call setup-armcc,TARGET_))
 $(eval $(call setup-gcc,HOST_,))
 
 MKDIR = mkdir -p
