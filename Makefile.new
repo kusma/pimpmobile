@@ -4,14 +4,14 @@
 
 # default-configuration
 TARGET    ?= arm-gba
-HOST      ?= $(shell $(HOST_CC) -dumpmachine)
+HOST      ?= $(shell $(CC) -dumpmachine)
 BUILD_DIR ?= build
 CONFIG    ?= release
 
 # some common unix unitls
-AWK  = awk
-SORT = sort
-PR   = pr
+AWK  ?= awk
+SORT ?= sort
+PR   ?= pr
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
@@ -49,7 +49,7 @@ endef
 
 $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
 # $(eval $(call setup-armcc,TARGET_))
-$(eval $(call setup-gcc,HOST_,))
+$(eval $(call setup-gcc,,))
 
 MKDIR = mkdir -p
 
@@ -72,13 +72,13 @@ THUMB = -mthumb
 
 VPATH = src/ converter/
 
-OBJS = \
-	pimp_gba.o          \
-	pimp_render.o       \
-	pimp_envelope.o     \
-	pimp_mod_context.o  \
-	pimp_math.iwram.o   \
-	pimp_mixer.iwram.o
+SOURCES = \
+	pimp_gba.c         \
+	pimp_render.c      \
+	pimp_envelope.c    \
+	pimp_mod_context.c \
+	pimp_math.c        \
+	pimp_mixer.c
 
 PIMPCONV_OBJS = \
 	pimpconv.o \
@@ -94,41 +94,43 @@ ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g -ggdb
 	CFLAGS   += -g -ggdb
-	OBJS     += pimp_mixer_portable.o
-	OBJS     += pimp_debug.o 
+	SOURCES  += pimp_mixer_portable.c
+	SOURCES  += pimp_debug.c
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
-	OBJS     += pimp_mixer_arm.o
-	OBJS     += pimp_mixer_clip_arm.o
+	SOURCES  += pimp_mixer_arm.S
+	SOURCES  += pimp_mixer_clip_arm.S
 endif
 
 ifeq ($(PROFILING), 1)
-	CFLAGS += -finstrument-functions
+	CFLAGS   += -finstrument-functions
 	CXXFLAGS += -finstrument-functions
-	OBJS += profiling/cyg-profile.o
+	SOURCES  += profiling/cyg-profile.c
 endif
 
 TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)/$(CONFIG)
 HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)/$(CONFIG)
 
-make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(1))
+make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(subst .c,.o,$(1)))
 make-host-objs = $(addprefix $(HOST_BUILD_DIR)/, $(1))
 
 make-target-deps = $(addprefix $(TARGET_BUILD_DIR)/, $(1:.o=.d))
 make-host-deps = $(addprefix $(HOST_BUILD_DIR)/, $(1:.o=.d))
 
-
-REAL_OBJS =	$(call make-target-objs, $(OBJS))
+OBJS = $(call make-target-objs, $(SOURCES))
 
 .PHONY: all clean help check check-syntax
 
 all: lib/libpimpmobile.a
 
 clean:
-	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(OBJS)) $(call make-target-deps, $(OBJS))
+	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
 	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_OBJS)) $(call make-host-deps, $(PIMPCONV_OBJS))
+	
+distclean:
+	$(RM) $(BUILD_DIR)
 
 help:
 	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
@@ -141,16 +143,15 @@ check:
 	@echo no testbench atm
 
 check-syntax:
-	@echo no flymake support atm
-	
-test:
-	@echo $(call make-host-objs, $(PIMPCONV_OBJS))
-	@echo $(call make-target-objs, $(OBJS))
+	$(CC) $(CPPFLAGS) $(CFLAGS) -fsyntax-only $(SOURCES)
+
+$(call make-target-objs, $(filter-out pimp_mixer.c, $(SOURCES))): CFLAGS += -mthumb
+$(call make-target-objs, pimp_mixer.c): CFLAGS += -marm
 
 bin/pimpconv: $(call make-host-objs, $(PIMPCONV_OBJS))
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-lib/libpimpmobile.a: $(REAL_OBJS)
+lib/libpimpmobile.a: $(OBJS)
 	$(TARGET_AR) $(ARFLAGS) $@ $?
 
 #### C ####
@@ -165,7 +166,7 @@ $(TARGET_BUILD_DIR)/%.o: %.c
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(HOST_CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### C++
 
@@ -175,7 +176,7 @@ $(TARGET_BUILD_DIR)/%.o: %.cpp
 
 $(HOST_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	$(HOST_CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 
