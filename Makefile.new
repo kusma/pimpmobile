@@ -2,11 +2,16 @@
 # Copyright (C) 2005-2007 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
-# configuration
+# default-configuration
 TARGET    ?= arm-gba
 HOST      ?= $(shell $(HOST_CC) -dumpmachine)
 BUILD_DIR ?= build
 CONFIG    ?= release
+
+# some common unix unitls
+AWK  = awk
+SORT = sort
+PR   = pr
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
@@ -22,6 +27,7 @@ else
 TARGET_PREFIX = $(TARGET)
 endif
 
+#$(eval $(call setup-gcc, out-prefix, toolchain-prefix))
 define setup-gcc
 	$(1)CC      = $(2)gcc
 	$(1)CXX     = $(2)g++
@@ -31,6 +37,7 @@ define setup-gcc
 	$(1)AR      = $(2)ar
 endef
 
+#$(eval $(call setup-armcc, out-prefix))
 define setup-armcc
 	$(1)CC      = armcc
 	$(1)CXX     = armcpp
@@ -115,7 +122,7 @@ make-host-deps = $(addprefix $(HOST_BUILD_DIR)/, $(1:.o=.d))
 
 REAL_OBJS =	$(call make-target-objs, $(OBJS))
 
-.PHONY: all clean run debug
+.PHONY: all clean help check check-syntax
 
 all: lib/libpimpmobile.a
 
@@ -123,6 +130,19 @@ clean:
 	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(OBJS)) $(call make-target-deps, $(OBJS))
 	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_OBJS)) $(call make-host-deps, $(PIMPCONV_OBJS))
 
+help:
+	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
+	$(AWK) '/^[^.%!][a-zA-Z0-9_-]*:/                                        \
+	       { print substr($$1, 1, length($$1)-1) }' |                       \
+	$(SORT) |                                                               \
+	$(PR) --omit-pagination --width=80 --columns=4
+	
+check:
+	@echo no testbench atm
+
+check-syntax:
+	@echo no flymake support atm
+	
 test:
 	@echo $(call make-host-objs, $(PIMPCONV_OBJS))
 	@echo $(call make-target-objs, $(OBJS))
