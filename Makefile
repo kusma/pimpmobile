@@ -56,7 +56,7 @@ ifeq ($(PROFILING), 1)
 	CXXFLAGS += -finstrument-functions
 	OBJS += profiling/cyg-profile.o
 endif
-	
+
 .PHONY: all clean run debug
 
 all: bin/example.bin bin/example.gba
