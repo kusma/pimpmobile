@@ -8,7 +8,7 @@ HOST      ?= $(shell $(CC) -dumpmachine)
 BUILD_DIR ?= build
 CONFIG    ?= release
 
-# some common unix unitls
+# some common unix utils
 AWK  ?= awk
 SORT ?= sort
 PR   ?= pr
@@ -80,6 +80,10 @@ SOURCES = \
 	pimp_math.c        \
 	pimp_mixer.c
 
+ARM_SOURCES = \
+	pimp_math.c \
+	pimp_mixer.c
+
 PIMPCONV_OBJS = \
 	pimpconv.o \
 	serializer.o \
@@ -113,7 +117,12 @@ endif
 TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)/$(CONFIG)
 HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)/$(CONFIG)
 
-make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(subst .c,.o,$(1)))
+source-to-object = \
+	$(subst .c,.o,      $(filter-out $(ARM_SOURCES), $(filter %.c,$1))) \
+	$(subst .c,.iwram.o,$(filter     $(ARM_SOURCES), $(filter %.c,$1))) \
+	$(subst .S,.o,      $(call iwram-filter, $(filter %.S,$1)))
+
+make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(call source-to-object, $1))
 make-host-objs = $(addprefix $(HOST_BUILD_DIR)/, $(1))
 
 make-target-deps = $(addprefix $(TARGET_BUILD_DIR)/, $(1:.o=.d))
@@ -128,9 +137,9 @@ all: lib/libpimpmobile.a
 clean:
 	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
 	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_OBJS)) $(call make-host-deps, $(PIMPCONV_OBJS))
-	
+
 distclean:
-	$(RM) $(BUILD_DIR)
+	$(RM) -r $(BUILD_DIR)
 
 help:
 	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
@@ -138,15 +147,15 @@ help:
 	       { print substr($$1, 1, length($$1)-1) }' |                       \
 	$(SORT) |                                                               \
 	$(PR) --omit-pagination --width=80 --columns=4
-	
+
 check:
 	@echo no testbench atm
 
 check-syntax:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fsyntax-only $(SOURCES)
 
-$(call make-target-objs, $(filter-out pimp_mixer.c, $(SOURCES))): CFLAGS += -mthumb
-$(call make-target-objs, pimp_mixer.c): CFLAGS += -marm
+$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
+$(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
 
 bin/pimpconv: $(call make-host-objs, $(PIMPCONV_OBJS))
 	$(CXX) $^ $(LDFLAGS) -o $@
@@ -158,11 +167,11 @@ lib/libpimpmobile.a: $(OBJS)
 
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) $(ARM) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
