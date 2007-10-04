@@ -9,9 +9,10 @@ BUILD_DIR ?= build
 CONFIG    ?= release
 
 # some common unix utils
-AWK  ?= awk
-SORT ?= sort
-PR   ?= pr
+AWK   ?= awk
+SORT  ?= sort
+PR    ?= pr
+CTAGS ?= ctags
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
@@ -155,6 +156,9 @@ check:
 
 check-syntax:
 	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
+
+TAGS:
+	$(CTAGS) $(filter %.c,$(SOURCES))
 
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
