@@ -16,11 +16,12 @@ PR   ?= pr
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
-export PATH	:=	$(DEVKITARM)/bin:$(PATH)
 
 DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
 LIBNDS    = $(DEVKITPRO)/libnds
+
+export PATH	:=	$(DEVKITARM)/bin:$(PATH)
 
 ifeq ($(TARGET), arm-gba)
 TARGET_PREFIX ?= arm-eabi-
