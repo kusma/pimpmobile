@@ -16,6 +16,7 @@ PR   ?= pr
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
+export PATH	:=	$(DEVKITARM)/bin:$(PATH)
 
 DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
@@ -73,16 +74,16 @@ THUMB = -mthumb
 VPATH = src/ converter/
 
 SOURCES = \
-	pimp_gba.c         \
-	pimp_render.c      \
-	pimp_envelope.c    \
-	pimp_mod_context.c \
-	pimp_math.c        \
-	pimp_mixer.c
+	src/pimp_gba.c         \
+	src/pimp_render.c      \
+	src/pimp_envelope.c    \
+	src/pimp_mod_context.c \
+	src/pimp_math.c        \
+	src/pimp_mixer.c
 
 ARM_SOURCES = \
-	pimp_math.c \
-	pimp_mixer.c
+	src/pimp_math.c \
+	src/pimp_mixer.c
 
 PIMPCONV_OBJS = \
 	pimpconv.o \
@@ -98,14 +99,14 @@ ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g -ggdb
 	CFLAGS   += -g -ggdb
-	SOURCES  += pimp_mixer_portable.c
-	SOURCES  += pimp_debug.c
+	SOURCES  += src/pimp_mixer_portable.c
+	SOURCES  += src/pimp_debug.c
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
-	SOURCES  += pimp_mixer_arm.S
-	SOURCES  += pimp_mixer_clip_arm.S
+	SOURCES  += src/pimp_mixer_arm.S
+	SOURCES  += src/pimp_mixer_clip_arm.S
 endif
 
 ifeq ($(PROFILING), 1)
@@ -152,7 +153,7 @@ check:
 	@echo no testbench atm
 
 check-syntax:
-	$(CC) $(CPPFLAGS) $(CFLAGS) -fsyntax-only $(SOURCES)
+	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
 
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
