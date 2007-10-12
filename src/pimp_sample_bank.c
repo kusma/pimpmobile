@@ -41,7 +41,7 @@ int pimp_sample_bank_insert_sample_data(pimp_sample_bank *sample_bank, void *dat
 	
 	/* copy data */
 	{
-		void *dst = (void*)((int)sample_bank->data + pos);
+		void *dst = (void*)((u8*)sample_bank->data + pos);
 		memcpy(dst, data, len);
 	}
 	
