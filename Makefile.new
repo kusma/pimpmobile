@@ -51,8 +51,8 @@ define setup-armcc
 	$(1)AR      = armar
 endef
 
-# $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
-$(eval $(call setup-armcc,TARGET_))
+$(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
+# $(eval $(call setup-armcc,TARGET_))
 $(eval $(call setup-gcc,,))
 
 MKDIR = mkdir -p
@@ -66,7 +66,7 @@ ifeq ($(TARGET), arm-gba)
 endif
 
 CPPFLAGS = 
-CFLAGS   = 
+CFLAGS   = -pedantic -Wall -Wno-long-long
 CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  = -Wl,-Map,$(basename $@).map
 ASFLAGS  = 
@@ -163,6 +163,13 @@ check-syntax:
 
 TAGS:
 	$(CTAGS) $(filter %.c,$(SOURCES))
+
+# set compiler for ARM-sources
+# $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):	CC = $(TARGET_CC)
+# $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): CFLAGS = $(TARGET_CFLAGS)
+#$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):
+#	echo $(COMPILE.c) $<
+
 
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
