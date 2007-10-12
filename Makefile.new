@@ -74,8 +74,6 @@ ASFLAGS  =
 ARM   = -marm
 THUMB = -mthumb
 
-VPATH = src/ converter/
-
 SOURCES = \
 	src/pimp_render.c      \
 	src/pimp_envelope.c    \
@@ -155,7 +153,7 @@ help:
 	$(SORT) |                                                               \
 	$(PR) --omit-pagination --width=80 --columns=4
 
-check:
+check:fjall
 	@echo no testbench atm
 
 check-syntax:
@@ -182,13 +180,18 @@ lib/libpimpmobile.a: $(OBJS)
 
 #### C ####
 
+# Override CC for target-builds
+$(TARGET_BUILD_DIR)/%.o: CC = $(TARGET_CC)
+$(TARGET_BUILD_DIR)/%.o: CPPFLAGS += $(TARGET_CPPFLAGS)
+$(TARGET_BUILD_DIR)/%.o: CFLAGS += $(TARGET_CFLAGS)
+
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) $(TARGET_CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
