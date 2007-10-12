@@ -60,7 +60,7 @@ typedef enum
 	/* missing 0x21 here, multi-command (X1 = extra fine porta up, X2 = extra fine porta down) */
 	EFF_ARPEGGIO                = 0x24,
 	EFF_SET_TEMPO               = 0x25,
-	EFF_SET_BPM                 = 0x26,
+	EFF_SET_BPM                 = 0x26
 
 /*
 	TODO: fill in the rest
@@ -98,7 +98,7 @@ typedef enum
 	EFF_FINE_VOLUME_SLIDE_UP   = 0xA,
 	EFF_FINE_VOLUME_SLIDE_DOWN = 0xB,
 	EFF_NOTE_CUT_AFTER_X_TICKS = 0xC,
-	EFF_NOTE_DELAY             = 0xD,
+	EFF_NOTE_DELAY             = 0xD
 /*
 		0x: Amiga filter on/off (ignored; according to everybody, it sucks)
 		1x: fine porta up
@@ -150,7 +150,7 @@ enum
 	FLAG_DELAY_GLOBAL_VOLUME     = (1 << 11),
 	FLAG_SAMPLE_OFFSET_CLAMP     = (1 << 12),
 	FLAG_PORTA_NOTE_SHARE_MEMORY = (1 << 13),
-	FLAG_PORTA_NOTE_MEMORY       = (1 << 14),
+	FLAG_PORTA_NOTE_MEMORY       = (1 << 14)
 };
 
 #endif /* PIMP_INTERNAL_H */
