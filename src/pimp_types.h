@@ -7,6 +7,7 @@
 #define PIMP_TYPES_H
 
 #include "pimp_debug.h"
+#include <stddef.h>
 
 typedef   signed char      s8;
 typedef unsigned char      u8;
@@ -17,7 +18,7 @@ typedef unsigned int       u32;
 typedef   signed long long s64;
 typedef unsigned long long u64;
 
-typedef unsigned long      pimp_size_t;
-typedef unsigned long      pimp_rel_ptr;
+typedef size_t    pimp_size_t;
+typedef ptrdiff_t pimp_rel_ptr;
 
 #endif /* PIMP_TYPES_H */
