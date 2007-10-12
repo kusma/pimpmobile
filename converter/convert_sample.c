@@ -16,7 +16,7 @@ void pimp_convert_sample(void *dst, enum pimp_sample_format dst_format, void *sr
 	{
 		s32 new_sample = 0;
 		
-		// fetch data, and get it to PIMP_SAMPLE_S16 format
+		/* fetch data, and get it to PIMP_SAMPLE_S16 format */
 		switch (src_format)
 		{
 			case PIMP_SAMPLE_U8:    new_sample = ((s32)((s8*) src)[i] << 8) - (1 << 15); break;

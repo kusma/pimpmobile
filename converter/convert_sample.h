@@ -14,7 +14,7 @@ enum pimp_sample_format
 	PIMP_SAMPLE_U8,
 	PIMP_SAMPLE_S8,
 	PIMP_SAMPLE_U16,
-	PIMP_SAMPLE_S16,
+	PIMP_SAMPLE_S16
 };
 
 static INLINE size_t pimp_sample_format_get_size(enum pimp_sample_format format)

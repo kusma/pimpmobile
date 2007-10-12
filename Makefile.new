@@ -89,15 +89,15 @@ ARM_SOURCES = \
 	src/pimp_math.c \
 	src/pimp_mixer.c
 
-PIMPCONV_OBJS = \
-	pimpconv.o \
-	serializer.o \
-	serialize_module.o \
-	serialize_instrument.o \
-	pimp_sample_bank.o \
-	convert_sample.o \
-	load_xm.o \
-	load_mod.o
+PIMPCONV_SOURCES = \
+	converter/pimpconv.o \
+	converter/serializer.o \
+	converter/serialize_module.o \
+	converter/serialize_instrument.o \
+	converter/convert_sample.o \
+	converter/load_xm.o \
+	converter/load_mod.o \
+	src/pimp_sample_bank.o
 
 ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
@@ -141,7 +141,7 @@ all: lib/libpimpmobile.a
 
 clean:
 	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
-	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_OBJS)) $(call make-host-deps, $(PIMPCONV_OBJS))
+	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_SOURCES)) $(call make-host-deps, $(PIMPCONV_SOURCES))
 
 distclean:
 	$(RM) -r $(BUILD_DIR)
@@ -172,7 +172,7 @@ TAGS:
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
 
-bin/pimpconv: $(call make-host-objs, $(PIMPCONV_OBJS))
+bin/pimpconv: $(call make-host-objs, $(PIMPCONV_SOURCES))
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 lib/libpimpmobile.a: $(OBJS)

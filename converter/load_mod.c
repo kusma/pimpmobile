@@ -16,24 +16,26 @@
 #include "../src/pimp_mixer.h" /* for pimp_loop_type enum */
 #include "../src/pimp_sample_bank.h"
 
+#if 0
 float log2(float f)
 {
 	return log(f) / log(2.0f);
 }
+#endif
 
 int return_nearest_note(int p)
 {
 	double log2p, note;
 	int note_int;
 	
-	if (p < 14) return 0; // this is not a note
+	if (p < 14) return 0; /* this is not a note */
 
 	log2p = log(p) / log(2);
 	note = (log2(428 << 5) - log2p) * 12.0 + 1;
 	
 	note_int = (int)floor(note + 0.5);
 
-	if (note_int <= 0 || note_int > 120) return 0; // this is not a note
+	if (note_int <= 0 || note_int > 120) return 0; /* this is not a note */
 	return note_int;
 }
 
@@ -55,7 +57,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	pimp_set_ptr(&instr->sample_ptr, sample);
 	
 	
-	// fill out the instrument-data. this is not stored in the module at all.
+	/* fill out the instrument-data. this is not stored in the module at all. */
 /*	strcpy(instr->name, (const char*)buf); */
 	pimp_set_ptr(&instr->vol_env_ptr, NULL);
 	pimp_set_ptr(&instr->pan_env_ptr, NULL);
@@ -171,12 +173,12 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	memset(mod, 0, sizeof(pimp_module));
 	
-	mod->period_low_clamp           = 113; // B-3 in MOD
-	mod->period_high_clamp          = 856; // C-1 in MOD
+	mod->period_low_clamp           = 113; /* B-3 in MOD */
+	mod->period_high_clamp          = 856; /* C-1 in MOD */
 	
 	/* this should be correct if no notes outside this range is used */
-	mod->period_low_clamp           = 108; // B-3 with fine tune 8 in MOD
-	mod->period_high_clamp          = 907; // C-1 wuth fine tune -8 in MOD
+	mod->period_low_clamp           = 108; /* B-3 with fine tune 8 in MOD */
+	mod->period_high_clamp          = 907; /* C-1 wuth fine tune -8 in MOD */
 	
 	mod->volume = 64;
 	mod->tempo  = 6;
@@ -185,7 +187,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	mod->flags = FLAG_TEMOR_EXTRA_DELAY | FLAG_TEMOR_MEMORY | FLAG_PORTA_NOTE_MEMORY;
 	
 	
-	// song name
+	/* song name */
 	rewind(fp);
 	{
 		char name[20 + 1];
@@ -331,7 +333,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 					period = ((buf[0] & 0x0F) << 8) + buf[1];
 					
 					pe->instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
-					pe->note             = return_nearest_note(period); // - 12;
+					pe->note             = return_nearest_note(period); /* - 12; */
 					pe->effect_byte      = buf[2] & 0xF;
 					pe->effect_parameter = buf[3];
 					

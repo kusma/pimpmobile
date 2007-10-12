@@ -104,8 +104,6 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	
 	if (ih.samples != 0)
 	{
-		size_t last_pos2 = ftell(fp);
-		
 		/* read part 2 */
 		fread(&ih.sample_header_size, 4,  1, fp);
 		fread(&ih.sample_number,      1, 96, fp);
@@ -214,14 +212,16 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 */
 
 	instr->sample_count = ih.samples;
-	
-	pimp_sample *samples = NULL;
-	if (instr->sample_count > 0)
+
 	{
-		samples = (pimp_sample *)malloc(sizeof(pimp_sample) * instr->sample_count);
-		if (NULL == samples) return FALSE;
+		pimp_sample *samples = NULL;
+		if (instr->sample_count > 0)
+		{
+			samples = (pimp_sample *)malloc(sizeof(pimp_sample) * instr->sample_count);
+			if (NULL == samples) return FALSE;
+		}
+		pimp_set_ptr(&instr->sample_ptr, samples);
 	}
-	pimp_set_ptr(&instr->sample_ptr, samples);
 	
 	fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
 	
@@ -234,9 +234,10 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	/* all sample headers are stored first, and THEN comes all sample-data. now it's time for them headers */
 	for (s = 0; s < instr->sample_count; ++s)
 	{
+		pimp_sample *samp = NULL;
 		xm_sample_header *sh = &sample_headers[s];
 		
-		// load sample-header
+		/* load sample-header */
 		fread(&sh->length,      4,  1, fp);
 		fread(&sh->loop_start,  4,  1, fp);
 		fread(&sh->loop_length, 4,  1, fp);
@@ -250,7 +251,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		sh->name[22] = '\0';
 		
 		/* fill converter-struct */
-		pimp_sample *samp = pimp_instrument_get_sample(instr, s);
+		samp = pimp_instrument_get_sample(instr, s);
 /*		sample_header_t &samp = instr->samples[s]; */
 /*		strcpy(samp->name, sh.name); */
 		
@@ -336,10 +337,12 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		
 		if (sh->type & (1 << 4))
 		{
+			signed short prev;
+			
 			/* signed 16 bit waveform data */
 			src_format = PIMP_SAMPLE_S16;
 			
-			signed short prev = 0;
+			prev = 0;
 			for (i = 0; i < sh->length / 2; ++i)
 			{
 				signed short data = 0;
@@ -351,10 +354,12 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 		else
 		{
 			unsigned i;
+			signed char prev;
+			
 			/* signed 8 bit waveform data */
 			src_format = PIMP_SAMPLE_S8;
 			
-			signed char prev = 0;
+			prev = 0;
 			for (i = 0; i < sh->length; ++i)
 			{
 				signed char data = 0;
@@ -528,8 +533,9 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	mod->order_repeat = xm_header.restart_pos;
 	
 	{
+		pimp_channel *channels;
 		mod->channel_count = xm_header.channels;
-		pimp_channel *channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
+		channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
@@ -548,10 +554,11 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	{
 		int p;
+		pimp_pattern *patterns;
 		
-		/* allocate memory for patterns */
 		mod->pattern_count = xm_header.patterns;
-		pimp_pattern *patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
+		/* allocate memory for patterns */
+		patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
 		if (NULL == patterns) return NULL;
 		
 		pimp_set_ptr(&mod->pattern_ptr, patterns);
@@ -563,6 +570,8 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 		/* load patterns */
 		for (p = 0; p < xm_header.patterns; ++p)
 		{
+			pimp_pattern *pat;
+			pimp_pattern_entry *pattern_data;
 			size_t last_pos = ftell(fp);
 			xm_pattern_header pattern_header;
 			memset(&pattern_header, 0, sizeof(pattern_header));
@@ -573,11 +582,11 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			fread(&pattern_header.rows,         2, 1, fp);
 			fread(&pattern_header.data_size,    2, 1, fp);
 			
-			pimp_pattern *pat = &patterns[p];
+			pat = &patterns[p];
 			pat->row_count = pattern_header.rows;
 			
 			/* allocate memory for pattern data */
-			pimp_pattern_entry *pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			if (NULL == pattern_data)
 			{
 				return NULL;
@@ -612,6 +621,8 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	#endif
 					for (n = 0; n < xm_header.channels; ++n)
 					{
+						pimp_pattern_entry *dat = NULL;
+						unsigned char pack;
 						unsigned char
 							note      = 0,
 							instr     = 0,
@@ -621,14 +632,14 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 						
 						fread(&note, 1, 1, fp);
 						
-						unsigned char pack = 0x1E;
+						pack = 0x1E;
 						if (note & (1 << 7))
 						{
 							pack = note;
 							note = 0;
 						}
 						
-						note &= (1 << 7) - 1; // we never need the top-bit.
+						note &= (1 << 7) - 1; /* we never need the top-bit. */
 						
 						if (pack & (1 << 0)) fread(&note,      1, 1, fp);
 						if (pack & (1 << 1)) fread(&instr,     1, 1, fp);
@@ -636,7 +647,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 						if (pack & (1 << 3)) fread(&eff,       1, 1, fp);
 						if (pack & (1 << 4)) fread(&eff_param, 1, 1, fp);
 						
-						pimp_pattern_entry *dat = &pattern_data[r * mod->channel_count + n];
+						dat = &pattern_data[r * mod->channel_count + n];
 						
 						if (note == 0x61) dat->note = 121;
 						else if (note == 0) dat->note = 0;
@@ -667,15 +678,18 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 				}
 			}
 			
-			// seek to end of block
+			/* seek to end of block */
 			fseek(fp, last_pos + pattern_header.header_size + pattern_header.data_size, SEEK_SET);
 		}
 	}
 
 	/* load instruments */
 	{
+		pimp_instrument *instruments = NULL;
+		
 		mod->instrument_count = xm_header.instruments;
-		pimp_instrument *instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
+		/* allocate instruments */
+		instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
 		if (NULL == instruments) return NULL;
 			
 		pimp_set_ptr(&mod->instrument_ptr, instruments);

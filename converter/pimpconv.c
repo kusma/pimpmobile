@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 #include "load_module.h"
@@ -40,6 +41,7 @@ static struct pimp_module *load_module(const char *filename, struct pimp_sample_
 
 static void dump_module(struct pimp_module *mod, const char *filename)
 {
+	FILE *fp = NULL;
 	struct serializer s;
 	
 	ASSERT(NULL != mod);
@@ -48,7 +50,7 @@ static void dump_module(struct pimp_module *mod, const char *filename)
 	serialize_module(&s, mod);
 	serializer_fixup_pointers(&s);
 
-	FILE *fp = fopen(filename, "wb");
+	fp = fopen(filename, "wb");
 	if (NULL == fp)
 	{
 		fprintf(stderr, "failed to open output file\n");
@@ -73,13 +75,15 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 		pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		for (j = 0; j < instr->sample_count; ++j)
 		{
+			int pos;
+			void *data = NULL;
 			pimp_sample *samp = pimp_instrument_get_sample(instr, j);
 			ASSERT(NULL != samp);
 			
-			void *data = pimp_sample_bank_get_sample_data(src, samp->data_ptr);
+			data = pimp_sample_bank_get_sample_data(src, samp->data_ptr);
 			ASSERT(NULL != data);
 			
-			int pos = pimp_sample_bank_find_sample_data(dst, data, samp->length);
+			pos = pimp_sample_bank_find_sample_data(dst, data, samp->length);
 			if (pos < 0)
 			{
 				pos = pimp_sample_bank_insert_sample_data(dst, data, samp->length);
@@ -91,14 +95,16 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 
 int main(int argc, char *argv[])
 {
+	FILE *fp = NULL;
 	int i;
 	int dither = 0;
-
-	struct serializer s;
-	serializer_init(&s);
 	
 	struct pimp_sample_bank master_sample_bank;
+	struct serializer s;
+	
 	pimp_sample_bank_init(&master_sample_bank);
+	serializer_init(&s);
+	
 	
 	for (i = 1; i < argc; ++i)
 	{
@@ -146,7 +152,7 @@ int main(int argc, char *argv[])
 	}
 	
 	printf("dumping sample_bank.bin\n");
-	FILE *fp = fopen("sample_bank.bin", "wb");
+	fp = fopen("sample_bank.bin", "wb");
 	if (NULL == fp)
 	{
 		fprintf(stderr, "failed to open output file\n");

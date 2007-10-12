@@ -122,7 +122,7 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		serializer_align(s, 4);
 		
-		serialize_pointer(s, pimp_get_ptr(&pattern->data_ptr)); // data_ptr
+		serialize_pointer(s, pimp_get_ptr(&pattern->data_ptr)); /* data_ptr */
 		serialize_halfword(s, pattern->row_count);
 	}
 	
@@ -130,10 +130,12 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	for (i = 0; i < mod->pattern_count; ++i)
 	{
 		int j;
+		const pimp_pattern_entry *pattern_data = NULL;
+		
 		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		if (NULL == pattern) continue;
 		
-		const pimp_pattern_entry *pattern_data = pimp_pattern_get_data(pattern);
+		pattern_data = pimp_pattern_get_data(pattern);
 		if (NULL == pattern_data) continue;
 		
 		serializer_set_pointer(s, pimp_get_ptr(&pattern->data_ptr), s->pos);
