@@ -11,7 +11,7 @@
 
 typedef struct
 {
-	u32 data_ptr;
+	pimp_rel_ptr data_ptr;
 	u16 row_count;
 } pimp_pattern;
 
@@ -31,10 +31,10 @@ typedef struct pimp_module
 	u32 reserved; /* for future flags */
 	
 	/* these are offsets relative to the begining of the pimp_module_t-structure */
-	u32 order_ptr;
-	u32 pattern_ptr;
-	u32 channel_ptr;
-	u32 instrument_ptr;
+	pimp_rel_ptr order_ptr;
+	pimp_rel_ptr pattern_ptr;
+	pimp_rel_ptr channel_ptr;
+	pimp_rel_ptr instrument_ptr;
 	
 	u16 period_low_clamp;
 	u16 period_high_clamp;

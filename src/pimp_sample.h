@@ -20,7 +20,7 @@ typedef enum
 typedef struct pimp_sample
 {
 	/* offset relative to sample-bank */
-	u32 data_ptr;
+	pimp_rel_ptr data_ptr;
 	
 	u32 length;
 	u32 loop_start;

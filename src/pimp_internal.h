@@ -10,7 +10,7 @@
 #include "pimp_config.h"
 #include "pimp_debug.h"
 
-static INLINE void *pimp_get_ptr(const unsigned int *offset)
+static INLINE void *pimp_get_ptr(const pimp_rel_ptr *offset)
 {
 	ASSERT(NULL != offset);
 	if (*offset == 0) return NULL;
@@ -19,11 +19,11 @@ static INLINE void *pimp_get_ptr(const unsigned int *offset)
 
 #define PIMP_GET_PTR(offset) pimp_get_ptr(&offset)
 
-static INLINE void pimp_set_ptr(unsigned int *dst, const void *ptr)
+static INLINE void pimp_set_ptr(pimp_rel_ptr *dst, const void *ptr)
 {
 	ASSERT(NULL != dst);
 	if (NULL == ptr) *dst = 0;
-	else *dst = ((int)ptr) - (int)dst;
+	else *dst = (pimp_rel_ptr)ptr - (pimp_rel_ptr)dst;
 }
 
 #define PIMP_SET_PTR(dst, ptr) pimp_set_ptr(&dst, ptr)

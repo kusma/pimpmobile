@@ -10,12 +10,12 @@
 
 typedef struct
 {
-	u32 sample_ptr;
-	u32 vol_env_ptr;
-	u32 pan_env_ptr;
+	pimp_rel_ptr sample_ptr;
+	pimp_rel_ptr vol_env_ptr;
+	pimp_rel_ptr pan_env_ptr;
 
 #if 0 /* IT ONLY (later) */
-	u32 pitch_env_ptr;
+	pimp_rel_ptr pitch_env_ptr;
 #endif
 
 	u16 volume_fadeout;
