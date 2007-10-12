@@ -14,15 +14,16 @@ SORT  ?= sort
 PR    ?= pr
 CTAGS ?= ctags
 
-ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
-endif
+#ifeq ($(strip $(DEVKITPRO)),)
+#$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
+#endif
 
+ifneq ($(strip $(DEVKITPRO)),)
 DEVKITARM = $(DEVKITPRO)/devkitARM
 LIBGBA    = $(DEVKITPRO)/libgba
 LIBNDS    = $(DEVKITPRO)/libnds
-
 export PATH	:=	$(DEVKITARM)/bin:$(PATH)
+endif
 
 ifeq ($(TARGET), arm-gba)
 TARGET_PREFIX ?= arm-eabi-
@@ -50,8 +51,8 @@ define setup-armcc
 	$(1)AR      = armar
 endef
 
-$(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
-# $(eval $(call setup-armcc,TARGET_))
+# $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
+$(eval $(call setup-armcc,TARGET_))
 $(eval $(call setup-gcc,,))
 
 MKDIR = mkdir -p
@@ -76,12 +77,15 @@ THUMB = -mthumb
 VPATH = src/ converter/
 
 SOURCES = \
-	src/pimp_gba.c         \
 	src/pimp_render.c      \
 	src/pimp_envelope.c    \
 	src/pimp_mod_context.c \
 	src/pimp_math.c        \
 	src/pimp_mixer.c
+
+ifeq ($(TARGET), arm-gba)
+	SOURCES += src/pimp_gba.c
+endif
 
 ARM_SOURCES = \
 	src/pimp_math.c \
