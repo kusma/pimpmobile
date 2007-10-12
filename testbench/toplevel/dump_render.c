@@ -6,71 +6,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define SAMPLES 100000
+
 int main(int argc, char *argv[])
 {
+	int i;
 	pimp_mixer mixer;
 	pimp_mod_context ctx;
 	struct pimp_sample_bank sample_bank;
+
+	s32 mixbuf[SAMPLES];
+	signed char buf[SAMPLES];
 	
+	FILE *fp;
+	char *ifn, *ofn;
 	const pimp_module *mod;
 	
-	const char *filename = "test.xm";
+	/* check parameters */
+	if (argc < 3) puts("too few arguments");
+	ifn = argv[1];
+	ofn = argv[2];
 
-	FILE *fp = fopen(filename, "rb");
+	/* open input file */
+	fp = fopen(ifn, "rb");
 	if (NULL == fp)
 	{
-		fprintf(stderr, "*** failed to load %s\n", filename);
+		fprintf(stderr, "*** failed to open %s for reading\n", ifn);
 		exit(1);
 	}
 	
+	/* load module */
 	pimp_sample_bank_init(&sample_bank);
 	mod = load_module_xm(fp, &sample_bank);
+	
+	/* close input file */
 	fclose(fp);
 	fp = NULL;
 	
+	/* check if module got loaded */
 	if (NULL == mod)
 	{
-		fprintf(stderr, "*** failed to load %s\n", filename);
+		fprintf(stderr, "*** failed to load module %s\n", ifn);
 		exit(1);
 	}
 
-#if 0
-#define SAMPLES 100000
-
-	s32 mixbuf[SAMPLES];
+	/* setup rendering */
 	mixer.mix_buffer = mixbuf;
 	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
 	
-	signed char buf[SAMPLES];
+	/* render module to buffer */
 	pimp_render(&ctx, buf, SAMPLES);
 
-	fp = fopen("output.sb", "wb");
-	if (NULL != fp)
+	/* open output file for writing */
+	fp = fopen(ofn, "wb");
+	if (NULL == fp)
 	{
-		fwrite(buf, 1, SAMPLES, fp);
-		fclose(fp);
+		fprintf(stderr, "*** failed to open %s for writing\n", ofn);
+		exit(1);
 	}
-#else
-#define BUFFER_SIZE 304
-	static s32 mixbuf[BUFFER_SIZE];
-	mixer.mix_buffer = mixbuf;
 
-	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
+	/* write buf to file */
+	fwrite(buf, 1, SAMPLES, fp);
 	
-	fp = fopen("output.sb", "wb");
-	if (NULL != fp)
-	{
-		int i, j;
-		for (i = 0; i < 1000; ++i)
-		{
-			static signed char buf[BUFFER_SIZE];
-/*			pimp_mixer_reset(&mixer); */
-			pimp_render(&ctx, buf, BUFFER_SIZE);
-			fwrite(buf, 1, BUFFER_SIZE, fp);
-		}
-		fclose(fp);
-	}
-#endif
+	/* close file */
+	fclose(fp);
+	fp = NULL;
 
 	return 0;
 }
