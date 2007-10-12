@@ -148,7 +148,7 @@ distclean:
 
 help:
 	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
-	$(AWK) '/^[^.%!][a-zA-Z0-9_-]*:/                                        \
+	$(AWK) '/^[^.%!][a-zA-Z0-9/_-]*:/                                       \
 	       { print substr($$1, 1, length($$1)-1) }' |                       \
 	$(SORT) |                                                               \
 	$(PR) --omit-pagination --width=80 --columns=4
