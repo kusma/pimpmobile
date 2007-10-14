@@ -5,7 +5,7 @@
 
 #include <gba_base.h>
 
-#define PIMP_TYPES_H /* prevent pimp_types.h from being included */
+#define PIMP_DONT_DECLARE_BASIC_TYPES /* prevent pimp_types.h from declaring types from gba_base.h in libgba */
 #include "pimp_render.h"
 #include "pimp_debug.h"
 
