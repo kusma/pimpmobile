@@ -161,8 +161,8 @@ void serialize_pointer(struct serializer *s, void *ptr)
 /*	printf("dumping ptr: %p\n", ptr); */
 	if (NULL != ptr) pointer_map.insert(std::make_pair(ptr, s->pos));
 	
-	iptr = ptr & ((1ULL<<32) - 1);
-	ASSERT(ptr == iptr);
+/*	iptr = ptr & ((1ULL<<32) - 1);
+	ASSERT(ptr == iptr); */
 	serialize_word(s, iptr);
 }
 
