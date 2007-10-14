@@ -25,6 +25,12 @@ LIBNDS    = $(DEVKITPRO)/libnds
 export PATH	:=	$(DEVKITARM)/bin:$(PATH)
 endif
 
+ifdef COMSPEC
+EXE_EXT=.exe
+else
+EXE_EXT=
+endif
+
 ifeq ($(TARGET), arm-gba)
 TARGET_PREFIX ?= arm-eabi-
 else
@@ -90,14 +96,14 @@ ARM_SOURCES = \
 	src/pimp_mixer.c
 
 PIMPCONV_SOURCES = \
-	converter/pimpconv.o \
-	converter/serializer.o \
-	converter/serialize_module.o \
-	converter/serialize_instrument.o \
-	converter/convert_sample.o \
-	converter/load_xm.o \
-	converter/load_mod.o \
-	src/pimp_sample_bank.o
+	converter/pimpconv.c \
+	converter/serializer.cpp \
+	converter/serialize_module.c \
+	converter/serialize_instrument.c \
+	converter/convert_sample.c \
+	converter/load_xm.c \
+	converter/load_mod.c \
+	src/pimp_sample_bank.c
 
 ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
@@ -123,15 +129,20 @@ TARGET_BUILD_DIR = $(BUILD_DIR)/$(TARGET)/$(CONFIG)
 HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)/$(CONFIG)
 
 source-to-object = \
-	$(subst .c,.o,      $(filter-out $(ARM_SOURCES), $(filter %.c,$1))) \
-	$(subst .c,.iwram.o,$(filter     $(ARM_SOURCES), $(filter %.c,$1))) \
-	$(subst .S,.o,      $(call iwram-filter, $(filter %.S,$1)))
+	$(subst .c,.o,        $(filter-out $(ARM_SOURCES), $(filter %.c,$1))) \
+	$(subst .c,.iwram.o,  $(filter     $(ARM_SOURCES), $(filter %.c,$1))) \
+	$(subst .cpp,.o,      $(filter-out $(ARM_SOURCES), $(filter %.cpp,$1))) \
+	$(subst .cpp,.iwram.o,$(filter     $(ARM_SOURCES), $(filter %.cpp,$1))) \
+	$(subst .S,.o,        $(filter-out $(ARM_SOURCES), $(filter %.S,$1))) \
+	$(subst .S,.iwram.o,  $(filter     $(ARM_SOURCES), $(filter %.S,$1)))
+
+source-to-depend = $(subst .o,.d, $(call source-to-object, $1))
 
 make-target-objs = $(addprefix $(TARGET_BUILD_DIR)/, $(call source-to-object, $1))
-make-host-objs = $(addprefix $(HOST_BUILD_DIR)/, $(1))
+make-host-objs   = $(addprefix $(HOST_BUILD_DIR)/,   $(call source-to-object, $1))
 
-make-target-deps = $(addprefix $(TARGET_BUILD_DIR)/, $(1:.o=.d))
-make-host-deps = $(addprefix $(HOST_BUILD_DIR)/, $(1:.o=.d))
+make-target-deps = $(addprefix $(TARGET_BUILD_DIR)/, $(call source-to-depend, $1))
+make-host-deps   = $(addprefix $(HOST_BUILD_DIR)/,   $(call source-to-depend, $1))
 
 OBJS = $(call make-target-objs, $(SOURCES))
 
@@ -141,12 +152,13 @@ all: lib/libpimpmobile.a
 
 clean:
 	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
-	$(RM) bin/pimpconv $(call make-host-objs, $(PIMPCONV_SOURCES)) $(call make-host-deps, $(PIMPCONV_SOURCES))
+	$(RM) bin/pimpconv$(EXE_EXT) $(call make-host-objs, $(PIMPCONV_SOURCES)) $(call make-host-deps, $(PIMPCONV_SOURCES))
 
 distclean:
 	$(RM) -r $(BUILD_DIR)
 
 help:
+	@echo available targets:
 	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
 	$(AWK) '/^[^.%!][a-zA-Z0-9/_-]*:/                                       \
 	       { print substr($$1, 1, length($$1)-1) }' |                       \
@@ -162,28 +174,28 @@ check-syntax:
 TAGS:
 	$(CTAGS) $(filter %.c,$(SOURCES))
 
+$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
+$(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
+
+bin/pimpconv$(EXE_EXT): CC = g++ # make sure we use the c++ compiler for this
+bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
+	$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
+
+lib/libpimpmobile.a: $(OBJS)
+	$(TARGET_AR) $(ARFLAGS) $@ $?
+
 # set compiler for ARM-sources
 # $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):	CC = $(TARGET_CC)
 # $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): CFLAGS = $(TARGET_CFLAGS)
 #$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):
 #	echo $(COMPILE.c) $<
 
-
-$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
-$(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
-
-bin/pimpconv: $(call make-host-objs, $(PIMPCONV_SOURCES))
-	$(CXX) $^ $(LDFLAGS) -o $@
-
-lib/libpimpmobile.a: $(OBJS)
-	$(TARGET_AR) $(ARFLAGS) $@ $?
-
-#### C ####
-
 # Override CC for target-builds
 $(TARGET_BUILD_DIR)/%.o: CC = $(TARGET_CC)
 $(TARGET_BUILD_DIR)/%.o: CPPFLAGS += $(TARGET_CPPFLAGS)
 $(TARGET_BUILD_DIR)/%.o: CFLAGS += $(TARGET_CFLAGS)
+
+#### C ####
 
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
@@ -195,7 +207,7 @@ $(TARGET_BUILD_DIR)/%.o: %.c
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 ### C++
 
@@ -214,4 +226,5 @@ $(TARGET_BUILD_DIR)/%.o: %.S
 	$(TARGET_CC) -MMD -MF $(@:.o=.d) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
 
 # deps
-# -include $(call make-target-deps, $(OBJS))
+-include $(call make-target-deps, $(SOURCES))
+-include $(call make-host-deps, $(PIMPCONV_SOURCES))
