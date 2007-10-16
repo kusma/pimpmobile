@@ -163,7 +163,7 @@ void serialize_pointer(struct serializer *s, void *ptr)
 	
 /*	iptr = ptr & ((1ULL<<32) - 1);
 	ASSERT(ptr == iptr); */
-	serialize_word(s, iptr);
+	serialize_word(s, (unsigned int)ptr);
 }
 
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
