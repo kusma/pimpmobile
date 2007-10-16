@@ -27,10 +27,10 @@
 	do {              \
 		if (!(expr))  \
 		{             \
-			printf("*** ASSERT FAILED %s AT %s:%i\n", #expr, __FILE__, __LINE__); \
+			printf("*** ASSERTION \"%s\" FAILED AT %s:%i\n", #expr, __FILE__, __LINE__); \
 			fflush(stdout); \
-			exit(1); \
-		} \
+			exit(1);        \
+		}                   \
 	} while(0)
 #else
  #define ASSERT(expr)
