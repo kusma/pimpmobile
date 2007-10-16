@@ -31,10 +31,10 @@ static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
 void pimp_init(const struct pimp_module *module, const void *sample_bank)
 {
+	u32 zero = 0;
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
 	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer);
 
-	u32 zero = 0;
 	CpuFastSet(&zero, &pimp_gba_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
 	REG_SOUNDCNT_X = (1 << 7);
