@@ -10,7 +10,7 @@
 void pimp_mixer_clear(s32 *target, u32 samples)
 {
 	int i;
-	assert(target != 0);
+	ASSERT(target != 0);
 
 	for (i = 0; i < samples; ++i)
 	{
