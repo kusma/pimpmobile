@@ -5,7 +5,7 @@
 
 #include <gba_base.h>
 
-#define PIMP_DONT_DECLARE_BASIC_TYPES /* prevent pimp_types.h from declaring types from gba_base.h in libgba */
+#define PIMP_DONT_DECLARE_BASIC_TYPES /* prevent pimp_types.h from declaring types conflicting with the types in gba_base.h in libgba */
 #include "pimp_render.h"
 #include "pimp_debug.h"
 
@@ -101,7 +101,7 @@ void pimp_mixer_clear(s32 *target, const u32 samples)
 	static const u32 zero = 0;
 	const u32 *src = &zero;
 	u32 *dst = (u32*)target;
-	const int mode = DMA_SRC_FIXED | (samples & ~7);
+	const int mode = (1 << 24) | (samples & ~7);
 	
 	ASSERT(NULL != src);
 	ASSERT(NULL != dst);
