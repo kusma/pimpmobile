@@ -3,9 +3,9 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
-#include <stdlib.h>
-#include <assert.h>
+#include "pimp_base.h"
 #include "pimp_mixer.h"
+#include "pimp_debug.h"
 
 void pimp_mixer_clear(s32 *target, u32 samples)
 {
@@ -21,8 +21,8 @@ void pimp_mixer_clear(s32 *target, u32 samples)
 u32 pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta)
 {
 	int i;
-	assert(target != 0);
-	assert(sample_data != 0);
+	ASSERT(target != 0);
+	ASSERT(sample_data != 0);
 
 	for (i = 0; i < samples; ++i)
 	{
@@ -37,8 +37,8 @@ u32 pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 
 void pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
 {
 	int i;
-	assert(target != NULL);
-	assert(source != NULL);
+	ASSERT(target != NULL);
+	ASSERT(source != NULL);
 	
 	for (i = 0; i < samples; ++i)
 	{
