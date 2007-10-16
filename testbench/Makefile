@@ -3,7 +3,10 @@
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
 CC = g++
-CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG -g
+CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG
+CFLAGS   = -g -m32
+CXXFLAGS = -g -m32
+LDFLAGS  = -m32
 
 FRAMEWORK_SOURCES = \
 	framework/test_framework.c \
