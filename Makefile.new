@@ -74,8 +74,14 @@ endif
 CPPFLAGS = 
 CFLAGS   = -pedantic -Wall -Wno-long-long
 CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
-LDFLAGS  = -Wl,-Map,$(basename $@).map
+LDFLAGS  =
 ASFLAGS  = 
+
+ifeq ($(HOST), x86_64-linux-gnu)
+	HOST_CFLAGS += -m32
+	HOST_CXXFLAGS += -m32
+	HOST_LDFLAGS += -m32
+endif
 
 ARM   = -marm
 THUMB = -mthumb
@@ -194,6 +200,11 @@ lib/libpimpmobile.a: $(OBJS)
 $(TARGET_BUILD_DIR)/%.o: CC = $(TARGET_CC)
 $(TARGET_BUILD_DIR)/%.o: CPPFLAGS += $(TARGET_CPPFLAGS)
 $(TARGET_BUILD_DIR)/%.o: CFLAGS += $(TARGET_CFLAGS)
+
+$(HOST_BUILD_DIR)/%.o: CFLAGS += $(HOST_CFLAGS)
+$(HOST_BUILD_DIR)/%.o: CXXFLAGS += $(HOST_CXXFLAGS)
+bin/pimpconv$(EXE_EXT): CC = $(CXX)
+bin/pimpconv$(EXE_EXT): LDFLAGS += $(HOST_LDFLAGS) -lstdc++
 
 #### C ####
 
