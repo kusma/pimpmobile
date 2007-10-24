@@ -172,7 +172,7 @@ help:
 	$(PR) --omit-pagination --width=80 --columns=4
 
 check:
-	@echo no testbench atm
+	make -C testbench run
 
 check-syntax:
 	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
