@@ -79,8 +79,8 @@ struct pimp_mod_context
 	u32 curr_tick;
 	s32 global_volume; /* 24.8 fixed point */
 
-	pimp_pattern *curr_pattern;
-	pimp_pattern *next_pattern;
+	struct pimp_pattern *curr_pattern;
+	struct pimp_pattern *next_pattern;
 	
 	struct pimp_channel_state channels[CHANNELS];
 	

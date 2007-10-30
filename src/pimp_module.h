@@ -9,19 +9,19 @@
 #include "pimp_base.h"
 #include "pimp_instrument.h"
 
-typedef struct
+struct pimp_pattern
 {
 	pimp_rel_ptr data_ptr;
 	u16 row_count;
-} pimp_pattern;
+};
 
 /* packed, because it's all bytes. no member-alignment or anything needed */
-typedef struct __attribute__((packed))
+struct pimp_channel
 {
 	u8 pan;
 	u8 volume;
 	u8 mute;
-} pimp_channel;
+} __attribute__((packed));
 
 typedef struct pimp_module
 {
@@ -54,7 +54,7 @@ typedef struct pimp_module
 #include "pimp_internal.h"
 
 /* pattern entry */
-static INLINE struct pimp_pattern_entry *pimp_pattern_get_data(const pimp_pattern *pat)
+static INLINE struct pimp_pattern_entry *pimp_pattern_get_data(const struct pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
 	return (struct pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
@@ -71,16 +71,16 @@ static INLINE int pimp_module_get_order(const pimp_module *mod, int i)
 	return array[i];
 }
 
-static INLINE pimp_pattern *pimp_module_get_pattern(const pimp_module *mod, int i)
+static INLINE struct pimp_pattern *pimp_module_get_pattern(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((pimp_pattern*)PIMP_GET_PTR(mod->pattern_ptr))[i];
+	return &((struct pimp_pattern*)PIMP_GET_PTR(mod->pattern_ptr))[i];
 }
 
-static INLINE pimp_channel *pimp_module_get_channel(const pimp_module *mod, int i)
+static INLINE struct pimp_channel *pimp_module_get_channel(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((pimp_channel*)PIMP_GET_PTR(mod->channel_ptr))[i];
+	return &((struct pimp_channel*)PIMP_GET_PTR(mod->channel_ptr))[i];
 }
 
 static INLINE struct pimp_instrument *pimp_module_get_instrument(const pimp_module *mod, int i)

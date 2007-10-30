@@ -20,7 +20,7 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 
 	ctx->curr_row      = 0;
 	ctx->curr_order    = 0;
-	ctx->curr_pattern  = (pimp_pattern*)NULL;
+	ctx->curr_pattern  = (struct pimp_pattern*)NULL;
 	ctx->curr_tick     = 0;
 	
 	ctx->next_row      = 0;
