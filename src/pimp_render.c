@@ -114,7 +114,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 		struct pimp_channel_state *chan = &ctx->channels[c];
 		pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
-		const pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
+		const struct pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
 		
 #ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);

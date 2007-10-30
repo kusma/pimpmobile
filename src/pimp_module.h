@@ -54,10 +54,10 @@ typedef struct pimp_module
 #include "pimp_internal.h"
 
 /* pattern entry */
-static INLINE pimp_pattern_entry *pimp_pattern_get_data(const pimp_pattern *pat)
+static INLINE struct pimp_pattern_entry *pimp_pattern_get_data(const pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
-	return (pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
+	return (struct pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
 }
 
 static INLINE int pimp_module_get_order(const pimp_module *mod, int i)

@@ -125,14 +125,14 @@ typedef enum
 } pimp_multi_effect;
 
 /* packed, because it's all bytes. no member-alignment or anything needed */
-typedef struct __attribute__((packed))
+struct pimp_pattern_entry
 {
 	u8 note;
 	u8 instrument;
 	u8 volume_command;
 	u8 effect_byte;
 	u8 effect_parameter;
-} pimp_pattern_entry;
+} __attribute__((packed));
 
 enum
 {
