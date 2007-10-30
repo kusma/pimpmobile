@@ -480,8 +480,8 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 	
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
-		struct pimp_channel_state       *chan = &ctx->channels[c];
-		pimp_mixer_channel_state *mc   = &ctx->mixer->channels[c];
+		struct pimp_channel_state *chan = &ctx->channels[c];
+		pimp_mixer_channel_state  *mc   = &ctx->mixer->channels[c];
 		BOOL period_dirty = FALSE;
 		BOOL volume_dirty = FALSE;
 		
