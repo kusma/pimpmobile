@@ -152,7 +152,7 @@ make-host-deps   = $(addprefix $(HOST_BUILD_DIR)/,   $(call source-to-depend, $1
 
 OBJS = $(call make-target-objs, $(SOURCES))
 
-.PHONY: all clean help check check-syntax
+.PHONY: all clean check check-syntax
 
 all: lib/libpimpmobile.a
 
@@ -162,14 +162,6 @@ clean:
 
 distclean:
 	$(RM) -r $(BUILD_DIR)
-
-help:
-	@echo available targets:
-	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) --print-data-base --question | \
-	$(AWK) '/^[^.%!][a-zA-Z0-9/_-]*:/                                       \
-	       { print substr($$1, 1, length($$1)-1) }' |                       \
-	$(SORT) |                                                               \
-	$(PR) --omit-pagination --width=80 --columns=4
 
 check:
 	make -C testbench run
