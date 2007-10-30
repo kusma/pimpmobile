@@ -12,7 +12,7 @@
 #include "pimp_math.h"
 #include "pimp_effects.h"
 
-static int pimp_channel_get_volume(pimp_channel_state *chan)
+static int pimp_channel_get_volume(struct pimp_channel_state *chan)
 {
 	int volume;
 	ASSERT(NULL != chan);
@@ -42,7 +42,7 @@ static int pimp_channel_get_volume(pimp_channel_state *chan)
 	return volume;
 }
 
-static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, pimp_channel_state *chan)
+static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, struct pimp_channel_state *chan)
 {
 	/* according to mixer_comments2.txt, vibrato counter is reset at new notes */
 	chan->vibrato_counter = 0;
@@ -111,7 +111,7 @@ static void pimp_mod_context_update_row(pimp_mod_context *ctx)
 		BOOL period_dirty = FALSE;
 		BOOL volume_dirty = FALSE;
 		
-		pimp_channel_state *chan = &ctx->channels[c];
+		struct pimp_channel_state *chan = &ctx->channels[c];
 		pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
 		const pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
@@ -480,7 +480,7 @@ static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
 	
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
-		pimp_channel_state       *chan = &ctx->channels[c];
+		struct pimp_channel_state       *chan = &ctx->channels[c];
 		pimp_mixer_channel_state *mc   = &ctx->mixer->channels[c];
 		BOOL period_dirty = FALSE;
 		BOOL volume_dirty = FALSE;

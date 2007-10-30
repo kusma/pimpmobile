@@ -12,7 +12,7 @@ extern "C" {
 
 #include "pimp_internal.h"
 
-static void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
+static void porta_up(struct pimp_channel_state *chan, s32 period_low_clamp)
 {
 	ASSERT(chan != 0);
 
@@ -20,7 +20,7 @@ static void porta_up(pimp_channel_state *chan, s32 period_low_clamp)
 	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
 }
 
-static void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
+static void porta_down(struct pimp_channel_state *chan, s32 period_high_clamp)
 {
 	ASSERT(chan != 0);
 
@@ -28,7 +28,7 @@ static void porta_down(pimp_channel_state *chan, s32 period_high_clamp)
 	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
 }
 
-static void porta_note(pimp_channel_state *chan)
+static void porta_note(struct pimp_channel_state *chan)
 {
 	ASSERT(chan != 0);
 
@@ -44,14 +44,14 @@ static void porta_note(pimp_channel_state *chan)
 	}
 }
 
-static void note_slide(pimp_channel_state *chan, int speed)
+static void note_slide(struct pimp_channel_state *chan, int speed)
 {
 	chan->volume += speed;
 	if (chan->volume > 64) chan->volume = 64;
 	if (chan->volume < 0)  chan->volume = 0;
 }
 
-static void vibrato(pimp_channel_state *chan, s32 period_low_clamp, s32 period_high_clamp)
+static void vibrato(struct pimp_channel_state *chan, s32 period_low_clamp, s32 period_high_clamp)
 {
 	static const s16 sine_waveform[64] = {
 		  0,  24,  49,  74,  97, 120, 141, 161,

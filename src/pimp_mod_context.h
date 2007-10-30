@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef struct
+struct pimp_channel_state
 {
 	/* some current-states */
 	const struct pimp_instrument *instrument;
@@ -56,7 +56,7 @@ typedef struct
 		
 	u8  note_retrig;
 	u8  retrig_tick;
-} pimp_channel_state;
+};
 
 typedef struct
 {
@@ -82,7 +82,7 @@ typedef struct
 	pimp_pattern *curr_pattern;
 	pimp_pattern *next_pattern;
 	
-	pimp_channel_state channels[CHANNELS];
+	struct pimp_channel_state channels[CHANNELS];
 	
 	const u8          *sample_bank;
 	const pimp_module *mod;
