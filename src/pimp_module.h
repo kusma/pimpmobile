@@ -83,13 +83,13 @@ static INLINE pimp_channel *pimp_module_get_channel(const pimp_module *mod, int 
 	return &((pimp_channel*)PIMP_GET_PTR(mod->channel_ptr))[i];
 }
 
-static INLINE pimp_instrument *pimp_module_get_instrument(const pimp_module *mod, int i)
+static INLINE struct pimp_instrument *pimp_module_get_instrument(const pimp_module *mod, int i)
 {
-	pimp_instrument *array;
+	struct pimp_instrument *array;
 	ASSERT(mod != NULL);
 	
-	array = (pimp_instrument*)pimp_get_ptr(&mod->instrument_ptr);
-	if (NULL == array) return (pimp_instrument*)NULL;
+	array = (struct pimp_instrument*)pimp_get_ptr(&mod->instrument_ptr);
+	if (NULL == array) return (struct pimp_instrument*)NULL;
 	
 	return &(array[i]);
 }

@@ -41,7 +41,7 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 	for (i = 0; i < CHANNELS; ++i)
 	{
 		pimp_channel_state *chan = &ctx->channels[i];
-		chan->instrument  = (const pimp_instrument*)NULL;
+		chan->instrument  = (const struct pimp_instrument*)NULL;
 		chan->sample      = (const pimp_sample*)    NULL;
 		chan->vol_env.env = (const struct pimp_envelope*)  NULL;
 

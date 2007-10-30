@@ -8,7 +8,7 @@
 
 #include "pimp_types.h"
 
-typedef struct
+struct pimp_instrument
 {
 	pimp_rel_ptr sample_ptr;
 	pimp_rel_ptr vol_env_ptr;
@@ -32,26 +32,26 @@ typedef struct
 	u8 pitch_pan_center;     /* not this on either; this one seems to be a note index */
 #endif
 
-} pimp_instrument;
+};
 
 #include "pimp_internal.h"
 #include "pimp_debug.h"
 #include "pimp_envelope.h"
 #include "pimp_sample.h"
 
-static INLINE pimp_sample *pimp_instrument_get_sample(const pimp_instrument *instr, int i)
+static INLINE pimp_sample *pimp_instrument_get_sample(const struct pimp_instrument *instr, int i)
 {
 	ASSERT(instr != NULL);
 	return &((pimp_sample*)PIMP_GET_PTR(instr->sample_ptr))[i];
 }
 
-static INLINE struct pimp_envelope *pimp_instrument_get_vol_env(const pimp_instrument *instr)
+static INLINE struct pimp_envelope *pimp_instrument_get_vol_env(const struct pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
 	return (struct pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->vol_env_ptr));
 }
 
-static INLINE struct pimp_envelope *pimp_instrument_get_pan_env(const pimp_instrument *instr)
+static INLINE struct pimp_envelope *pimp_instrument_get_pan_env(const struct pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
 	return (struct pimp_envelope*)(instr->pan_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->pan_env_ptr));
