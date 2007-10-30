@@ -17,7 +17,7 @@ typedef enum
 } pimp_vibrato_waveform;
 
 
-typedef struct pimp_sample
+struct pimp_sample
 {
 	/* offset relative to sample-bank */
 	pimp_rel_ptr data_ptr;
@@ -48,7 +48,7 @@ typedef struct pimp_sample
 	u8  sustain_loop_type;
 */
 	
-} pimp_sample;
+};
 
 
 #endif /* PIMP_SAMPLE_H */

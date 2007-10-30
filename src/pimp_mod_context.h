@@ -21,7 +21,7 @@ typedef struct
 {
 	/* some current-states */
 	const struct pimp_instrument *instrument;
-	const pimp_sample     *sample;
+	const struct pimp_sample     *sample;
 	
 	struct pimp_envelope_state vol_env;
 	BOOL sustain;

@@ -39,10 +39,10 @@ struct pimp_instrument
 #include "pimp_envelope.h"
 #include "pimp_sample.h"
 
-static INLINE pimp_sample *pimp_instrument_get_sample(const struct pimp_instrument *instr, int i)
+static INLINE struct pimp_sample *pimp_instrument_get_sample(const struct pimp_instrument *instr, int i)
 {
 	ASSERT(instr != NULL);
-	return &((pimp_sample*)PIMP_GET_PTR(instr->sample_ptr))[i];
+	return &((struct pimp_sample*)PIMP_GET_PTR(instr->sample_ptr))[i];
 }
 
 static INLINE struct pimp_envelope *pimp_instrument_get_vol_env(const struct pimp_instrument *instr)
