@@ -5,7 +5,7 @@
 
 #include "pimp_mod_context.h"
 
-void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
+void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
 {
 	int i;
 	ASSERT(ctx != NULL);
@@ -70,7 +70,7 @@ void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const 
 }
 
 /* "hard" jump in a module */
-void pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
+void pimp_mod_context_set_pos(struct pimp_mod_context *ctx, int row, int order)
 {
 	ASSERT(ctx != NULL);
 	
@@ -87,7 +87,7 @@ void pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order)
 }
 
 /* make sure next pos isn't outside a pattern or the order-list */
-static void pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
+static void pimp_mod_context_fix_next_pos(struct pimp_mod_context *ctx)
 {
 	if (ctx->next_row == ctx->curr_pattern->row_count)
 	{
@@ -105,7 +105,7 @@ static void pimp_mod_context_fix_next_pos(pimp_mod_context *ctx)
 }
 
 /* setup next position to be one row advanced in module */
-void pimp_mod_context_update_next_pos(pimp_mod_context *ctx)
+void pimp_mod_context_update_next_pos(struct pimp_mod_context *ctx)
 {
 	ctx->next_row = ctx->curr_row + 1;
 	ctx->next_order = ctx->curr_order;
@@ -113,7 +113,7 @@ void pimp_mod_context_update_next_pos(pimp_mod_context *ctx)
 }
 
 /* setup next position to be a specific position. useful for jumping etc */
-void pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order)
+void pimp_mod_context_set_next_pos(struct pimp_mod_context *ctx, int row, int order)
 {
 	ASSERT(ctx != NULL);
 	
@@ -123,7 +123,7 @@ void pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order)
 }
 
 
-void pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm)
+void pimp_mod_context_set_bpm(struct pimp_mod_context *ctx, int bpm)
 {
 	/* we're using 8 fractional-bits for the tick-length */
 	const int temp = (int)(((SAMPLERATE) * 5) * (1 << 8));

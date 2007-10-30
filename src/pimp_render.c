@@ -42,7 +42,7 @@ static int pimp_channel_get_volume(struct pimp_channel_state *chan)
 	return volume;
 }
 
-static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, struct pimp_channel_state *chan)
+static void note_on(const struct pimp_mod_context *ctx, pimp_mixer_channel_state *mc, struct pimp_channel_state *chan)
 {
 	/* according to mixer_comments2.txt, vibrato counter is reset at new notes */
 	chan->vibrato_counter = 0;
@@ -95,7 +95,7 @@ static void note_on(const pimp_mod_context *ctx, pimp_mixer_channel_state *mc, s
 	}                                                                     \
 } while(0)
 
-static void pimp_mod_context_update_row(pimp_mod_context *ctx)
+static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 {
 	u32 c;
 	ASSERT(ctx != 0);
@@ -466,7 +466,7 @@ static void pimp_mod_context_update_row(pimp_mod_context *ctx)
 #endif
 }
 
-static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
+static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 {
 	u32 c;
 	if (ctx->mod == NULL) return; /* no module active (sound-effects can still be playing, though) */
@@ -636,7 +636,7 @@ static void pimp_mod_context_update_tick(pimp_mod_context *ctx)
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
 #endif
 
-void pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples)
+void pimp_render(struct pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
 	while (TRUE)
 	{

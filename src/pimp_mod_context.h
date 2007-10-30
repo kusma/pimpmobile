@@ -58,7 +58,7 @@ struct pimp_channel_state
 	u8  retrig_tick;
 };
 
-typedef struct
+struct pimp_mod_context
 {
 	u32 tick_len;
 	u32 curr_tick_len;
@@ -89,33 +89,33 @@ typedef struct
 	pimp_mixer        *mixer;
 	
 	pimp_callback callback;
-} pimp_mod_context;
+};
 
-void pimp_mod_context_init(pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer);
-void pimp_mod_context_set_bpm(pimp_mod_context *ctx, int bpm);
-void pimp_mod_context_set_tempo(pimp_mod_context *ctx, int tempo);
+void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer);
+void pimp_mod_context_set_bpm(struct pimp_mod_context *ctx, int bpm);
+void pimp_mod_context_set_tempo(struct pimp_mod_context *ctx, int tempo);
 
 /* position manipulation */
-void pimp_mod_context_set_pos(pimp_mod_context *ctx, int row, int order);
-void pimp_mod_context_set_next_pos(pimp_mod_context *ctx, int row, int order);
-void pimp_mod_context_update_next_pos(pimp_mod_context *ctx);
+void pimp_mod_context_set_pos(struct pimp_mod_context *ctx, int row, int order);
+void pimp_mod_context_set_next_pos(struct pimp_mod_context *ctx, int row, int order);
+void pimp_mod_context_update_next_pos(struct pimp_mod_context *ctx);
 
-static INLINE int pimp_mod_context_get_row(const pimp_mod_context *ctx)
+static INLINE int pimp_mod_context_get_row(const struct pimp_mod_context *ctx)
 {
 	return ctx->report_row;
 }
 
-static INLINE int pimp_mod_context_get_order(const pimp_mod_context *ctx)
+static INLINE int pimp_mod_context_get_order(const struct pimp_mod_context *ctx)
 {
 	return ctx->report_order;
 }
 
-static INLINE int pimp_mod_context_get_bpm(const pimp_mod_context *ctx)
+static INLINE int pimp_mod_context_get_bpm(const struct pimp_mod_context *ctx)
 {
 	return ctx->curr_bpm;
 }
 
-static INLINE int pimp_mod_context_get_tempo(const pimp_mod_context *ctx)
+static INLINE int pimp_mod_context_get_tempo(const struct pimp_mod_context *ctx)
 {
 	return ctx->curr_tempo;
 }

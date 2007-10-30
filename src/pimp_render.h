@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-void pimp_render(pimp_mod_context *ctx, s8 *buf, u32 samples);
+void pimp_render(struct pimp_mod_context *ctx, s8 *buf, u32 samples);
 
 #ifdef __cplusplus
 }
