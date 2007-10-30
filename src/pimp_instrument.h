@@ -45,16 +45,16 @@ static INLINE pimp_sample *pimp_instrument_get_sample(const pimp_instrument *ins
 	return &((pimp_sample*)PIMP_GET_PTR(instr->sample_ptr))[i];
 }
 
-static INLINE pimp_envelope *pimp_instrument_get_vol_env(const pimp_instrument *instr)
+static INLINE struct pimp_envelope *pimp_instrument_get_vol_env(const pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
-	return (pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->vol_env_ptr));
+	return (struct pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->vol_env_ptr));
 }
 
-static INLINE pimp_envelope *pimp_instrument_get_pan_env(const pimp_instrument *instr)
+static INLINE struct pimp_envelope *pimp_instrument_get_pan_env(const pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
-	return (pimp_envelope*)(instr->pan_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->pan_env_ptr));
+	return (struct pimp_envelope*)(instr->pan_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->pan_env_ptr));
 }
 
 #endif /* PIMP_INSTRUMENT_H */

@@ -23,7 +23,7 @@ typedef struct
 	const pimp_instrument *instrument;
 	const pimp_sample     *sample;
 	
-	pimp_envelope_state vol_env;
+	struct pimp_envelope_state vol_env;
 	BOOL sustain;
 	
 	u8  note;
