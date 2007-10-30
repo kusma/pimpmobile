@@ -175,7 +175,7 @@ TAGS:
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
 
-bin/pimpconv$(EXE_EXT): CC = g++ # make sure we use the c++ compiler for this
+bin/pimpconv$(EXE_EXT): CC = $(HOST_CXX) # make sure we use the c++ compiler for this
 bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
 	$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
 
