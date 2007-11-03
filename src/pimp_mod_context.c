@@ -5,7 +5,7 @@
 
 #include "pimp_mod_context.h"
 
-void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, pimp_mixer *mixer)
+void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, struct pimp_mixer *mixer)
 {
 	int i;
 	ASSERT(ctx != NULL);

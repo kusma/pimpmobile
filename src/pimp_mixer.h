@@ -13,36 +13,36 @@
 extern "C" {
 #endif
 
-typedef enum
+enum pimp_mixer_loop_type
 {
 	LOOP_TYPE_NONE,
 	LOOP_TYPE_FORWARD,
 	LOOP_TYPE_PINGPONG
-} pimp_mixer_loop_type;
+};
 
-typedef struct
+struct pimp_mixer_channel_state
 {
-	u32                   sample_length;
-	u32                   loop_start;
-	u32                   loop_end;
-	pimp_mixer_loop_type  loop_type;
-	const u8             *sample_data;
-	u32                   sample_cursor;
-	s32                   sample_cursor_delta;
-	s32                   volume;
-} pimp_mixer_channel_state;
+	u32                        sample_length;
+	u32                        loop_start;
+	u32                        loop_end;
+	enum pimp_mixer_loop_type  loop_type;
+	const u8                  *sample_data;
+	u32                        sample_cursor;
+	s32                        sample_cursor_delta;
+	s32                        volume;
+};
 
-int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, int samples);
+int pimp_mixer_detect_loop_event(const struct pimp_mixer_channel_state *chan, int samples);
 
-typedef struct
+struct pimp_mixer
 {
-	pimp_mixer_channel_state channels[CHANNELS];
+	struct pimp_mixer_channel_state channels[CHANNELS];
 	s32 *mix_buffer;
-} pimp_mixer;
+};
 
-void pimp_mixer_reset(pimp_mixer *mixer);
-void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples);
-void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples);
+void pimp_mixer_reset(struct pimp_mixer *mixer);
+void pimp_mixer_mix(struct pimp_mixer *mixer, s8 *target, int samples);
+void pimp_mixer_mix_channel(struct pimp_mixer_channel_state *chan, s32 *target, u32 samples);
 
 void pimp_mixer_clear(s32 *target, u32 samples);
 u32  pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 vol, u32 sample_cursor, s32 sample_cursor_delta);

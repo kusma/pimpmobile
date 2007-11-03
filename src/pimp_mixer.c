@@ -6,7 +6,7 @@
 #include "pimp_mixer.h"
 #include "pimp_debug.h"
 
-void pimp_mixer_reset(pimp_mixer *mixer)
+void pimp_mixer_reset(struct pimp_mixer *mixer)
 {
 	u32 c;
 	ASSERT(mixer != NULL);
@@ -78,7 +78,7 @@ PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_s
 #endif
 
 /* returns the number of samples that can be mixed before a loop event occurs */
-PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, const int max_samples)
+PURE int pimp_mixer_detect_loop_event(const struct pimp_mixer_channel_state *chan, const int max_samples)
 {
 	int event_delta, event_cursor;
 	
@@ -131,7 +131,7 @@ PURE int pimp_mixer_detect_loop_event(const pimp_mixer_channel_state *chan, cons
 }
 
 /* returns false if we hit sample-end */
-STATIC BOOL pimp_process_loop_event(pimp_mixer_channel_state *chan)
+STATIC BOOL pimp_process_loop_event(struct pimp_mixer_channel_state *chan)
 {
 	ASSERT(NULL != chan);
 	switch (chan->loop_type)
@@ -178,7 +178,7 @@ STATIC BOOL pimp_process_loop_event(pimp_mixer_channel_state *chan)
 	return TRUE;
 }
 
-void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 samples)
+void pimp_mixer_mix_channel(struct pimp_mixer_channel_state *chan, s32 *target, u32 samples)
 {
 	ASSERT(NULL != target);
 	ASSERT(NULL != chan);
@@ -220,7 +220,7 @@ void pimp_mixer_mix_channel(pimp_mixer_channel_state *chan, s32 *target, u32 sam
 	}
 }
 
-void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
+void pimp_mixer_mix(struct pimp_mixer *mixer, s8 *target, int samples)
 {
 	u32 c;
 	int dc_offs;
@@ -235,7 +235,7 @@ void pimp_mixer_mix(pimp_mixer *mixer, s8 *target, int samples)
 	dc_offs = 0;
 	for (c = 0; c < CHANNELS; ++c)
 	{
-		pimp_mixer_channel_state *chan = &mixer->channels[c];
+		struct pimp_mixer_channel_state *chan = &mixer->channels[c];
 		if ((NULL != chan->sample_data) && (chan->volume > 1))
 		{
 			pimp_mixer_mix_channel(chan, mixer->mix_buffer, samples);

@@ -42,7 +42,7 @@ static int pimp_channel_get_volume(struct pimp_channel_state *chan)
 	return volume;
 }
 
-static void note_on(const struct pimp_mod_context *ctx, pimp_mixer_channel_state *mc, struct pimp_channel_state *chan)
+static void note_on(const struct pimp_mod_context *ctx, struct pimp_mixer_channel_state *mc, struct pimp_channel_state *chan)
 {
 	/* according to mixer_comments2.txt, vibrato counter is reset at new notes */
 	chan->vibrato_counter = 0;
@@ -62,7 +62,7 @@ static void note_on(const struct pimp_mod_context *ctx, pimp_mixer_channel_state
 		mc->sample_cursor = 0;
 		mc->sample_data = ctx->sample_bank + chan->sample->data_ptr;
 		mc->sample_length = chan->sample->length;
-		mc->loop_type = (pimp_mixer_loop_type)chan->sample->loop_type;
+		mc->loop_type = (enum pimp_mixer_loop_type)chan->sample->loop_type;
 		mc->loop_start = chan->sample->loop_start;
 		mc->loop_end = chan->sample->loop_start + chan->sample->loop_length;
 		
@@ -112,7 +112,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 		BOOL volume_dirty = FALSE;
 		
 		struct pimp_channel_state *chan = &ctx->channels[c];
-		pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
+		struct pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
 		const struct pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
 		
@@ -481,7 +481,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
 		struct pimp_channel_state *chan = &ctx->channels[c];
-		pimp_mixer_channel_state  *mc   = &ctx->mixer->channels[c];
+		struct pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		BOOL period_dirty = FALSE;
 		BOOL volume_dirty = FALSE;
 		

@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 
-static pimp_mixer       pimp_gba_mixer IWRAM_DATA;
+static struct pimp_mixer       pimp_gba_mixer IWRAM_DATA;
 static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
