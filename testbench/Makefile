@@ -6,7 +6,13 @@ CC = g++
 CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG
 CFLAGS   = -g -m32
 CXXFLAGS = -g -m32
-LDFLAGS  = -m32
+# TARGET_ARCH = -m32
+
+ifdef COMSPEC
+EXE_EXT=.exe
+else
+EXE_EXT=
+endif
 
 FRAMEWORK_SOURCES = \
 	framework/test_framework.c \
@@ -29,15 +35,16 @@ TEST_DEPS_SOURCES = \
 	../src/pimp_sample_bank.c
 
 .PHONY: clean all run
-all: unit_test
+all: unit_test$(EXE_EXT)
 
 clean:
-	$(RM) unit_test
+	$(RM) unit_test$(EXE_EXT)
 
-run: unit_test
-	./unit_test
+run: unit_test$(EXE_EXT)
+	./unit_test$(EXE_EXT)
 
-unit_test: $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) ../converter/serializer.cpp
+unit_test$(EXE_EXT): $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) ../converter/serializer.cpp
+	$(LINK.cpp) $^$(LOADLIBES) $(LDLIBS) -o $@
 
 toplevel/dump_render: $(TEST_DEPS_SOURCES)
 
