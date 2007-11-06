@@ -343,7 +343,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 			src_format = PIMP_SAMPLE_S16;
 			
 			prev = 0;
-			for (i = 0; i < sh->length / 2; ++i)
+			for (i = 0; i < (int)(sh->length / 2); ++i)
 			{
 				signed short data = 0;
 				fread(&data, 1, 2, fp);
