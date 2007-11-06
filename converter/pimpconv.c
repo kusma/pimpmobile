@@ -11,8 +11,8 @@
 
 void print_usage()
 {
-	fprintf(stderr, "usage: converter filenames\n");
-	exit(1);
+	fprintf(stderr, "Usage: pimpconv [-d] filenames\n");
+	exit(EXIT_FAILURE);
 }
 
 static struct pimp_module *load_module(const char *filename, struct pimp_sample_bank *sample_bank)
@@ -23,19 +23,22 @@ static struct pimp_module *load_module(const char *filename, struct pimp_sample_
 	FILE *fp = fopen(filename, "rb");
 	if (!fp)
 	{
-		printf("file not found!\n");
-		return NULL;
+		perror(filename);
+		exit(EXIT_FAILURE);
 	}
 	
 	/* try to load */
 	mod = load_module_xm(fp, sample_bank);
 	if (NULL == mod) mod = load_module_mod(fp, sample_bank);
-	if (NULL == mod) fprintf(stderr, "failed to load module!\n");
+		
+	/* report error if any */
+	if (NULL == mod) fprintf(stderr, "%s: Failed to load module\n", filename);
 	
 	/* close file */
 	fclose(fp);
 	fp = NULL;
 	
+	/* get back on track */
 	return mod;
 }
 
@@ -46,22 +49,26 @@ static void dump_module(struct pimp_module *mod, const char *filename)
 	
 	ASSERT(NULL != mod);
 	
-	serializer_init(&s);
-	serialize_module(&s, mod);
-	serializer_fixup_pointers(&s);
-
+	/* open target file */
 	fp = fopen(filename, "wb");
 	if (NULL == fp)
 	{
-		fprintf(stderr, "failed to open output file\n");
-		return;
+		perror(filename);
+		exit(EXIT_FAILURE);
 	}
 	
+	/* serialize module to memory dump */
+	serializer_init(&s);
+	serialize_module(&s, mod);
+	serializer_fixup_pointers(&s);
+	
 	fwrite(s.data, 1, s.pos, fp);
+	
+	/* close target file */
 	fclose(fp);
 	fp = NULL;
 	
-	
+	/* get rid of serializer */
 	serializer_deinit(&s);
 }
 
@@ -97,7 +104,9 @@ int main(int argc, char *argv[])
 {
 	FILE *fp = NULL;
 	int i;
+	int modules_loaded;
 	int dither = 0;
+	const char *sample_bank_fn = "sample_bank.bin";
 	
 	struct pimp_sample_bank master_sample_bank;
 	struct serializer s;
@@ -105,7 +114,7 @@ int main(int argc, char *argv[])
 	pimp_sample_bank_init(&master_sample_bank);
 	serializer_init(&s);
 	
-	
+	modules_loaded = 0;
 	for (i = 1; i < argc; ++i)
 	{
 		const char *arg = argv[i];
@@ -136,14 +145,17 @@ int main(int argc, char *argv[])
 			
 			if (NULL != mod)
 			{
-				/* generate output filename */
 				char ofn[256];
+				
+				modules_loaded++;
+				
+				/* generate output filename */
 				strncpy(ofn, ifn, 256);
 				strncat(ofn, ".bin", 256);
 				
 				/* dump sample data */
 				merge_samples(&master_sample_bank, &sample_bank, mod);
-
+				
 				/* dump module */
 				printf("dumping %s...\n", ofn);
 				dump_module(mod, ofn);
@@ -151,12 +163,18 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	printf("dumping sample_bank.bin\n");
-	fp = fopen("sample_bank.bin", "wb");
+	if (0 == modules_loaded)
+	{
+		fprintf(stderr, "%s: No input files\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	
+	printf("dumping %s\n", sample_bank_fn);
+	fp = fopen(sample_bank_fn, "wb");
 	if (NULL == fp)
 	{
-		fprintf(stderr, "failed to open output file\n");
-		return 1;
+		perror(sample_bank_fn);
+		exit(EXIT_FAILURE);
 	}
 	
 	fwrite(master_sample_bank.data, 1, master_sample_bank.size, fp);
@@ -164,6 +182,6 @@ int main(int argc, char *argv[])
 	fp = NULL;
 	
 	serializer_deinit(&s);
-
+	
 	return 0;
 }
