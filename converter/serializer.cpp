@@ -61,8 +61,8 @@ void serializer_check_size(struct serializer *s, size_t needed_size)
 		
 		if (NULL == s->data)
 		{
-			printf("out of memory\n");
-			exit(1);
+			fputs("out of memory\n", stderr);
+			abort();
 		}
 		
 		memset(&s->data[old_size], 0, (s->buffer_size - old_size));
@@ -184,20 +184,11 @@ void serializer_fixup_pointers(struct serializer *s)
 	
 	for (it = pointer_map.begin(); it != pointer_map.end(); ++it)
 	{
-		if (pointer_back_map.count(it->first) == 0)
-		{
-			printf("%p refered to, but not set\n", it->first);
-			exit(1);
-		}
+		ASSERT(pointer_back_map.count(it->first) != 0);
 		
 		unsigned *target = (unsigned*)(&s->data[it->second]);
 		
-		/* verify that the data pointed to is really the original pointer (just another sanity-check) */
-		if (*target != (unsigned)it->first)
-		{
-			printf("POOOTATOOOOO!\n");
-			exit(1);
-		}
+		ASSERT(*target == (unsigned)it->first);
 		
 		*target = pointer_back_map[it->first] - it->second;
 	}

@@ -27,9 +27,8 @@
 	do {              \
 		if (!(expr))  \
 		{             \
-			printf("*** ASSERTION \"%s\" FAILED AT %s:%i\n", #expr, __FILE__, __LINE__); \
-			fflush(stdout); \
-			exit(1);        \
+			fprintf(stderr, "*** ASSERTION \"%s\" FAILED AT %s:%d\n", #expr, __FILE__, __LINE__); \
+			abort();        \
 		}                   \
 	} while(0)
 #else
