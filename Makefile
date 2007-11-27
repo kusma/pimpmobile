@@ -154,7 +154,7 @@ OBJS = $(call make-target-objs, $(SOURCES))
 
 .PHONY: all clean check check-syntax
 
-all: lib/libpimpmobile.a
+all: lib/libpimpmobile.a bin/pimpconv$(EXE_EXT)
 
 clean:
 	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
