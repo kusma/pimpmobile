@@ -4,6 +4,7 @@
  */
 
 #include "framework/test_framework.h"
+#include "framework/test_helpers.h"
 #include <stdio.h>
 
 void test_mixer(struct test_suite *suite);
@@ -11,10 +12,14 @@ void test_serializer(struct test_suite *suite);
 
 int main(int argc, char *argv[])
 {
+	/* setup test suite */
 	struct test_suite suite;
+	test_suite_init(&suite);
 	
-	test_mixer(&suite);
-	test_serializer(&suite);
+	/* run tests */
+	TEST_RUN(&suite, test_mixer);
+	TEST_RUN(&suite, test_serializer);
 	
+	/* report */
 	return test_report_file(&suite, stderr);
 }

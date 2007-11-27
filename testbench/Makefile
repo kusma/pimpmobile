@@ -16,7 +16,8 @@ endif
 
 FRAMEWORK_SOURCES = \
 	framework/test_framework.c \
-	framework/test_helpers.c
+	framework/test_helpers.c \
+	framework/test_suite.c
 
 TEST_SOURCES = \
 	unit_test.c \
