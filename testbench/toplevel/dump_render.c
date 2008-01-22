@@ -23,7 +23,12 @@ int main(int argc, char *argv[])
 	const pimp_module *mod;
 	
 	/* check parameters */
-	if (argc < 3) puts("too few arguments");
+	if (argc < 3)
+	{
+		puts("too few arguments");
+		exit(1);
+	}
+	
 	ifn = argv[1];
 	ofn = argv[2];
 

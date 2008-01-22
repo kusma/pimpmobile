@@ -129,20 +129,8 @@ static void test_looping(struct test_suite *suite)
 		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 3), -1);
 		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 4), 4);
 		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 5), 4);
-#if 0
-#define CLAMP 4
-		for (i = 1; i < CLAMP; ++i)
-		{
-			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), i);
-		}
 		
-		for (i = CLAMP; i < 1024; ++i)
-		{
-			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), CLAMP);
-			ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, i), CLAMP);
-		}
-#endif
-		/* see that the correct amount of samples are mixed event at the border values */
+		/* see that the correct amount of samples are mixed event at the border values -- both these locations are inside the same sample */
 		chan.sample_cursor       = (0 << 12) + 1;
 		ASSERT_INTS_EQUAL(suite, pimp_mixer_detect_loop_event(&chan, 5), 4);
 		chan.sample_cursor       = (1 << 12) - 1;
