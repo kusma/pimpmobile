@@ -439,8 +439,6 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			
 			default:
 				EFFECT_MISSING(ctx, chan->effect);
-				DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported effect %02X\n", chan->effect));
-				ASSERT(0);
 		}
 		
 		if (period_dirty)
