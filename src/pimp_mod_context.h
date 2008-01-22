@@ -30,10 +30,6 @@ struct pimp_mod_context
 	u32 next_row;
 	u32 next_order;
 	
-	/* used to delay row / order getters. usefull for demo-synching */
-	u32 report_row;
-	u32 report_order;
-	
 	u32 curr_bpm;
 	u32 curr_tempo;
 	u32 curr_tick;
@@ -62,12 +58,12 @@ void pimp_mod_context_update_next_pos(struct pimp_mod_context *ctx);
 
 static INLINE int pimp_mod_context_get_row(const struct pimp_mod_context *ctx)
 {
-	return ctx->report_row;
+	return ctx->curr_row;
 }
 
 static INLINE int pimp_mod_context_get_order(const struct pimp_mod_context *ctx)
 {
-	return ctx->report_order;
+	return ctx->curr_order;
 }
 
 static INLINE int pimp_mod_context_get_bpm(const struct pimp_mod_context *ctx)
