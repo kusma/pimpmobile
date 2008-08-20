@@ -118,7 +118,7 @@ pimp_mixer_clip_samples:
 	orr   r4, r4, r6, asl #16       @ 1 cycle
 	orr   r4, r4, r7, asl #24       @ 1 cycle
 	eor   r4, r4, FLIP_SIGN         @ 1 cycle
-	str  r4, [r0], #4               @ 2 cycles
+	str   r4, [r0], #4              @ 2 cycles
 	
 	subs COUNT, COUNT, #1           @ 1 cycle
 	bne .clip_loop                  @ 3 cycles
