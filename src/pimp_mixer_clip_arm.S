@@ -30,6 +30,11 @@
 pimp_mixer_clip_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack
 	
+	ldr FLIP_SIGN, =0x80808080
+	ldr CONST_00, =0
+	ldr CONST_FF, =0xFF
+	rsb BIAS, BIAS, #128
+	
 	cmp COUNT, #7
 	bmi .fixup_last
 	
@@ -45,28 +50,21 @@ pimp_mixer_clip_samples:
 	@ update COUNT
 	sub COUNT, COUNT, TEMP
 	
-.fixup_first_loop:               @ 10 cycles pr sample:
-	
-	@clip a single sample (stupid routine), 14 cycles pr sample
-	ldr   S1, [SRC], #4          @ 3 cycles
-	rsb   S1, BIAS, S1, lsr #8   @ 1 cycle
-	cmps  S1, #127               @ 1 cycle
-	movge S1, #127               @ 1 cycle
-	cmps  S1, #-128              @ 1 cycle
-	movle S1, #-128              @ 1 cycle
-	strb  S1, [DST], #1          @ 2 cycles
+	@ clip a single sample pr iteration
+.fixup_first_loop:                        @ 10-13 cycles pr sample:
+	ldr   S1, [SRC], #4                   @ 3 cycles
+	add   S1, BIAS, S1, asr #8            @ 1 cycle
+	subs  r12, CONST_00, S1, asr #8       @ 1 cycle
+	andne S1, CONST_FF, r12, lsr #24      @ 1 cycle
+	eor   S1, S1, #0x80                   @ 1 cycle
+	strb  S1, [DST], #1                   @ 2 cycles
 	
 	@ loop
-	subs TEMP, TEMP, #1          @ 1 cycle
-	bne .fixup_first_loop        @ 3 cycles
+	subs TEMP, TEMP, #1                   @ 1 cycle
+	bne .fixup_first_loop                 @ 3 cycles
 .no_fixup_first:
 	
 	sub COUNT, COUNT, #4
-	
-	ldr FLIP_SIGN, =0x80808080
-	rsb BIAS, BIAS, #128
-	ldr CONST_00, =0
-	ldr CONST_FF, =0xFF
 	
 .clip_loop:                               @ 7 cycles pr sample:
 	ldmia SRC!, {S1-S4}                   @ 6 cycles
@@ -99,25 +97,23 @@ pimp_mixer_clip_samples:
 	                                      @ 28 cycles / 4 samples = 7 cycles per sample
 	
 	add COUNT, COUNT, #4
-	rsb BIAS, BIAS, #128
 	
 .fixup_last:
 	cmp COUNT, #0
 	beq .no_fixup_last
 	
-.fixup_last_loop:                @ 11-14 cycles pr sample:
 	@ clip a single sample pr iteration
-	ldr   S1, [SRC], #4          @ 3 cycles
-	rsb   S1, BIAS, r4, lsr #8   @ 1 cycle
-	cmps  S1, #127               @ 1 cycle
-	movge S1, #127               @ 1 cycle
-	cmps  S1, #-128              @ 1 cycle
-	movle S1, #-128              @ 1 cycle
-	strb  S1, [DST], #1          @ 2 cycles
+.fixup_last_loop:                         @ 10-13 cycles pr sample:
+	ldr   S1, [SRC], #4                   @ 3 cycles
+	add   S1, BIAS, S1, asr #8            @ 1 cycle
+	subs  r12, CONST_00, S1, asr #8       @ 1 cycle
+	andne S1, CONST_FF, r12, lsr #24      @ 1 cycle
+	eor   S1, S1, #0x80                   @ 1 cycle
+	strb  S1, [DST], #1                   @ 2 cycles
 	
 	@ loop
-	subs COUNT, COUNT, #1        @ 1 cycle
-	bne .fixup_last_loop         @ 3 cycles
+	subs COUNT, COUNT, #1                 @ 1 cycle
+	bne .fixup_last_loop                  @ 3 cycles
 .no_fixup_last:
 	
 	ldmfd sp!, {r4-r12, lr} @ restore all registers but parameters and stack
