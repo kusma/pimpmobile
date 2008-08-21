@@ -34,7 +34,7 @@ u32 pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 
 	return sample_cursor;
 }
 
-void pimp_mixer_clip_samples(s8 *target, s32 *source, u32 samples, u32 dc_offs)
+void pimp_mixer_clip_samples(s8 *target, const s32 *source, u32 samples, u32 dc_offs)
 {
 	int i;
 	ASSERT(target != NULL);
