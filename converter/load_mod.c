@@ -39,21 +39,21 @@ int return_nearest_note(int p)
 	return note_int;
 }
 
-static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
+static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
 {
 	unsigned char buf[256];
-	pimp_sample *sample;
+	struct pimp_sample *sample;
 		
 	fread(buf, 1, 22, fp);
 	buf[22] = '\0';
 
-	sample = (pimp_sample *)malloc(sizeof(pimp_sample));
+	sample = (struct pimp_sample *)malloc(sizeof(struct pimp_sample));
 	if (NULL == sample) return FALSE;
 
 	/* only one sample per instrument in MOD */
 	instr->sample_count = 1;
 	
-	memset(sample, 0, sizeof(pimp_sample));
+	memset(sample, 0, sizeof(struct pimp_sample));
 	pimp_set_ptr(&instr->sample_ptr, sample);
 	
 	
@@ -198,14 +198,14 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 
 	/* setup channel-settings */
 	{
-		pimp_channel *channels;
+		struct pimp_channel *channels;
 		mod->channel_count = channel_count;
 		
 		/* allocate channel array */
-		channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
+		channels = (struct pimp_channel *)malloc(sizeof(struct pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
 		
-		memset(channels, 0, sizeof(pimp_channel) * mod->channel_count);
+		memset(channels, 0, sizeof(struct pimp_channel) * mod->channel_count);
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
 		
@@ -220,12 +220,12 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	/* load instruments */
 	{
-		pimp_instrument *instruments;
+		struct pimp_instrument *instruments;
 		mod->instrument_count = 31;
-		instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
+		instruments = (struct pimp_instrument *)malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
 		if (NULL == instruments) return NULL;
 			
-		memset(instruments, 0, sizeof(pimp_instrument) * mod->instrument_count);
+		memset(instruments, 0, sizeof(struct pimp_instrument) * mod->instrument_count);
 			
 		pimp_set_ptr(&mod->instrument_ptr, instruments);
 		for (i = 0; i < mod->instrument_count; ++i)
@@ -293,24 +293,24 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		int min_period =  99999;
 		int max_period = -99999;
 
-		pimp_pattern *patterns;
+		struct pimp_pattern *patterns;
 		mod->pattern_count = max_pattern + 1;
 		
-		patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
+		patterns = (struct pimp_pattern *)malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
 		if (NULL == patterns) return NULL;
 		
-		memset(patterns, 0, sizeof(pimp_pattern) * mod->pattern_count);
+		memset(patterns, 0, sizeof(struct pimp_pattern) * mod->pattern_count);
 		pimp_set_ptr(&mod->pattern_ptr, patterns);
 		
 		/* load patterns  */
 		for (p = 0; p < mod->pattern_count; ++p)
 		{
-			pimp_pattern_entry *pattern_data;
+			struct pimp_pattern_entry *pattern_data;
 			
-			pimp_pattern *pat = &patterns[p];
+			struct pimp_pattern *pat = &patterns[p];
 			pat->row_count = 64;
 	
-			pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			pattern_data = (struct pimp_pattern_entry *)malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			if (NULL == pattern_data)
 			{
 				return NULL;
@@ -318,7 +318,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 			pimp_set_ptr(&pat->data_ptr, pattern_data);
 	
 			/* clear memory */
-			memset(pattern_data, 0, sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			memset(pattern_data, 0, sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			
 			for (i = 0; i < 64; ++i)
 			{
@@ -328,7 +328,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 					unsigned char buf[4];
 					int period;
 					
-					pimp_pattern_entry *pe = &pattern_data[i * mod->channel_count + j];
+					struct pimp_pattern_entry *pe = &pattern_data[i * mod->channel_count + j];
 					fread(buf, 1, 4, fp);
 					period = ((buf[0] & 0x0F) << 8) + buf[1];
 					
@@ -354,8 +354,8 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	/* load samples */
 	for (i = 0; i < 31; ++i)
 	{
-		pimp_sample *samp;
-		pimp_instrument *instr = pimp_module_get_instrument(mod, i);
+		struct pimp_sample *samp;
+		struct pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		samp = pimp_instrument_get_sample(instr, 0);
 		
 		if (samp->length > 0 && samp->length > 2)

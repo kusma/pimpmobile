@@ -78,7 +78,7 @@ typedef struct
 	char          name[22 + 1];
 } xm_sample_header;
 
-static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
+static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
 {
 	int i, s;
 	size_t last_pos;
@@ -90,7 +90,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	
 	last_pos = ftell(fp);
 	
-	memset(instr, 0, sizeof(pimp_instrument));
+	memset(instr, 0, sizeof(struct pimp_instrument));
 	
 	/* clear structure */
 	memset(&ih, 0, sizeof(ih));
@@ -129,9 +129,9 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	pimp_set_ptr(&instr->vol_env_ptr, NULL);
 	if ((ih.vol_type & 1) == 1)
 	{
-		pimp_envelope *env = (pimp_envelope*)malloc(sizeof(pimp_envelope));
+		struct pimp_envelope *env = (struct pimp_envelope*)malloc(sizeof(struct pimp_envelope));
 		if (NULL == env) return FALSE;
-		memset(env, 0, sizeof(pimp_envelope));
+		memset(env, 0, sizeof(struct pimp_envelope));
 		
 		pimp_set_ptr(&instr->vol_env_ptr, env);
 
@@ -168,9 +168,9 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	if ((ih.pan_type & 1) == 1)
 	{
 		/* panning envelope */
-		pimp_envelope *env = (pimp_envelope*)malloc(sizeof(pimp_envelope));
+		struct pimp_envelope *env = (struct pimp_envelope*)malloc(sizeof(struct pimp_envelope));
 		if (NULL == env) return FALSE;
-		memset(env, 0, sizeof(pimp_envelope));
+		memset(env, 0, sizeof(struct pimp_envelope));
 		
 		pimp_set_ptr(&instr->pan_env_ptr, env);
 		
@@ -214,10 +214,10 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	instr->sample_count = ih.samples;
 
 	{
-		pimp_sample *samples = NULL;
+		struct pimp_sample *samples = NULL;
 		if (instr->sample_count > 0)
 		{
-			samples = (pimp_sample *)malloc(sizeof(pimp_sample) * instr->sample_count);
+			samples = (struct pimp_sample *)malloc(sizeof(struct pimp_sample) * instr->sample_count);
 			if (NULL == samples) return FALSE;
 		}
 		pimp_set_ptr(&instr->sample_ptr, samples);
@@ -234,7 +234,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	/* all sample headers are stored first, and THEN comes all sample-data. now it's time for them headers */
 	for (s = 0; s < instr->sample_count; ++s)
 	{
-		pimp_sample *samp = NULL;
+		struct pimp_sample *samp = NULL;
 		xm_sample_header *sh = &sample_headers[s];
 		
 		/* load sample-header */
@@ -327,7 +327,7 @@ static BOOL load_instrument(FILE *fp, pimp_instrument *instr, struct pimp_sample
 	for (s = 0; s < instr->sample_count; ++s)
 	{
 		xm_sample_header *sh = &sample_headers[s];
-		pimp_sample *samp = pimp_instrument_get_sample(instr, s);
+		struct pimp_sample *samp = pimp_instrument_get_sample(instr, s);
 		enum pimp_sample_format src_format;
 		enum pimp_sample_format dst_format = PIMP_SAMPLE_U8;
 
@@ -533,9 +533,9 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	mod->order_repeat = xm_header.restart_pos;
 	
 	{
-		pimp_channel *channels;
+		struct pimp_channel *channels;
 		mod->channel_count = xm_header.channels;
-		channels = (pimp_channel *)malloc(sizeof(pimp_channel) * mod->channel_count);
+		channels = (struct pimp_channel *)malloc(sizeof(struct pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
@@ -554,24 +554,24 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	{
 		int p;
-		pimp_pattern *patterns;
+		struct pimp_pattern *patterns;
 		
 		mod->pattern_count = xm_header.patterns;
 		/* allocate memory for patterns */
-		patterns = (pimp_pattern *)malloc(sizeof(pimp_pattern) * mod->pattern_count);
+		patterns = (struct pimp_pattern *)malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
 		if (NULL == patterns) return NULL;
 		
 		pimp_set_ptr(&mod->pattern_ptr, patterns);
 		
 		/* clear memory */
-		memset(patterns, 0, sizeof(pimp_pattern) * mod->pattern_count);
+		memset(patterns, 0, sizeof(struct pimp_pattern) * mod->pattern_count);
 		
 		
 		/* load patterns */
 		for (p = 0; p < xm_header.patterns; ++p)
 		{
-			pimp_pattern *pat;
-			pimp_pattern_entry *pattern_data;
+			struct pimp_pattern *pat;
+			struct pimp_pattern_entry *pattern_data;
 			size_t last_pos = ftell(fp);
 			xm_pattern_header pattern_header;
 			memset(&pattern_header, 0, sizeof(pattern_header));
@@ -586,7 +586,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			pat->row_count = pattern_header.rows;
 			
 			/* allocate memory for pattern data */
-			pattern_data = (pimp_pattern_entry *)malloc(sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			pattern_data = (struct pimp_pattern_entry *)malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			if (NULL == pattern_data)
 			{
 				return NULL;
@@ -594,7 +594,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			pimp_set_ptr(&pat->data_ptr, pattern_data);
 
 			/* clear memory */
-			memset(pattern_data, 0, sizeof(pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			memset(pattern_data, 0, sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			
 			
 #ifdef PRINT_PATTERNS
@@ -621,7 +621,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	#endif
 					for (n = 0; n < xm_header.channels; ++n)
 					{
-						pimp_pattern_entry *dat = NULL;
+						struct pimp_pattern_entry *dat = NULL;
 						unsigned char pack;
 						unsigned char
 							note      = 0,
@@ -685,11 +685,11 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 
 	/* load instruments */
 	{
-		pimp_instrument *instruments = NULL;
+		struct pimp_instrument *instruments = NULL;
 		
 		mod->instrument_count = xm_header.instruments;
 		/* allocate instruments */
-		instruments = (pimp_instrument *)malloc(sizeof(pimp_instrument) * mod->instrument_count);
+		instruments = (struct pimp_instrument *)malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
 		if (NULL == instruments) return NULL;
 			
 		pimp_set_ptr(&mod->instrument_ptr, instruments);
