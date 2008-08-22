@@ -44,7 +44,7 @@ PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_s
 	int result;
 	if (event_cursor == 0) return 1;
 	if ((event_cursor - event_delta * max_samples) > 0) return -1;
-
+	
 #ifdef TARGET_GBA
 	{
 		int number = event_cursor + event_delta - 1;
@@ -70,7 +70,7 @@ PURE int pimp_calc_loop_event(int event_cursor, int event_delta, const int max_s
 #else
 	result = (event_cursor + event_delta - 1) / event_delta;
 #endif
-
+	
 	ASSERT(result <= max_samples);
 	return result;
 }

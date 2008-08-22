@@ -21,10 +21,10 @@ static INLINE unsigned clz(unsigned input)
 	unsigned c = 0;
 	if (input & 0xFFFF0000) input >>= 16;
 	else c = 16;
-
+	
 	if (input & 0xFF00) input >>= 8;
 	else c += 8;
-
+	
 	/* a 256 entries lut ain't too bad... */
 	return pimp_clz_lut[input] + c;
 }
@@ -36,7 +36,7 @@ static INLINE unsigned clz16(unsigned input)
 	
 	if (input & 0xFF00) input >>= 8;
 	else c += 8;
-
+	
 	/* a 256 entries lut ain't too bad... */
 	return pimp_clz_lut[input] + c;
 }

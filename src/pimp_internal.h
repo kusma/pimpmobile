@@ -27,8 +27,6 @@ static INLINE void pimp_set_ptr(pimp_rel_ptr *dst, const void *ptr)
 }
 
 #define PIMP_SET_PTR(dst, ptr) pimp_set_ptr(&dst, ptr)
-
-
 #define KEY_OFF 121
 
 typedef enum

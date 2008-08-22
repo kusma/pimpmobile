@@ -11,7 +11,7 @@ void pimp_mixer_clear(s32 *target, u32 samples)
 {
 	int i;
 	ASSERT(target != 0);
-
+	
 	for (i = 0; i < samples; ++i)
 	{
 		target[i] = 0;
@@ -23,7 +23,7 @@ u32 pimp_mixer_mix_samples(s32 *target, u32 samples, const u8 *sample_data, u32 
 	int i;
 	ASSERT(target != 0);
 	ASSERT(sample_data != 0);
-
+	
 	for (i = 0; i < samples; ++i)
 	{
 		s32 samp = sample_data[sample_cursor >> 12];

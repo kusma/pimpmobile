@@ -34,13 +34,13 @@ void pimp_init(const struct pimp_module *module, const void *sample_bank)
 	u32 zero = 0;
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
 	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer);
-
+	
 	CpuFastSet(&zero, &pimp_gba_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
 	REG_SOUNDCNT_X = (1 << 7);
 	
 	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PR_FRAME, SOUND_BUFFER_SIZE));
-
+	
 	/* setup timer */
 	REG_TM0CNT_L = (1 << 16) - SAMPLES_PR_FRAME;
 	REG_TM0CNT_H = TIMER_START;
@@ -105,7 +105,7 @@ void pimp_mixer_clear(s32 *target, const u32 samples)
 	
 	ASSERT(NULL != src);
 	ASSERT(NULL != dst);
-
+	
 	for (i = samples & 7; i; --i)
 	{
 		*dst++ = 0;

@@ -25,8 +25,8 @@ static INLINE void *pimp_sample_bank_get_sample_data(const pimp_sample_bank *sam
 	return (void*)((u8*)sample_bank->data + offset);
 }
 
-int   pimp_sample_bank_find_sample_data(const pimp_sample_bank *sample_bank, void *data, pimp_size_t len);
-int   pimp_sample_bank_insert_sample_data(pimp_sample_bank *sample_bank, void *data, pimp_size_t len);
+int pimp_sample_bank_find_sample_data(const pimp_sample_bank *sample_bank, void *data, pimp_size_t len);
+int pimp_sample_bank_insert_sample_data(pimp_sample_bank *sample_bank, void *data, pimp_size_t len);
 
 #ifdef __cplusplus
 }

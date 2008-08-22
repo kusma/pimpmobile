@@ -15,7 +15,7 @@ extern "C" {
 static void porta_up(struct pimp_channel_state *chan, s32 period_low_clamp)
 {
 	ASSERT(chan != 0);
-
+	
 	chan->final_period -= chan->porta_speed;
 	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
 }
@@ -23,7 +23,7 @@ static void porta_up(struct pimp_channel_state *chan, s32 period_low_clamp)
 static void porta_down(struct pimp_channel_state *chan, s32 period_high_clamp)
 {
 	ASSERT(chan != 0);
-
+	
 	chan->final_period += chan->porta_speed;
 	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
 }
@@ -31,7 +31,7 @@ static void porta_down(struct pimp_channel_state *chan, s32 period_high_clamp)
 static void porta_note(struct pimp_channel_state *chan)
 {
 	ASSERT(chan != 0);
-
+	
 	if (chan->final_period > chan->porta_target)
 	{
 		chan->final_period -= chan->porta_speed;
@@ -68,7 +68,7 @@ static void vibrato(struct pimp_channel_state *chan, s32 period_low_clamp, s32 p
 	
 	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
 	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
-
+	
 	chan->vibrato_counter += chan->vibrato_speed;
 }
 

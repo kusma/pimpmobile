@@ -13,16 +13,16 @@ struct pimp_instrument
 	pimp_rel_ptr sample_ptr;
 	pimp_rel_ptr vol_env_ptr;
 	pimp_rel_ptr pan_env_ptr;
-
+	
 #if 0 /* IT ONLY (later) */
 	pimp_rel_ptr pitch_env_ptr;
 #endif
-
+	
 	u16 volume_fadeout;
 	
 	u8 sample_count;                 /* number of samples tied to instrument */
 	u8 sample_map[120];
-
+	
 #if 0 /* IT ONLY (later) */
 	new_note_action_t        new_note_action;
 	duplicate_check_type_t   duplicate_check_type;
@@ -31,7 +31,6 @@ struct pimp_instrument
 	s8 pitch_pan_separation; /* no idea what this one does */
 	u8 pitch_pan_center;     /* not this on either; this one seems to be a note index */
 #endif
-
 };
 
 #include "pimp_internal.h"

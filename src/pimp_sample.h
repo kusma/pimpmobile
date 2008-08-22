@@ -47,7 +47,6 @@ struct pimp_sample
 	IT ONLY (later)
 	u8  sustain_loop_type;
 */
-	
 };
 
 

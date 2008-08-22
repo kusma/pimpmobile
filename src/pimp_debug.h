@@ -28,8 +28,8 @@
 		if (!(expr))  \
 		{             \
 			fprintf(stderr, "*** ASSERTION \"%s\" FAILED AT %s:%d\n", #expr, __FILE__, __LINE__); \
-			abort();        \
-		}                   \
+			abort();  \
+		}             \
 	} while(0)
 #else
  #define ASSERT(expr)

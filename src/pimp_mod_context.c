@@ -17,7 +17,7 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 	/* setup default player-state */
 	ctx->tick_len      = 0;
 	ctx->curr_tick_len = 0;
-
+	
 	ctx->curr_row      = 0;
 	ctx->curr_order    = 0;
 	ctx->curr_pattern  = (struct pimp_pattern*)NULL;
@@ -44,7 +44,7 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 		chan->instrument  = (const struct pimp_instrument*)NULL;
 		chan->sample      = (const struct pimp_sample*)    NULL;
 		chan->vol_env.env = (const struct pimp_envelope*)  NULL;
-
+		
 		chan->volume_command = 0;
 		chan->effect = 0;
 		chan->effect_param = 0;
@@ -60,12 +60,12 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 		chan->loop_target_order = 0;
 		chan->loop_target_row   = 0;
 		chan->loop_counter      = 0;
-
+		
 		pimp_envelope_reset(&chan->vol_env);
 	}
 	
 	ctx->callback = (pimp_callback)NULL;
-
+	
 	pimp_mixer_reset(ctx->mixer);
 }
 

@@ -64,10 +64,10 @@ static INLINE int pimp_module_get_order(const pimp_module *mod, int i)
 {
 	char *array;
 	ASSERT(mod != NULL);
-
+	
 	array = (char*)pimp_get_ptr(&mod->order_ptr);
 	if (NULL == array) return -1;
-
+	
 	return array[i];
 }
 

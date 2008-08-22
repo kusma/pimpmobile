@@ -29,7 +29,7 @@ struct pimp_channel_state
 	u8  effect;
 	u8  effect_param;
 	u8  volume_command;
-
+	
 	s32 period;
 	s32 final_period;
 	
@@ -46,13 +46,13 @@ struct pimp_channel_state
 	u8 loop_target_order;
 	u8 loop_target_row;
 	u8 loop_counter;
-		
+	
 	s32 porta_target;
 	s32 fadeout;
 	u16 porta_speed;
 	s8  volume_slide_speed;
 	u8  note_delay;
-		
+	
 	u8  note_retrig;
 	u8  retrig_tick;
 };

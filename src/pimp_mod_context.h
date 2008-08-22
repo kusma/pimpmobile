@@ -23,7 +23,7 @@ struct pimp_mod_context
 	u32 tick_len;
 	u32 curr_tick_len;
 	u32 remainder;
-
+	
 	s32 curr_row;
 	s32 curr_order;
 	
@@ -34,7 +34,7 @@ struct pimp_mod_context
 	u32 curr_tempo;
 	u32 curr_tick;
 	s32 global_volume; /* 24.8 fixed point */
-
+	
 	struct pimp_pattern *curr_pattern;
 	struct pimp_pattern *next_pattern;
 	

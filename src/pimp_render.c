@@ -179,7 +179,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			chan->volume = chan->sample->volume;
 			volume_dirty = TRUE;
 		}
-
+		
 		switch (chan->volume_command >> 4)
 		{
 			case 0x0: break; /* do nothing */
@@ -214,11 +214,11 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 				note_slide(chan, chan->volume_command & 0xF);
 				volume_dirty = TRUE;
 			break;
-
+			
 			case 0xa: /* set vibrato speed */
 				VOLUME_EFFECT_MISSING(ctx, chan->volume_command);
 			break;
-
+			
 			case 0xb: /* vibrato */
 				VOLUME_EFFECT_MISSING(ctx, chan->volume_command);
 			break;
@@ -280,7 +280,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 				}
 				if (chan->effect_param != 0) chan->porta_speed = chan->effect_param * 4;
 			break;
-
+			
 			case EFF_VIBRATO:
 				if (0 != (chan->effect_param & 0xF0)) chan->vibrato_speed = chan->effect_param >> 4;
 				if (0 != (chan->effect_param & 0x0F)) chan->vibrato_depth = chan->effect_param & 0x0F;
@@ -307,14 +307,14 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 					chan->volume_slide_speed = -(chan->effect_param & 0xF);
 				}
 			break;
-
+			
 			case EFF_VIBRATO_VOLUME_SLIDE: EFFECT_MISSING(ctx, chan->effect); break;
 			case EFF_TREMOLO:              EFFECT_MISSING(ctx, chan->effect); break;
-
+			
 			case EFF_SET_PAN:
 				chan->pan = chan->effect_param;
 			break;
-
+			
 			case EFF_SAMPLE_OFFSET: break;
 			
 			case EFF_VOLUME_SLIDE:
@@ -332,13 +332,13 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 				/* go to order xy */
 				pimp_mod_context_set_next_pos( ctx, 0, chan->effect_param );
 			break;
-
+			
 			case EFF_SET_VOLUME:
 				chan->volume = chan->effect_param;
 				if (chan->volume > 64) chan->volume = 64;
 				volume_dirty = TRUE;
 			break;
-
+			
 			case EFF_BREAK_ROW:
 				{
 					/* go to next order, row xy (decimal) */
@@ -352,7 +352,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 				switch (chan->effect_param >> 4)
 				{
 					case EFF_AMIGA_FILTER: break;
-
+					
 					case EFF_FINE_PORTA_UP:
 						porta_up(chan, ctx->mod->period_low_clamp);
 						period_dirty = TRUE;
@@ -458,7 +458,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			mc->volume = (pimp_channel_get_volume(chan) * ctx->global_volume) >> 8;
 		}
 	}
-
+	
 #ifdef PRINT_PATTERNS	
 	iprintf("\n");
 #endif
@@ -468,7 +468,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 {
 	u32 c;
 	if (ctx->mod == NULL) return; /* no module active (sound-effects can still be playing, though) */
-
+	
 	if (ctx->curr_tick == ctx->curr_tempo)
 	{
 		pimp_mod_context_update_row(ctx);
@@ -494,7 +494,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 			case 0x4:
 			case 0x5: /* set volume */
 			break;
-	
+			
 			case 0x6:
 				/* volume slide down */
 				note_slide(chan, -(chan->volume_command & 0xF));
@@ -577,7 +577,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 							chan->retrig_tick = 0;
 						}
 					break;
-
+					
 					case EFF_FINE_VOLUME_SLIDE_UP:
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
 					break; /* fine volume slide is only done on tick0 */
@@ -601,8 +601,6 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 					chan->retrig_tick = 0;
 				}
 			break;
-			
-/*				default: ASSERT(0); */
 		}
 		
 		/* period to delta-conversion */
