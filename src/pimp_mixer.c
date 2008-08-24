@@ -194,7 +194,7 @@ void pimp_mixer_mix_channel(struct pimp_mixer_channel_state *chan, s32 *target, 
 		
 		pimp_mixer_mix_samples(target, mix_samples, chan->sample_data, chan->volume, chan->sample_cursor, chan->sample_cursor_delta);
 		chan->sample_cursor = chan->sample_cursor + chan->sample_cursor_delta * mix_samples;
-
+		
 		if (safe_samples < 0) break; /* done. */
 		
 		target  += safe_samples; /* move target pointer */
