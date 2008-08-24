@@ -191,13 +191,13 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			case 0x5: /* set volume */
 				if (note->volume_command > 0x50)
 				{
-					/* something else */
+					/* volume commands 0x51..0x5f doesn't seem to be defined. */
 					DEBUG_PRINT(DEBUG_LEVEL_ERROR, ("unsupported volume-command %02X\n", note->volume_command));
+					VOLUME_EFFECT_MISSING(ctx, chan->volume_command);
 				}
 				else
 				{
 					chan->volume = note->volume_command - 0x10;
-					DEBUG_PRINT(DEBUG_LEVEL_INFO, ("setting volume to: %02X\n", chan->volume));
 					volume_dirty = TRUE;
 				}
 			break;
@@ -206,12 +206,12 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			case 0x7: break; /* volume slide up */
 			
 			case 0x8: /* fine volume slide down */
-				note_slide(chan, -(chan->volume_command & 0xF));
+				volume_slide(chan, -(chan->volume_command & 0xF));
 				volume_dirty = TRUE;
 			break;
 			
 			case 0x9: /* fine volume slide up */
-				note_slide(chan, chan->volume_command & 0xF);
+				volume_slide(chan, chan->volume_command & 0xF);
 				volume_dirty = TRUE;
 			break;
 			
@@ -392,12 +392,12 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_UP:
-						note_slide(chan, chan->effect_param & 0xF);
+						volume_slide(chan, chan->effect_param & 0xF);
 						volume_dirty = TRUE;
 					break;
 					
 					case EFF_FINE_VOLUME_SLIDE_DOWN:
-						note_slide(chan, -(chan->effect_param & 0xF));
+						volume_slide(chan, -(chan->effect_param & 0xF));
 						volume_dirty = TRUE;
 					break;
 					
@@ -497,13 +497,13 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 			
 			case 0x6:
 				/* volume slide down */
-				note_slide(chan, -(chan->volume_command & 0xF));
+				volume_slide(chan, -(chan->volume_command & 0xF));
 				volume_dirty = TRUE;
 			break;
 			
 			case 0x7:
 				/* volume slide up */
-				note_slide(chan, chan->volume_command & 0xF);
+				volume_slide(chan, chan->volume_command & 0xF);
 				volume_dirty = TRUE;
 			break;
 			
@@ -549,7 +549,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 				porta_note(chan);
 				period_dirty = TRUE;
 				
-				note_slide(chan, chan->volume_slide_speed);
+				volume_slide(chan, chan->volume_slide_speed);
 				volume_dirty = TRUE;
 			break;
 			
@@ -557,7 +557,7 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 			case EFF_SAMPLE_OFFSET: break;
 			
 			case EFF_VOLUME_SLIDE:
-				note_slide(chan, chan->volume_slide_speed);
+				volume_slide(chan, chan->volume_slide_speed);
 				volume_dirty = TRUE;
 			break;
 			

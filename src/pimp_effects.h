@@ -44,7 +44,7 @@ static void porta_note(struct pimp_channel_state *chan)
 	}
 }
 
-static void note_slide(struct pimp_channel_state *chan, int speed)
+static void volume_slide(struct pimp_channel_state *chan, int speed)
 {
 	chan->volume += speed;
 	if (chan->volume > 64) chan->volume = 64;
