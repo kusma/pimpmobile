@@ -236,7 +236,7 @@ void pimp_mixer_mix(struct pimp_mixer *mixer, s8 *target, int samples)
 	for (c = 0; c < CHANNELS; ++c)
 	{
 		struct pimp_mixer_channel_state *chan = &mixer->channels[c];
-		if ((NULL != chan->sample_data) && (chan->volume > 1))
+		if ((NULL != chan->sample_data) && (chan->volume > 0))
 		{
 			pimp_mixer_mix_channel(chan, mixer->mix_buffer, samples);
 			dc_offs += chan->volume * 128;
