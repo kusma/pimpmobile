@@ -77,8 +77,8 @@ pimp_mixer_mix_samples:
 	and r4, COUNTER, #7
 	
 	@ fixup, jump to the correct position
-	adr	r5, .mixer_jumptable
-	ldr	pc, [r5, r4, lsl #2]
+	adr r5, .mixer_jumptable
+	ldr pc, [r5, r4, lsl #2]
 	
 	@ fixup code unrolled 7 times
 .mix7:
