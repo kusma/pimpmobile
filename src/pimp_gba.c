@@ -21,8 +21,8 @@ static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
-#define SAMPLES_PR_FRAME  ((int)((1 << 24) / ((float)SAMPLERATE)))
-#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / SAMPLES_PR_FRAME))
+#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)SAMPLERATE)))
+#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / CYCLES_PR_SAMPLE))
 
 /* mix and playback-buffers */
 static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
@@ -42,7 +42,7 @@ void pimp_init(const struct pimp_module *module, const void *sample_bank)
 	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PR_FRAME, SOUND_BUFFER_SIZE));
 	
 	/* setup timer */
-	REG_TM0CNT_L = (1 << 16) - SAMPLES_PR_FRAME;
+	REG_TM0CNT_L = (1 << 16) - CYCLES_PR_SAMPLE;
 	REG_TM0CNT_H = TIMER_START;
 }
 
