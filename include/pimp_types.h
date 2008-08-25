@@ -1,6 +1,6 @@
 /*
 
-pimp_gba.h -- The interface of Pimpmobile, a module playback library
+pimp_types.h -- The type-definitions of Pimpmobile, a module playback library
 targeting the Nintendo GameBoy Advance
 
 
@@ -26,32 +26,29 @@ the following restrictions:
 
 */
 
-#ifndef PIMPMOBILE_H
-#define PIMPMOBILE_H
+#ifndef PIMP_TYPES_H
+#define PIMP_TYPES_H
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "pimp_types.h"
+struct pimp_module;
+typedef void (*pimp_callback)(int, int);
 
-void pimp_init(const struct pimp_module *module, const void *sample_bank);
-void pimp_close(void);
+enum pimp_callback_type
+{
+	PIMP_CALLBACK_LOOP = 0,
+	PIMP_CALLBACK_SYNC = 1,
+	PIMP_CALLBACK_NOTE = 2,
+	PIMP_CALLBACK_UNSUPPORTED_EFFECT = 3,
+	PIMP_CALLBACK_UNSUPPORTED_VOLUME_EFFECT = 4
+};
 
-void pimp_vblank(void); /* call this on the beginning of each vsync */
-void pimp_frame(void); /* call once each frame. doesn't need to be called in precious vblank time */
-
-/* get information about playback */
-int pimp_get_row(void);
-int pimp_get_order(void);
-void pimp_set_pos(int row, int order);
-
-/* callback system (for music sync) */
-void pimp_set_callback(pimp_callback callback);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PIMPMOBILE_H */
+#endif /* PIMP_TYPES_H */

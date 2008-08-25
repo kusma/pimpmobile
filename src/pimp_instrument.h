@@ -6,7 +6,7 @@
 #ifndef PIMP_INSTRUMENT_H
 #define PIMP_INSTRUMENT_H
 
-#include "pimp_types.h"
+#include "pimp_base.h"
 
 struct pimp_instrument
 {

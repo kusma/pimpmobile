@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-#include "pimp_types.h"
 #include "pimp_base.h"
 #include "pimp_debug.h"
 

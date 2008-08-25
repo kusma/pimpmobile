@@ -3,8 +3,8 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
-#include "pimp_types.h"
 #include "pimp_math.h"
+#include "pimp_base.h"
 #include "pimp_debug.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))

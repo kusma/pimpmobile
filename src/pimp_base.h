@@ -6,7 +6,20 @@
 #ifndef PIMP_BASE_H
 #define PIMP_BASE_H
 
-#include "pimp_types.h"
+#ifndef PIMP_DONT_DECLARE_BASIC_TYPES
+typedef   signed char      s8;
+typedef unsigned char      u8;
+typedef   signed short     s16;
+typedef unsigned short     u16;
+typedef   signed int       s32;
+typedef unsigned int       u32;
+#endif
+typedef   signed long long s64;
+typedef unsigned long long u64;
+
+#include <stddef.h>
+typedef size_t    pimp_size_t;
+typedef ptrdiff_t pimp_rel_ptr;
 
 #ifndef NULL
 #define NULL ((void*)0)

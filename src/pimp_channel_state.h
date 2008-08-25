@@ -6,7 +6,7 @@
 #ifndef PIMP_CHANNEL_STATE_H
 #define PIMP_CHANNEL_STATE_H
 
-#include "pimp_types.h"
+#include "pimp_base.h"
 #include "pimp_envelope.h"
 
 #ifdef __cplusplus
