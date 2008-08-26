@@ -26,8 +26,8 @@ the following restrictions:
 
 */
 
-#ifndef PIMPMOBILE_H
-#define PIMPMOBILE_H
+#ifndef PIMP_GBA_H
+#define PIMP_GBA_H
 
 #ifdef __cplusplus
 extern "C"
@@ -36,22 +36,22 @@ extern "C"
 
 #include "pimp_types.h"
 
-void pimp_init(const struct pimp_module *module, const void *sample_bank);
-void pimp_close(void);
+void pimp_gba_init(const struct pimp_module *module, const void *sample_bank);
+void pimp_gba_close(void);
 
-void pimp_vblank(void); /* call this on the beginning of each vsync */
-void pimp_frame(void); /* call once each frame. doesn't need to be called in precious vblank time */
+void pimp_gba_vblank(void); /* call this on the beginning of each vsync */
+void pimp_gba_frame(void); /* call once each frame. doesn't need to be called in precious vblank time */
 
 /* get information about playback */
-int pimp_get_row(void);
-int pimp_get_order(void);
-void pimp_set_pos(int row, int order);
+int pimp_gba_get_row(void);
+int pimp_gba_get_order(void);
+void pimp_gba_set_pos(int row, int order);
 
 /* callback system (for music sync) */
-void pimp_set_callback(pimp_callback callback);
+void pimp_gba_set_callback(pimp_callback callback);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PIMPMOBILE_H */
+#endif /* PIMP_GBA_H */

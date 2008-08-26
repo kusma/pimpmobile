@@ -29,7 +29,7 @@ static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
 static u32 pimp_gba_sound_buffer_index = 0;
 static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
 
-void pimp_init(const struct pimp_module *module, const void *sample_bank)
+void pimp_gba_init(const struct pimp_module *module, const void *sample_bank)
 {
 	u32 zero = 0;
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
@@ -46,12 +46,12 @@ void pimp_init(const struct pimp_module *module, const void *sample_bank)
 	REG_TM0CNT_H = TIMER_START;
 }
 
-void pimp_close()
+void pimp_gba_close()
 {
 	REG_SOUNDCNT_X = 0;
 }
 
-void pimp_vblank()
+void pimp_gba_vblank()
 {
 	if (pimp_gba_sound_buffer_index == 0)
 	{
@@ -63,27 +63,27 @@ void pimp_vblank()
 	pimp_gba_sound_buffer_index ^= 1;
 }
 
-void pimp_set_callback(pimp_callback in_callback)
+void pimp_gba_set_callback(pimp_callback in_callback)
 {
 	pimp_gba_ctx.callback = in_callback;
 }
 
-void pimp_set_pos(int row, int order)
+void pimp_gba_set_pos(int row, int order)
 {
 	pimp_mod_context_set_pos(&pimp_gba_ctx, row, order);
 }
 
-int pimp_get_row()
+int pimp_gba_get_row()
 {
 	return pimp_mod_context_get_row(&pimp_gba_ctx);
 }
 
-int pimp_get_order()
+int pimp_gba_get_order()
 {
 	return pimp_mod_context_get_order(&pimp_gba_ctx);
 }
 
-void pimp_frame()
+void pimp_gba_frame()
 {
 	static volatile BOOL locked = FALSE;
 	if (TRUE == locked) return; /* whops, we're in the middle of filling. sorry. you did something wrong! */
