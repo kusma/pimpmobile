@@ -74,16 +74,32 @@ void pimp_mod_context_set_pos(struct pimp_mod_context *ctx, int row, int order)
 {
 	ASSERT(ctx != NULL);
 	
-	ctx->curr_tick = 0;
-	ctx->curr_row = row;
-	ctx->curr_order = order;
-	if (ctx->curr_order >= ctx->mod->order_count)
+	if (1)
 	{
-		ctx->curr_order = ctx->mod->order_repeat;
+		// skip ahead to next pos right away
+		ctx->curr_tick = curr_tempo;
+		ctx->remainder  = 0;
 	}
 	
-	ctx->curr_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->curr_order));
-	pimp_mod_context_update_next_pos(ctx);
+	ctx->next_row = MAX(row, 0);
+	ctx->next_order = MAX(order, 0);
+	if (ctx->next_order >= ctx->mod->order_count) ctx->next_order = ctx->mod->order_repeat;
+	ctx->next_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->next_order));
+	if (ctx->next_row >= ctx->next_pattern->row_count) ctx->next_row = ctx->next_pattern->row_count - 1;
+	
+#if 0
+	/* wrap row (seek forward) */
+	while (ctx->next_row >= ctx->next_pattern->row_count)
+	{
+		ctx->next_row -= ctx->next_pattern->row_count;
+		ctx->next_order++;
+		if (ctx->next_order >= ctx->mod->order_count)
+		{
+			ctx->next_order = ctx->mod->order_repeat;
+		}
+		ctx->next_pattern = pimp_module_get_pattern(ctx->mod, pimp_module_get_order(ctx->mod, ctx->next_order));
+	}
+#endif
 }
 
 /* make sure next pos isn't outside a pattern or the order-list */
