@@ -77,7 +77,7 @@ void pimp_mod_context_set_pos(struct pimp_mod_context *ctx, int row, int order)
 	if (1)
 	{
 		// skip ahead to next pos right away
-		ctx->curr_tick = curr_tempo;
+		ctx->curr_tick = ctx->curr_tempo;
 		ctx->remainder  = 0;
 	}
 	
