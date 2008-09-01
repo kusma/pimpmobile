@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../include/pimpmobile.h"
+#include "../include/pimp_gba.h"
 #include "gbfs.h"
 
 const void *mod = NULL;
@@ -33,8 +33,8 @@ void mix()
 	REG_TM2CNT_L = 0;
 	REG_TM2CNT_H = 0;
 	REG_TM2CNT_H = TIMER_START;
-	pimp_vblank();
-	pimp_frame();
+	pimp_gba_vblank();
+	pimp_gba_frame();
 	u32 value = REG_TM2CNT_L;
 	accum += value;
 }
@@ -84,10 +84,10 @@ void play_next_file()
 	}
 	while (strncmp(name, "sample_bank.bin", 32) == 0);
 	
-	pimp_close();
+	pimp_gba_close();
 	iprintf("loading %s\n", name);
-	pimp_init(mod, sample_bank);
-	pimp_set_callback(callback);
+	pimp_gba_init((const pimp_module*)mod, sample_bank);
+	pimp_gba_set_callback(callback);
 }
 
 int main()
@@ -128,11 +128,11 @@ int main()
 		VBlankIntrWait();
 		scanKeys();
 		int keys = keysDown();
-		if (keys & KEY_RIGHT) pimp_set_pos(0, pimp_get_order() + 1);
-		if (keys & KEY_LEFT)  pimp_set_pos(pimp_get_row() + 8, pimp_get_order());
+		if (keys & KEY_RIGHT) pimp_gba_set_pos(0, pimp_gba_get_order() + 1);
+		if (keys & KEY_LEFT)  pimp_gba_set_pos(pimp_gba_get_row() + 8, pimp_gba_get_order());
 		if (keys & KEY_A) play_next_file();
 	}
 	
-	pimp_close();
+	pimp_gba_close();
 	return 0;
 }

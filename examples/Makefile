@@ -6,6 +6,13 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
 endif
 
+ifdef COMSPEC
+EXE_EXT=.exe
+else
+EXE_EXT=
+endif
+
+
 DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
 PIMPMOBILE = ..
@@ -29,10 +36,7 @@ ARM   = -marm
 THUMB = -mthumb
 
 OBJS = \
-	example2.o \
-	../converter/load_xm.o \
-	../converter/convert_sample.o \
-	../src/pimp_sample_bank.o \
+	example.o \
 	libgbfs.o \
 	gbfs_stdio.o
 
@@ -40,8 +44,8 @@ MODULES = $(shell ls data/*.xm)
 
 BIN_MODULES = $(MODULES:=.bin)
 
-TARGET = ../bin/example2.gba
-CONVERTER = ../bin/pimpconv
+TARGET = ../bin/example.gba
+CONVERTER = ../bin/pimpconv$(EXE_EXT)
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
@@ -64,9 +68,8 @@ data.gbfs: sample_bank.bin $(BIN_MODULES)
 
 data2.gbfs: $(MODULES)
 
-
 $(CONVERTER)::
-	make -C ../converter
+	make -C .. bin/pimpconv$(EXE_EXT)
 
 $(PIMPMOBILE)/lib/libpimpmobile.a::
 	make -C .. lib/libpimpmobile.a
@@ -87,7 +90,7 @@ $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	padbin 256 $@
 	gbafix $@ -t$(basename $@)
 
-%.gba: %.bin data2.gbfs
+%.gba: %.bin data.gbfs
 	cat $^ > $@
 
 %.o: %.cpp
