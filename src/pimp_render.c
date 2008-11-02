@@ -27,7 +27,8 @@ static int pimp_channel_get_volume(struct pimp_channel_state *chan)
 		
 		/* fadeout  */
 		volume = (volume * chan->fadeout) >> 16;
-		chan->fadeout -= chan->instrument->volume_fadeout;
+		if (!chan->sustain) chan->fadeout -= chan->instrument->volume_fadeout;
+		
 		if (chan->fadeout <= 0)
 		{
 			/* TODO: kill sample */
