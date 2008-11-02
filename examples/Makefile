@@ -40,7 +40,7 @@ OBJS = \
 	libgbfs.o \
 	gbfs_stdio.o
 
-MODULES = $(shell ls data/*.xm)
+MODULES = $(shell find data -iname *.xm)
 
 BIN_MODULES = $(MODULES:=.bin)
 
