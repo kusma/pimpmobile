@@ -350,6 +350,13 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 				prev += data;
 				((signed short*)src_waveform)[i] = prev;
 			}
+			
+			/* adjust loop points */
+			{
+				int loop_end = samp->loop_start + sh->loop_length;
+				samp->loop_start  = samp->loop_start / 2;
+				samp->loop_length = (loop_end / 2) - samp->loop_start;
+			}
 		}
 		else
 		{
