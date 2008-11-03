@@ -419,7 +419,15 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 			
 			case EFF_SET_GLOBAL_VOLUME:     EFFECT_MISSING(ctx, chan->effect); break;
 			case EFF_GLOBAL_VOLUME_SLIDE:   EFFECT_MISSING(ctx, chan->effect); break;
-			case EFF_KEY_OFF:               EFFECT_MISSING(ctx, chan->effect); break;
+			
+			case EFF_KEY_OFF:
+				if (chan->effect_param == ctx->curr_tick)
+				{
+					chan->sustain = FALSE;
+					volume_dirty  = TRUE; /* we need to update volume if note off killed note */
+				}
+				break;
+				
 			case EFF_SET_ENVELOPE_POSITION: EFFECT_MISSING(ctx, chan->effect); break;
 			case EFF_PAN_SLIDE:             EFFECT_MISSING(ctx, chan->effect); break;
 
@@ -593,6 +601,14 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 					break;
 				}
 			break;
+			
+			case EFF_KEY_OFF:
+				if (chan->effect_param == ctx->curr_tick)
+				{
+					chan->sustain = FALSE;
+					volume_dirty  = TRUE; /* we need to update volume if note off killed note */
+				}
+				break;
 			
 			case EFF_MULTI_RETRIG:
 				chan->retrig_tick++;
