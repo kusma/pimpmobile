@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void pimp_sample_bank_init(pimp_sample_bank *sample_bank)
+void pimp_sample_bank_init(struct pimp_sample_bank *sample_bank)
 {
 	sample_bank->data = NULL;
 	sample_bank->size = 0;
 }
 
-int pimp_sample_bank_find_sample_data(const pimp_sample_bank *sample_bank, void *data, pimp_size_t len)
+int pimp_sample_bank_find_sample_data(const struct pimp_sample_bank *sample_bank, void *data, pimp_size_t len)
 {
 	pimp_size_t i;
 	ASSERT(NULL != sample_bank);
@@ -24,7 +24,7 @@ int pimp_sample_bank_find_sample_data(const pimp_sample_bank *sample_bank, void 
 	return -1; /* not found */
 }
 
-int pimp_sample_bank_insert_sample_data(pimp_sample_bank *sample_bank, void *data, pimp_size_t len)
+int pimp_sample_bank_insert_sample_data(struct pimp_sample_bank *sample_bank, void *data, pimp_size_t len)
 {
 	int pos = sample_bank->size;
 	
