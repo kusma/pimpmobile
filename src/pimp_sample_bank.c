@@ -12,7 +12,7 @@ void pimp_sample_bank_init(pimp_sample_bank *sample_bank)
 
 int pimp_sample_bank_find_sample_data(const pimp_sample_bank *sample_bank, void *data, pimp_size_t len)
 {
-	int i;
+	pimp_size_t i;
 	ASSERT(NULL != sample_bank);
 	
 	if (len > sample_bank->size) return -1; /* not found */
