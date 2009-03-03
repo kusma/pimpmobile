@@ -87,8 +87,7 @@ int main()
 	pimp_sample_bank sb;
 	pimp_sample_bank_init(&sb);
 	
-//	FILE *fp = fopen("dxn-oopk.xm", "rb");
-	FILE *fp = fopen("biomech.mod", "rb");
+	FILE *fp = fopen("dxn-oopk.xm", "rb");
 	if (!fp)
 	{
 		fprintf(stderr, "file not found\n");

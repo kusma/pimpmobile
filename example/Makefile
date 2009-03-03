@@ -70,10 +70,7 @@ data2.gbfs: $(MODULES)
 $(CONVERTER)::
 	make -C ../converter
 
-$(PIMPMOBILE)/lib/libpimpmobile.a::
-	make -C .. lib/libpimpmobile.a
-
-$(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimpmobile.a
+$(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimp_gba.a
 
 $(BIN_MODULES) sample_bank.bin : $(MODULES) $(CONVERTER)
 	$(CONVERTER) $(MODULES)

@@ -154,10 +154,10 @@ OBJS = $(call make-target-objs, $(SOURCES))
 
 .PHONY: all clean check check-syntax
 
-all: lib/libpimpmobile.a bin/pimpconv$(EXE_EXT)
+all: lib/libpimp_gba.a bin/pimpconv$(EXE_EXT)
 
 clean:
-	$(RM) lib/libpimpmobile.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
+	$(RM) lib/libpimp_gba.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
 	$(RM) bin/pimpconv$(EXE_EXT) $(call make-host-objs, $(PIMPCONV_SOURCES)) $(call make-host-deps, $(PIMPCONV_SOURCES))
 
 distclean:
@@ -179,7 +179,7 @@ bin/pimpconv$(EXE_EXT): CC = $(HOST_CXX) # make sure we use the c++ compiler for
 bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
 	$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
 
-lib/libpimpmobile.a: $(OBJS)
+lib/libpimp_gba.a: $(OBJS)
 	$(TARGET_AR) $(ARFLAGS) $@ $?
 
 # set compiler for ARM-sources
