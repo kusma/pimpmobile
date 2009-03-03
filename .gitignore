@@ -3,7 +3,9 @@ bin/*.map
 bin/*.gba
 bin/*.elf
 build/
-lib/libpimpmobile.a
-example/*.gbfs
+lib/libpimp_gba.a
+examples/*.gbfs
+examples/sample_bank.bin
+examples/data/*.bin
 *.o
 *.d
