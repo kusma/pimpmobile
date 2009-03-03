@@ -85,6 +85,8 @@ int main()
 	gbfs_init(1);
 	
 	pimp_sample_bank sb;
+	pimp_sample_bank_init(&sb);
+	
 //	FILE *fp = fopen("dxn-oopk.xm", "rb");
 	FILE *fp = fopen("biomech.mod", "rb");
 	if (!fp)
