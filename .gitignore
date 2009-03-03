@@ -1,3 +1,9 @@
 bin/pimpconv.exe
+bin/*.map
+bin/*.gba
+bin/*.elf
 build/
 lib/libpimpmobile.a
+example/*.gbfs
+*.o
+*.d
