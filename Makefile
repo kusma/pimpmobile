@@ -61,6 +61,12 @@ $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
 # $(eval $(call setup-armcc,TARGET_))
 $(eval $(call setup-gcc,,))
 
+QUIET_CC       = @echo '   ' CC $@;
+QUIET_CXX      = @echo '   ' CXX $@;
+QUIET_AS       = @echo '   ' AS $@;
+QUIET_AR       = @echo '   ' AR $@;
+QUIET_LINK     = @echo '   ' LINK $@;
+
 MKDIR = mkdir -p
 
 ifeq ($(TARGET), arm-gba)
@@ -76,6 +82,7 @@ CFLAGS   = -pedantic -Wall -Wno-long-long
 CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  =
 ASFLAGS  = 
+ARFLAGS  = rcs
 
 ifeq ($(HOST), x86_64-linux-gnu)
 	HOST_CFLAGS += -m32
@@ -177,10 +184,10 @@ $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAG
 
 bin/pimpconv$(EXE_EXT): CC = $(HOST_CXX) # make sure we use the c++ compiler for this
 bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
-	$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
+	$(QUIET_LINK)$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
 
 lib/libpimp_gba.a: $(OBJS)
-	$(TARGET_AR) $(ARFLAGS) $@ $?
+	$(QUIET_AR)$(TARGET_AR) $(ARFLAGS) $@ $?
 
 # set compiler for ARM-sources
 # $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):	CC = $(TARGET_CC)
@@ -202,31 +209,31 @@ bin/pimpconv$(EXE_EXT): LDFLAGS += $(HOST_LDFLAGS) -lstdc++
 
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CC)$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CC)$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
-	$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CC)$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 ### C++
 
 $(TARGET_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CXX)$(TARGET_CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 $(HOST_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CXX)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 
 $(TARGET_BUILD_DIR)/%.o: %.S
 	@$(MKDIR) $(dir $@)
-	$(TARGET_CC) -MMD -MF $(@:.o=.d) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
+	$(QUIET_AS)$(TARGET_CC) -MMD -MF $(@:.o=.d) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
 
 # deps
 -include $(call make-target-deps, $(SOURCES))
