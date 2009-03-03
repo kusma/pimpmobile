@@ -61,11 +61,13 @@ $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
 # $(eval $(call setup-armcc,TARGET_))
 $(eval $(call setup-gcc,,))
 
-QUIET_CC       = @echo '   ' CC $@;
-QUIET_CXX      = @echo '   ' CXX $@;
-QUIET_AS       = @echo '   ' AS $@;
-QUIET_AR       = @echo '   ' AR $@;
-QUIET_LINK     = @echo '   ' LINK $@;
+ifneq ($(findstring $(MAKEFLAGS),s),s)
+	QUIET_CC       = @echo '   ' CC $@;
+	QUIET_CXX      = @echo '   ' CXX $@;
+	QUIET_AS       = @echo '   ' AS $@;
+	QUIET_AR       = @echo '   ' AR $@;
+	QUIET_LINK     = @echo '   ' LINK $@;
+endif
 
 MKDIR = mkdir -p
 
