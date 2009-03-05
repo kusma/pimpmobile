@@ -1,8 +1,8 @@
+@echo off
 REM makefs.bat -- File system generator for Pimpmobile examples
 REM Copyright (C) 2006-2007 Jørn Nystad and Erik Faye-Lund
 REM For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
-@echo off
 
 REM check parameters
 if %1x==x goto usage
