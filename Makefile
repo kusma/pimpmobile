@@ -117,7 +117,7 @@ PIMPCONV_SOURCES = \
 	converter/serialize_instrument.c \
 	converter/convert_sample.c \
 	src/load_xm.c \
-	converter/load_mod.c \
+	src/load_mod.c \
 	src/pimp_sample_bank.c
 
 ifeq ($(CONFIG), debug)
