@@ -2,7 +2,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "load_module.h"
+#include "../src/load_module.h"
 #include "serialize_module.h"
 #include "serializer.h"
 
