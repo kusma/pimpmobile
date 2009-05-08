@@ -8,11 +8,11 @@
 #include <string.h>
 #include <assert.h>
 
-#include "load_module.h"
-#include "convert_sample.h"
-#include "../src/pimp_module.h"
-#include "../src/pimp_mixer.h" /* for pimp_loop_type enum */
-#include "../src/pimp_sample_bank.h"
+#include "../converter/load_module.h"
+#include "../converter/convert_sample.h"
+#include "pimp_module.h"
+#include "pimp_mixer.h" /* for pimp_loop_type enum */
+#include "pimp_sample_bank.h"
 
 typedef struct
 {
