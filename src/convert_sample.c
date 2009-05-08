@@ -1,5 +1,5 @@
-#include "../src/pimp_base.h"
-#include "../src/pimp_debug.h"
+#include "pimp_base.h"
+#include "pimp_debug.h"
 #include "convert_sample.h"
 
 void pimp_convert_sample(void *dst, enum pimp_sample_format dst_format, void *src, enum pimp_sample_format src_format, size_t sample_count)

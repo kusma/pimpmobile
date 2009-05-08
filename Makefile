@@ -115,7 +115,7 @@ PIMPCONV_SOURCES = \
 	converter/serializer.cpp \
 	converter/serialize_module.c \
 	converter/serialize_instrument.c \
-	converter/convert_sample.c \
+	src/convert_sample.c \
 	src/load_xm.c \
 	src/load_mod.c \
 	src/pimp_sample_bank.c
