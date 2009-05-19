@@ -194,12 +194,3 @@ void serializer_fixup_pointers(struct serializer *s)
 	}
 }
 
-int serializer_find_data(struct serializer *s, const void *data, size_t data_size)
-{
-	int i;
-	for (i = 0; i <= (int)s->pos - (int)data_size; ++i)
-	{
-		if (0 == memcmp(data, &s->data[i], data_size)) return i;
-	}
-	return -1;
-}

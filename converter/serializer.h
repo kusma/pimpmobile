@@ -27,8 +27,6 @@ void serializer_align(struct serializer *s, int alignment);
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos);
 void serializer_fixup_pointers(struct serializer *s);
 
-int serializer_find_data(struct serializer *s, const void *data, size_t data_size);
-
 void serialize_byte(struct serializer *s, unsigned char b);
 void serialize_halfword(struct serializer *s, unsigned short h);
 void serialize_word(struct serializer *s, unsigned int w);
