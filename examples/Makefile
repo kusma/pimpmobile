@@ -15,6 +15,8 @@ endif
 
 DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
+export PATH := $(DEVKITARM)/bin:$(PATH)
+
 PIMPMOBILE = ..
 
 PREFIX ?= arm-eabi-
