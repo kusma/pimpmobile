@@ -20,8 +20,6 @@ CTAGS ?= ctags
 
 ifneq ($(strip $(DEVKITPRO)),)
 DEVKITARM = $(DEVKITPRO)/devkitARM
-LIBGBA    = $(DEVKITPRO)/libgba
-LIBNDS    = $(DEVKITPRO)/libnds
 export PATH	:=	$(DEVKITARM)/bin:$(PATH)
 endif
 
@@ -72,7 +70,7 @@ endif
 MKDIR = mkdir -p
 
 ifeq ($(TARGET), arm-gba)
-	TARGET_CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -DTARGET_GBA
+	TARGET_CPPFLAGS = -I$(DEVKITARM)/include -DTARGET_GBA
 	TARGET_CFLAGS   = -mthumb-interwork -mlong-calls
 	TARGET_CXXFLAGS = -mthumb-interwork -mlong-calls
 	TARGET_LDFLAGS  = -mthumb-interwork -Wl,--gc-section

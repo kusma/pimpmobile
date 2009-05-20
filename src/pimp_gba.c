@@ -3,18 +3,58 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
-#include <gba_base.h>
-
-#define PIMP_DONT_DECLARE_BASIC_TYPES /* prevent pimp_base.h from declaring types conflicting with the types in gba_base.h in libgba */
 #include "pimp_render.h"
 #include "pimp_debug.h"
-
-#include <gba_dma.h>
-#include <gba_sound.h>
-#include <gba_timers.h>
-#include <gba_systemcalls.h>
-
 #include <stdio.h>
+
+typedef volatile u16 vu16;
+typedef volatile u32 vu32;
+#define IWRAM_DATA __attribute__((section(".iwram")))
+#define EWRAM_DATA __attribute__((section(".ewram")))
+
+#define DMA_DST_FIXED (2U << 21)
+#define DMA_SRC_FIXED (2U << 23)
+#define DMA_REPEAT    (1U << 25)
+#define DMA32         (1U << 26)
+#define DMA_SPECIAL   (3U << 28)
+#define DMA_ENABLE    (1U << 31)
+
+#define SNDA_VOL_100    (1U << 2)
+#define SNDA_R_ENABLE   (1U << 8)
+#define SNDA_L_ENABLE   (1U << 9)
+#define SNDA_RESET_FIFO (1U << 11)
+#define TIMER_START     (1U << 7)
+
+#define REG_BASE        0x04000000
+#define REG_SOUNDCNT_H (*((vu16*)(REG_BASE + 0x082)))
+#define REG_SOUNDCNT_X (*((vu16*)(REG_BASE + 0x084)))
+#define REG_TM0CNT_L   (*((vu16*)(REG_BASE + 0x100)))
+#define REG_TM0CNT_H   (*((vu16*)(REG_BASE + 0x102)))
+#define REG_DMA1SAD    (*((vu32*)(REG_BASE + 0x0bc)))
+#define REG_DMA1DAD    (*((vu32*)(REG_BASE + 0x0c0)))
+#define REG_DMA1CNT    (*((vu32*)(REG_BASE + 0x0c4)))
+#define REG_FIFO_A     (*((vu32*)(REG_BASE + 0x0A0)))
+
+void CpuFastSet( const void *src, void *dst, u32 mode)
+{
+	/* call BIOS-function CpuFastSet() to clear buffer */
+	asm (
+		"mov r0, %[src]  \n"
+		"mov r1, %[dst]  \n"
+		"mov r2, %[mode] \n"
+#ifdef __thumb__
+		"swi 0xC         \n"
+#else
+		"swi 0xC << 16   \n"
+#endif
+		: /* no output */
+		: /* inputs */
+			[src]  "r"(src),
+			[dst]  "r"(dst),
+			[mode] "r"(mode)
+		: "r0", "r1", "r2", "r3" /* clobbers */
+	);
+}
 
 static struct pimp_mixer       pimp_gba_mixer IWRAM_DATA;
 static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
@@ -115,22 +155,6 @@ void pimp_mixer_clear(s32 *target, const u32 samples)
 	ASSERT(((int)src & 3) == 0);
 	ASSERT(((int)dst & 3) == 0);
 	
-	/* call BIOS-function CpuFastSet() to clear buffer */
-	asm (
-		"mov r0, %[src]  \n"
-		"mov r1, %[dst]  \n"
-		"mov r2, %[mode] \n"
-#ifdef __thumb__
-		"swi 0xC         \n"
-#else
-		"swi 0xC << 16   \n"
-#endif
-		: /* no output */
-		: /* inputs */
-			[src]  "r"(src),
-			[dst]  "r"(dst),
-			[mode] "r"(mode)
-		: "r0", "r1", "r2", "r3" /* clobbers */
-	);
+	CpuFastSet(src, dst, mode);
 }
 #endif
