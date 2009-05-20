@@ -46,7 +46,7 @@ unsigned pimp_get_linear_period(int note, int fine_tune)
 #include "linear_delta_lut.h"
 unsigned pimp_get_linear_delta(unsigned period)
 {
-	const unsigned int scale = (unsigned int)((1.0 / (SAMPLERATE)) * (1 << 3) * (1ULL << 32));
+	const unsigned int scale = (unsigned int)((1.0 / (PIMP_SAMPLERATE)) * (1 << 3) * (1ULL << 32));
 	
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
@@ -94,7 +94,7 @@ unsigned pimp_get_amiga_period(int note, int fine_tune)
 #define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG2_SIZE)
 unsigned pimp_get_amiga_delta(unsigned period)
 {
-	const unsigned int scale = (unsigned int)(((1.0 / (SAMPLERATE)) * (1 << 6)) * (1LL << 32));
+	const unsigned int scale = (unsigned int)(((1.0 / (PIMP_SAMPLERATE)) * (1 << 6)) * (1LL << 32));
 	
 	int d1, d2;
 	unsigned int delta;

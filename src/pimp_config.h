@@ -11,8 +11,8 @@
 
 /* check the sample-rate calculator at http://www.pineight.com/gba/samplerates/ for more glitch-free samplerates */
 /* 0x4000100 = 0xFFFF, 0x4000102 = 0x0083 */
-#define SAMPLERATE (18157.16)
-/* #define SAMPLERATE (31536.12) */
+#define PIMP_SAMPLERATE (18157.16)
+/* #define PIMP_SAMPLERATE (31536.12) */
 
 /* enable / disable assert */
 /* #define DEBUG_PRINT_ENABLE */

@@ -21,7 +21,7 @@ static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
-#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)SAMPLERATE)))
+#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)PIMP_SAMPLERATE)))
 #define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / CYCLES_PR_SAMPLE))
 
 /* mix and playback-buffers */

@@ -142,7 +142,7 @@ void pimp_mod_context_set_next_pos(struct pimp_mod_context *ctx, int row, int or
 void pimp_mod_context_set_bpm(struct pimp_mod_context *ctx, int bpm)
 {
 	/* we're using 8 fractional-bits for the tick-length */
-	const int temp = (int)(((SAMPLERATE) * 5) * (1 << 8));
+	const int temp = (int)(((PIMP_SAMPLERATE) * 5) * (1 << 8));
 	
 	ASSERT(ctx != NULL);
 	ASSERT(bpm > 0);
