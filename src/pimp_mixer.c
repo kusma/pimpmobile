@@ -11,7 +11,7 @@ void pimp_mixer_reset(struct pimp_mixer *mixer)
 	u32 c;
 	ASSERT(mixer != NULL);
 	
-	for (c = 0; c < CHANNELS; ++c)
+	for (c = 0; c < PIMP_CHANNEL_COUNT; ++c)
 	{
 		mixer->channels[c].sample_data = 0;
 		mixer->channels[c].sample_cursor = 0;
@@ -233,7 +233,7 @@ void pimp_mixer_mix(struct pimp_mixer *mixer, s8 *target, int samples)
 	pimp_mixer_clear(mixer->mix_buffer, samples);
 	
 	dc_offs = 0;
-	for (c = 0; c < CHANNELS; ++c)
+	for (c = 0; c < PIMP_CHANNEL_COUNT; ++c)
 	{
 		struct pimp_mixer_channel_state *chan = &mixer->channels[c];
 		if ((NULL != chan->sample_data) && (chan->volume > 0))

@@ -38,7 +38,7 @@ struct pimp_mod_context
 	struct pimp_pattern *curr_pattern;
 	struct pimp_pattern *next_pattern;
 	
-	struct pimp_channel_state channels[CHANNELS];
+	struct pimp_channel_state channels[PIMP_CHANNEL_COUNT];
 	
 	const u8          *sample_bank;
 	const pimp_module *mod;

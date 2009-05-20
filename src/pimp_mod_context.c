@@ -38,7 +38,7 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 	ctx->curr_tempo = mod->tempo;
 	ctx->curr_tick  = ctx->curr_tempo; /* make sure we skip to the next row right away */
 	
-	for (i = 0; i < CHANNELS; ++i)
+	for (i = 0; i < PIMP_CHANNEL_COUNT; ++i)
 	{
 		struct pimp_channel_state *chan = &ctx->channels[i];
 		chan->instrument  = (const struct pimp_instrument*)NULL;

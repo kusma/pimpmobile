@@ -36,7 +36,7 @@ int pimp_mixer_detect_loop_event(const struct pimp_mixer_channel_state *chan, in
 
 struct pimp_mixer
 {
-	struct pimp_mixer_channel_state channels[CHANNELS];
+	struct pimp_mixer_channel_state channels[PIMP_CHANNEL_COUNT];
 	s32 *mix_buffer;
 };
 

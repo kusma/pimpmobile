@@ -7,7 +7,7 @@
 #define PIMP_CONFIG_H
 
 /* 32 is the maximum amount of channels in fasttracker2. a nice default. */
-#define CHANNELS 32
+#define PIMP_CHANNEL_COUNT 32
 
 /* check the sample-rate calculator at http://www.pineight.com/gba/samplerates/ for more glitch-free samplerates */
 /* 0x4000100 = 0xFFFF, 0x4000102 = 0x0083 */
