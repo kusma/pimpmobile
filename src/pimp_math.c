@@ -44,17 +44,15 @@ unsigned pimp_get_linear_period(int note, int fine_tune)
 }
 
 #include "linear_delta_lut.h"
-unsigned pimp_get_linear_delta(unsigned period)
+unsigned pimp_get_linear_delta(unsigned int period, unsigned int delta_scale)
 {
-	const unsigned int scale = (unsigned int)((1.0 / (PIMP_SAMPLERATE)) * (1 << 3) * (1ULL << 32));
-	
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
 	unsigned octave_period = p % (12 * 16 * 4);
 	unsigned delta = linear_delta_lut[octave_period] << octave;
 	
 	/* BEHOLD: the expression of the devil (this compiles to one arm-instruction) */
-	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
+	delta = ((long long)delta * (delta_scale >> 3) + (1ULL << 31)) >> 32;
 	return delta;
 }
 #endif /* NO_LINEAR_PERIODS */
@@ -92,10 +90,8 @@ unsigned pimp_get_amiga_period(int note, int fine_tune)
 #include "amiga_delta_lut.h"
 #define AMIGA_DELTA_LUT_SIZE (1 << AMIGA_DELTA_LUT_LOG2_SIZE)
 #define AMIGA_DELTA_LUT_FRAC_BITS (15 - AMIGA_DELTA_LUT_LOG2_SIZE)
-unsigned pimp_get_amiga_delta(unsigned period)
+unsigned pimp_get_amiga_delta(unsigned int period, unsigned int delta_scale)
 {
-	const unsigned int scale = (unsigned int)(((1.0 / (PIMP_SAMPLERATE)) * (1 << 6)) * (1LL << 32));
-	
 	int d1, d2;
 	unsigned int delta;
 	unsigned int shamt = clz16(period) - 1;
@@ -112,7 +108,7 @@ unsigned pimp_get_amiga_delta(unsigned period)
 	else delta >>= AMIGA_DELTA_LUT_FRAC_BITS - shamt;
 	
 	/* BEHOLD: the expression of the devil 2.0 (this compiles to one arm-instruction) */
-	delta = ((long long)delta * scale + (1ULL << 31)) >> 32;
+	delta = ((long long)delta * delta_scale + (1ULL << 31)) >> 32;
 	return delta;
 }
 #endif /* NO_AMIGA_PERIODS */

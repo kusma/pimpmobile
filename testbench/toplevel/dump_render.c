@@ -1,7 +1,7 @@
 #include "../../src/pimp_mod_context.h"
 #include "../../src/pimp_sample_bank.h"
 #include "../../src/pimp_render.h"
-#include "../../converter/load_module.h"
+#include "../../src/load_module.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
 	/* setup rendering */
 	mixer.mix_buffer = mixbuf;
-	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer);
+	pimp_mod_context_init(&ctx, mod, (const u8*)sample_bank.data, &mixer, 44100.0f);
 	
 	/* render module to buffer */
 	pimp_render(&ctx, buf, SAMPLES);

@@ -48,12 +48,12 @@ static INLINE unsigned clz8(unsigned input)
 
 
 #ifndef NO_LINEAR_PERIODS
-unsigned pimp_get_linear_delta(unsigned period);
+unsigned pimp_get_linear_delta(unsigned int period, unsigned int delta_scale);
 unsigned pimp_get_linear_period(int note, int fine_tune);
 #endif
 
 #ifndef NO_AMIGA_PERIODS
-unsigned pimp_get_amiga_delta(unsigned period);
+unsigned pimp_get_amiga_delta(unsigned period, unsigned int delta_scale);
 unsigned pimp_get_amiga_period(int note, int fine_tune);
 #endif
 

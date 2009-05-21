@@ -454,11 +454,11 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period, ctx->delta_scale);
 			}
 			else
 			{
-				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period, ctx->delta_scale);
 			}
 		}
 		
@@ -625,11 +625,11 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 		{
 			if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 			{
-				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_linear_delta(chan->final_period, ctx->delta_scale);
 			}
 			else
 			{
-				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period);
+				mc->sample_cursor_delta = pimp_get_amiga_delta(chan->final_period, ctx->delta_scale);
 			}
 		}
 		

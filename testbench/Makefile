@@ -51,7 +51,4 @@ dump_render$(EXE_EXT): toplevel/dump_render.c $(TEST_DEPS_SOURCES)
 	$(LINK.cpp) $^$(LOADLIBES) $(LDLIBS) -o $@
 
 %.wav : %.sb
-	sox -r 18157 $< $@
-
-%.wav : %.ub
-	sox -r 18157 $< $@
+	sox -r 44100 $< $@

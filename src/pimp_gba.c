@@ -61,7 +61,7 @@ static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
 #define CYCLES_PR_FRAME 280896
-#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)PIMP_SAMPLERATE)))
+#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)PIMP_GBA_SAMPLERATE)))
 #define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / CYCLES_PR_SAMPLE))
 
 /* mix and playback-buffers */
@@ -73,7 +73,7 @@ void pimp_gba_init(const struct pimp_module *module, const void *sample_bank)
 {
 	u32 zero = 0;
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
-	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer);
+	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer, PIMP_GBA_SAMPLERATE);
 	
 	CpuFastSet(&zero, &pimp_gba_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;

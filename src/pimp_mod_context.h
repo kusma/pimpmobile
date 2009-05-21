@@ -44,10 +44,15 @@ struct pimp_mod_context
 	const pimp_module *mod;
 	struct pimp_mixer *mixer;
 	
+	float samplerate;
+	unsigned int delta_scale;
+	
 	pimp_callback callback;
 };
 
-void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, struct pimp_mixer *mixer);
+void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, struct pimp_mixer *mixer, const float samplerate);
+void pimp_mod_context_set_samplerate(struct pimp_mod_context *ctx, const float samplerate);
+
 void pimp_mod_context_set_bpm(struct pimp_mod_context *ctx, int bpm);
 void pimp_mod_context_set_tempo(struct pimp_mod_context *ctx, int tempo);
 

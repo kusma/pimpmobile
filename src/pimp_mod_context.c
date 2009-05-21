@@ -5,7 +5,7 @@
 
 #include "pimp_mod_context.h"
 
-void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, struct pimp_mixer *mixer)
+void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod, const u8 *sample_bank, struct pimp_mixer *mixer, const float samplerate)
 {
 	int i;
 	ASSERT(ctx != NULL);
@@ -13,6 +13,7 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 	ctx->mod = mod;
 	ctx->sample_bank = sample_bank;
 	ctx->mixer = mixer;
+	pimp_mod_context_set_samplerate(ctx, samplerate);
 	
 	/* setup default player-state */
 	ctx->tick_len      = 0;
@@ -67,6 +68,12 @@ void pimp_mod_context_init(struct pimp_mod_context *ctx, const pimp_module *mod,
 	ctx->callback = (pimp_callback)NULL;
 	
 	pimp_mixer_reset(ctx->mixer);
+}
+
+void pimp_mod_context_set_samplerate(struct pimp_mod_context *ctx, const float samplerate)
+{
+	ctx->samplerate = samplerate;
+	ctx->delta_scale = (unsigned int)((1.0 / samplerate) * (1 << 6) * (1ULL << 32));
 }
 
 /* "hard" jump in a module */
@@ -142,7 +149,7 @@ void pimp_mod_context_set_next_pos(struct pimp_mod_context *ctx, int row, int or
 void pimp_mod_context_set_bpm(struct pimp_mod_context *ctx, int bpm)
 {
 	/* we're using 8 fractional-bits for the tick-length */
-	const int temp = (int)(((PIMP_SAMPLERATE) * 5) * (1 << 8));
+	const int temp = (int)((ctx->samplerate * 5) * (1 << 8));
 	
 	ASSERT(ctx != NULL);
 	ASSERT(bpm > 0);
