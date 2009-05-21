@@ -31,7 +31,7 @@ the following restrictions:
 extern "C" {
 #endif
 
-void gbfs_init(int set_default);
+int gbfs_init(int set_default);
 
 #ifdef __cplusplus
 }
