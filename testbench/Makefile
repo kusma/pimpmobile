@@ -31,8 +31,8 @@ TEST_DEPS_SOURCES = \
 	../src/pimp_envelope.c \
 	../src/pimp_math.c \
 	../src/pimp_render.c \
-	../converter/load_xm.c \
-	../converter/convert_sample.c \
+	../src/load_xm.c \
+	../src/convert_sample.c \
 	../src/pimp_sample_bank.c
 
 .PHONY: clean all run

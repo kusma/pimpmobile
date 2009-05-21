@@ -125,33 +125,10 @@ static void test_serializer_align_halfword(struct test_suite *suite)
 	serializer_deinit(&s);
 }
 
-
-static void test_serializer_find(struct test_suite *suite)
-{
-	const unsigned char data[4] = { 0xde, 0xad, 0xbe, 0xef };
-	
-	struct serializer s;
-	serializer_init(&s);
-		
-	serialize_byte(&s, 0xFF);
-	
-	/* assure that 32bit words are dumped in little endian format */
-	serialize_byte(&s, data[0]);
-	serialize_byte(&s, data[1]);
-	serialize_byte(&s, data[2]);
-	ASSERT_INTS_EQUAL(suite, serializer_find_data(&s, data, 4), -1);
-	
-	serialize_byte(&s, data[3]);
-	ASSERT_INTS_EQUAL(suite, serializer_find_data(&s, data, 4), 1);
-	
-	serializer_deinit(&s);
-}
-
 void test_serializer(struct test_suite *suite)
 {
 	test_serializer_basic(suite);
 	test_serializer_endianess(suite);
 	test_serializer_align_word(suite);
 	test_serializer_align_halfword(suite);
-	test_serializer_find(suite);
 }
