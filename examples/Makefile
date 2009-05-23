@@ -42,7 +42,7 @@ OBJS = \
 	libgbfs.o \
 	gbfs_stdio.o
 
-MODULES = $(shell find data -iname *.xm -or -iname *.mod)
+MODULES = $(shell find data -iname "*.xm" -or -iname "*.mod")
 
 BIN_MODULES = $(MODULES:=.bin)
 
