@@ -1,4 +1,4 @@
-const u16 amiga_period_lut[] =
+const u16 pimp_amiga_period_lut[] =
 {
 	/* this is for negative fine-tunes... */
 	907,900,894,887,881,875,868,862,	/* B-0 */

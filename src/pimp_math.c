@@ -49,7 +49,7 @@ unsigned pimp_get_linear_delta(unsigned int period, unsigned int delta_scale)
 	unsigned p = (12 * 16 * 4 * 14) - period;
 	unsigned octave        = p / (12 * 16 * 4);
 	unsigned octave_period = p % (12 * 16 * 4);
-	unsigned delta = linear_delta_lut[octave_period] << octave;
+	unsigned delta = pimp_linear_delta_lut[octave_period] << octave;
 	
 	/* BEHOLD: the expression of the devil (this compiles to one arm-instruction) */
 	delta = ((long long)delta * (delta_scale >> 3) + (1ULL << 31)) >> 32;
@@ -74,17 +74,17 @@ unsigned pimp_get_amiga_period(int note, int fine_tune)
 	{
 		unsigned int octave       = index / (12 * 8);
 		unsigned int octave_index = index % (12 * 8);
-		return (((u32)amiga_period_lut[octave_index]) * 4) << (5 - octave);
+		return (((u32)pimp_amiga_period_lut[octave_index]) * 4) << (5 - octave);
 	}
 	
-	if (index >= ARRAY_SIZE(amiga_period_lut) + 12 * 8 * 5)
+	if (index >= ARRAY_SIZE(pimp_amiga_period_lut) + 12 * 8 * 5)
 	{
 		unsigned int octave       = index / (12 * 8);
 		unsigned int octave_index = index % (12 * 8);
-		return (((u32)amiga_period_lut[octave_index]) * 4) >> (octave - 5);
+		return (((u32)pimp_amiga_period_lut[octave_index]) * 4) >> (octave - 5);
 	}
 	
-	return ((u32)amiga_period_lut[index - (12 * 8 * 5)]) * 4;
+	return ((u32)pimp_amiga_period_lut[index - (12 * 8 * 5)]) * 4;
 }
 
 #include "amiga_delta_lut.h"
@@ -100,8 +100,8 @@ unsigned pimp_get_amiga_delta(unsigned int period, unsigned int delta_scale)
 	p >>= AMIGA_DELTA_LUT_FRAC_BITS;
 	
 	/* interpolate table-entries for better result */
-	d1 = amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p) */
-	d2 = amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p + 1) */
+	d1 = pimp_amiga_delta_lut[p     - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p) */
+	d2 = pimp_amiga_delta_lut[p + 1 - (AMIGA_DELTA_LUT_SIZE / 2)]; /* (8363 * 1712) / float(p + 1) */
 	delta = (d1 << AMIGA_DELTA_LUT_FRAC_BITS) + (d2 - d1) * p_frac;
 	
 	if (shamt > AMIGA_DELTA_LUT_FRAC_BITS) delta <<= shamt - AMIGA_DELTA_LUT_FRAC_BITS;

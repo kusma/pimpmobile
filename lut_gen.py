@@ -46,14 +46,14 @@ def gen_amiga_delta_lut():
 def dump_linear_lut(filename):
 	linear_delta_lut = gen_linear_delta_lut()
 	f = open(filename, 'w')
-	print_lut_to_file(f, 'linear_delta_lut', linear_delta_lut)
+	print_lut_to_file(f, 'pimp_linear_delta_lut', linear_delta_lut)
 	f.close()
 
 def dump_amiga_lut(filename):
 	amiga_delta_lut = gen_amiga_delta_lut()
 	f = open(filename, 'w')
 	f.write('#define AMIGA_DELTA_LUT_LOG2_SIZE %d\n' % (AMIGA_DELTA_LUT_LOG2_SIZE))
-	print_lut_to_file(f, 'amiga_delta_lut', amiga_delta_lut)
+	print_lut_to_file(f, 'pimp_amiga_delta_lut', amiga_delta_lut)
 	f.close()
 
 dump_linear_lut('src/linear_delta_lut.h')
