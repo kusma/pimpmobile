@@ -1,4 +1,4 @@
-/* converter_mod.cpp -- Protracker MOD converting code
+/* load_mod.c -- Protracker MOD loading code
  * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */

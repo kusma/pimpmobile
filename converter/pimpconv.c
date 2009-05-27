@@ -1,3 +1,8 @@
+/* pimpconv.c -- Main entry-point for the tool to load and export bin-modules
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

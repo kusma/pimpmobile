@@ -1,3 +1,8 @@
+/* serialize_instrument.c -- Serializer for instrument data
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #include <stdio.h>
 #include "../src/pimp_module.h"
 #include "../src/pimp_mixer.h"

@@ -1,10 +1,10 @@
-#ifndef PIMP_INTERNAL_H
-#define PIMP_INTERNAL_H
-
 /* pimp_internal.h -- Internal enums and routines for Pimpmobile
  * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
+
+#ifndef PIMP_INTERNAL_H
+#define PIMP_INTERNAL_H
 
 #include "pimp_base.h"
 #include "pimp_config.h"

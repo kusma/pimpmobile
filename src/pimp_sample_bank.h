@@ -1,3 +1,8 @@
+/* pimp_sample_bank.h -- Sample databse for Pimpmobile
+ * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef PIMP_SAMPLE_BANK_H
 #define PIMP_SAMPLE_BANK_H
 

@@ -1,3 +1,8 @@
+/* convert_sample.h -- Sample converter header
+ * Copyright (C) 2006-2007 Jørn Nystad and Erik Faye-Lund
+ * For conditions of distribution and use, see copyright notice in LICENSE.TXT
+ */
+
 #ifndef CONVERT_SAMPLE_H
 #define CONVERT_SAMPLE_H
 
