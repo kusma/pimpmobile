@@ -9,3 +9,5 @@ examples/sample_bank.bin
 examples/data/*.bin
 *.o
 *.d
+testbench/unit_test.exe
+testbench/dump_render.exe
