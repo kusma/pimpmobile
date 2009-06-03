@@ -32,7 +32,12 @@ static struct pimp_module *load_module(const char *filename, struct pimp_sample_
 	if (NULL == mod) mod = load_module_mod(fp, sample_bank);
 		
 	/* report error if any */
-	if (NULL == mod) fprintf(stderr, "%s: Failed to load module\n", filename);
+	if (NULL == mod)
+	{
+		if (errno) fprintf(stderr, "%s: Failed to load module, %s\n", filename, strerror(errno));
+		else       fprintf(stderr, "%s: Failed to load module\n", filename);
+		exit(EXIT_FAILURE);
+	}
 	
 	/* close file */
 	fclose(fp);
