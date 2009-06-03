@@ -71,7 +71,7 @@ data.gbfs: sample_bank.bin $(BIN_MODULES)
 data2.gbfs: $(MODULES)
 
 $(CONVERTER)::
-	make -C .. bin/pimpconv$(EXE_EXT)
+	$(MAKE) -C .. bin/pimpconv$(EXE_EXT)
 
 $(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimp_gba.a
 
