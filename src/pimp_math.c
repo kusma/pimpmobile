@@ -94,7 +94,7 @@ unsigned pimp_get_amiga_delta(unsigned int period, unsigned int delta_scale)
 {
 	int d1, d2;
 	unsigned int delta;
-	unsigned int shamt = clz16(period) - 1;
+	unsigned int shamt = pimp_clz16(period) - 1;
 	unsigned int p = period << shamt;
 	unsigned int p_frac = p & ((1 << AMIGA_DELTA_LUT_FRAC_BITS) - 1);
 	p >>= AMIGA_DELTA_LUT_FRAC_BITS;
