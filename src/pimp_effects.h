@@ -64,7 +64,7 @@ static void vibrato(struct pimp_channel_state *chan, s32 period_low_clamp, s32 p
 		-180, -161, -141, -120,  -97,  -74,  -49,  -24
 	};
 	
-	chan->final_period = chan->period + (sine_waveform[chan->vibrato_counter & 63] * chan->vibrato_depth) / 32;
+	chan->final_period = chan->note_period + (sine_waveform[chan->vibrato_counter & 63] * chan->vibrato_depth) / 32;
 	
 	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
 	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;

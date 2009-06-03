@@ -69,14 +69,14 @@ static void note_on(const struct pimp_mod_context *ctx, struct pimp_mixer_channe
 		
 		if (ctx->mod->flags & FLAG_LINEAR_PERIODS)
 		{
-			chan->period = pimp_get_linear_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
+			chan->note_period = pimp_get_linear_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
 		}
 		else
 		{
-			chan->period = pimp_get_amiga_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
+			chan->note_period = pimp_get_amiga_period(((s32)chan->note) + chan->sample->rel_note, chan->sample->fine_tune);
 		}
 		
-		chan->final_period = chan->period;
+		chan->final_period = chan->note_period;
 	}
 }
 
