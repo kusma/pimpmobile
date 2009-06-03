@@ -26,24 +26,24 @@ struct pimp_channel
 typedef struct pimp_module
 {
 	char name[32];
-	
+
 	u32 flags;
 	u32 reserved; /* for future flags */
-	
+
 	pimp_rel_ptr order_ptr;
 	pimp_rel_ptr pattern_ptr;
 	pimp_rel_ptr channel_ptr;
 	pimp_rel_ptr instrument_ptr;
-	
+
 	u16 period_low_clamp;
 	u16 period_high_clamp;
 	u16 order_count;
-	
+
 	u8  order_repeat;
 	u8  volume;
 	u8  tempo;
 	u8  bpm;
-	
+
 	u8  instrument_count;
 	u8  pattern_count;
 	u8  channel_count;
@@ -63,10 +63,10 @@ static INLINE int pimp_module_get_order(const pimp_module *mod, int i)
 {
 	char *array;
 	ASSERT(mod != NULL);
-	
+
 	array = (char*)pimp_get_ptr(&mod->order_ptr);
 	if (NULL == array) return -1;
-	
+
 	return array[i];
 }
 
@@ -86,10 +86,10 @@ static INLINE struct pimp_instrument *pimp_module_get_instrument(const pimp_modu
 {
 	struct pimp_instrument *array;
 	ASSERT(mod != NULL);
-	
+
 	array = (struct pimp_instrument*)pimp_get_ptr(&mod->instrument_ptr);
 	if (NULL == array) return (struct pimp_instrument*)NULL;
-	
+
 	return &(array[i]);
 }
 
