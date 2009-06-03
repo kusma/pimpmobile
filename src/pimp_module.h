@@ -30,7 +30,6 @@ typedef struct pimp_module
 	u32 flags;
 	u32 reserved; /* for future flags */
 	
-	/* these are offsets relative to the begining of the pimp_module_t-structure */
 	pimp_rel_ptr order_ptr;
 	pimp_rel_ptr pattern_ptr;
 	pimp_rel_ptr channel_ptr;
