@@ -70,15 +70,10 @@ data.gbfs: $(CONVERTER) $(MODULES)
 	$(CONVERTER) $(MODULES)
 	gbfs $@ sample_bank.bin $(BIN_MODULES)
 
-data2.gbfs: $(MODULES)
-
 $(CONVERTER)::
 	$(MAKE) -C .. bin/pimpconv$(EXE_EXT)
 
 $(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimp_gba.a
-
-%.gbfs:
-	gbfs $@ $^
 
 %.elf:
 	$(LD) -specs=gba.specs $^ $(LDFLAGS) -o $@
