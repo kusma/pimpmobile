@@ -16,31 +16,31 @@ static void porta_up(struct pimp_channel_state *chan, s32 period_low_clamp)
 {
 	ASSERT(chan != 0);
 	
-	chan->final_period -= chan->porta_speed;
-	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
+	chan->period -= chan->porta_speed;
+	if (chan->period < period_low_clamp) chan->period = period_low_clamp;
 }
 
 static void porta_down(struct pimp_channel_state *chan, s32 period_high_clamp)
 {
 	ASSERT(chan != 0);
 	
-	chan->final_period += chan->porta_speed;
-	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
+	chan->period += chan->porta_speed;
+	if (chan->period > period_high_clamp) chan->period = period_high_clamp;
 }
 
 static void porta_note(struct pimp_channel_state *chan)
 {
 	ASSERT(chan != 0);
 	
-	if (chan->final_period > chan->porta_target)
+	if (chan->period > chan->porta_target)
 	{
-		chan->final_period -= chan->porta_speed;
-		if (chan->final_period < chan->porta_target) chan->final_period = chan->porta_target;
+		chan->period -= chan->porta_speed;
+		if (chan->period < chan->porta_target) chan->period = chan->porta_target;
 	}
-	else if (chan->final_period < chan->porta_target)
+	else if (chan->period < chan->porta_target)
 	{
-		chan->final_period += chan->porta_speed;
-		if (chan->final_period > chan->porta_target) chan->final_period = chan->porta_target;
+		chan->period += chan->porta_speed;
+		if (chan->period > chan->porta_target) chan->period = chan->porta_target;
 	}
 }
 
@@ -64,10 +64,10 @@ static void vibrato(struct pimp_channel_state *chan, s32 period_low_clamp, s32 p
 		-180, -161, -141, -120,  -97,  -74,  -49,  -24
 	};
 	
-	chan->final_period = chan->note_period + (sine_waveform[chan->vibrato_counter & 63] * chan->vibrato_depth) / 32;
+	chan->period = chan->note_period + (sine_waveform[chan->vibrato_counter & 63] * chan->vibrato_depth) / 32;
 	
-	if (chan->final_period < period_low_clamp) chan->final_period = period_low_clamp;
-	if (chan->final_period > period_high_clamp) chan->final_period = period_high_clamp;
+	if (chan->period < period_low_clamp) chan->period = period_low_clamp;
+	if (chan->period > period_high_clamp) chan->period = period_high_clamp;
 	
 	chan->vibrato_counter += chan->vibrato_speed;
 }

@@ -31,7 +31,7 @@ struct pimp_channel_state
 	u8  volume_command;
 	
 	s32 note_period;
-	s32 final_period;
+	s32 period;
 	
 	s8  volume;
 	u8  pan;
