@@ -311,10 +311,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 			pat->row_count = 64;
 	
 			pattern_data = (struct pimp_pattern_entry *)malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
-			if (NULL == pattern_data)
-			{
-				return NULL;
-			}
+			if (NULL == pattern_data) return NULL;
 			pimp_set_ptr(&pat->data_ptr, pattern_data);
 	
 			/* clear memory */
