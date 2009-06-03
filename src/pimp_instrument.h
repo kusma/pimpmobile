@@ -41,19 +41,19 @@ struct pimp_instrument
 static INLINE struct pimp_sample *pimp_instrument_get_sample(const struct pimp_instrument *instr, int i)
 {
 	ASSERT(instr != NULL);
-	return &((struct pimp_sample*)PIMP_GET_PTR(instr->sample_ptr))[i];
+	return &((struct pimp_sample*)pimp_get_ptr(&instr->sample_ptr))[i];
 }
 
 static INLINE struct pimp_envelope *pimp_instrument_get_vol_env(const struct pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
-	return (struct pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->vol_env_ptr));
+	return (struct pimp_envelope*)(instr->vol_env_ptr == 0 ? NULL : pimp_get_ptr(&instr->vol_env_ptr));
 }
 
 static INLINE struct pimp_envelope *pimp_instrument_get_pan_env(const struct pimp_instrument *instr)
 {
 	ASSERT(instr != NULL);
-	return (struct pimp_envelope*)(instr->pan_env_ptr == 0 ? NULL : PIMP_GET_PTR(instr->pan_env_ptr));
+	return (struct pimp_envelope*)(instr->pan_env_ptr == 0 ? NULL : pimp_get_ptr(&instr->pan_env_ptr));
 }
 
 #endif /* PIMP_INSTRUMENT_H */

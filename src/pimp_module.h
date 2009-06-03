@@ -56,7 +56,7 @@ typedef struct pimp_module
 static INLINE struct pimp_pattern_entry *pimp_pattern_get_data(const struct pimp_pattern *pat)
 {
 	ASSERT(pat != NULL);
-	return (struct pimp_pattern_entry*)PIMP_GET_PTR(pat->data_ptr);
+	return (struct pimp_pattern_entry*)pimp_get_ptr(&pat->data_ptr);
 }
 
 static INLINE int pimp_module_get_order(const pimp_module *mod, int i)
@@ -73,13 +73,13 @@ static INLINE int pimp_module_get_order(const pimp_module *mod, int i)
 static INLINE struct pimp_pattern *pimp_module_get_pattern(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((struct pimp_pattern*)PIMP_GET_PTR(mod->pattern_ptr))[i];
+	return &((struct pimp_pattern*)pimp_get_ptr(&mod->pattern_ptr))[i];
 }
 
 static INLINE struct pimp_channel *pimp_module_get_channel(const pimp_module *mod, int i)
 {
 	ASSERT(mod != NULL);
-	return &((struct pimp_channel*)PIMP_GET_PTR(mod->channel_ptr))[i];
+	return &((struct pimp_channel*)pimp_get_ptr(&mod->channel_ptr))[i];
 }
 
 static INLINE struct pimp_instrument *pimp_module_get_instrument(const pimp_module *mod, int i)
