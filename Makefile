@@ -189,12 +189,6 @@ bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
 lib/libpimp_gba.a: $(OBJS)
 	$(QUIET_AR)$(TARGET_AR) $(ARFLAGS) $@ $?
 
-# set compiler for ARM-sources
-# $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):	CC = $(TARGET_CC)
-# $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): CFLAGS = $(TARGET_CFLAGS)
-#$(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))):
-#	echo $(COMPILE.c) $<
-
 # Override CC for target-builds
 $(TARGET_BUILD_DIR)/%.o: CC = $(TARGET_CC)
 $(TARGET_BUILD_DIR)/%.o: CPPFLAGS += $(TARGET_CPPFLAGS)
