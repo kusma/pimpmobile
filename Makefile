@@ -205,7 +205,7 @@ $(HOST_BUILD_DIR)/%.o: CXXFLAGS += $(HOST_CXXFLAGS)
 bin/pimpconv$(EXE_EXT): CC = $(CXX)
 bin/pimpconv$(EXE_EXT): LDFLAGS += $(HOST_LDFLAGS) -lstdc++
 
-#### C ####
+### C
 
 $(TARGET_BUILD_DIR)/%.iwram.o: %.c
 	@$(MKDIR) $(dir $@)
