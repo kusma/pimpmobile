@@ -184,7 +184,7 @@ $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAG
 
 bin/pimpconv$(EXE_EXT): CC = $(HOST_CXX) # make sure we use the c++ compiler for this
 bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
-	$(QUIET_LINK)$(LINK.o) $^ $(LOADLIBES) $(OUTPUT_OPTION)
+	$(QUIET_LINK)$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) $(OUTPUT_OPTION)
 
 lib/libpimp_gba.a: $(OBJS)
 	$(QUIET_AR)$(TARGET_AR) $(ARFLAGS) $@ $?
