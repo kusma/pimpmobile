@@ -221,13 +221,9 @@ $(HOST_BUILD_DIR)/%.o: %.c
 
 ### C++
 
-$(TARGET_BUILD_DIR)/%.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	$(QUIET_CXX)$(TARGET_CXX) $(CPPFLAGS) $(CXXFLAGS) $(THUMB) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
-
 $(HOST_BUILD_DIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	$(QUIET_CXX)$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+	$(QUIET_CXX)$(COMPILE.cpp) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 
