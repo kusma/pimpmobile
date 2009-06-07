@@ -48,7 +48,7 @@ unit_test$(EXE_EXT): $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) .
 	$(LINK.cpp) $^$(LOADLIBES) $(LDLIBS) -o $@
 
 dump_render$(EXE_EXT): toplevel/dump_render.c $(TEST_DEPS_SOURCES)
-	$(LINK.cpp) $^$(LOADLIBES) $(LDLIBS) -o $@
+	$(LINK.c) $^$(LOADLIBES) $(LDLIBS) -o $@
 
 %.wav : %.sb
 	sox -r 44100 $< $@
