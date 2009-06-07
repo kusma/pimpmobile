@@ -36,10 +36,10 @@ TEST_DEPS_SOURCES = \
 	../src/pimp_sample_bank.c
 
 .PHONY: clean all run
-all: unit_test$(EXE_EXT)
+all: unit_test$(EXE_EXT) dump_render$(EXE_EXT)
 
 clean:
-	$(RM) unit_test$(EXE_EXT)
+	$(RM) unit_test$(EXE_EXT) dump_render$(EXE_EXT)
 
 run: unit_test$(EXE_EXT)
 	./unit_test$(EXE_EXT)
