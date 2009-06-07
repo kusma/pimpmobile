@@ -171,7 +171,7 @@ distclean:
 	$(RM) -r $(BUILD_DIR)
 
 check:
-	make -C testbench run
+	$(MAKE) -C testbench run
 
 check-syntax:
 	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
