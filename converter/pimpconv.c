@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "../src/load_module.h"
 #include "serialize_module.h"
@@ -150,7 +151,7 @@ int main(int argc, char *argv[])
 			pimp_sample_bank_init(&sample_bank);
 			
 			/* load module */
-			printf("loading %s...\n", ifn);
+			if (isatty(STDOUT_FILENO)) printf("loading %s...\n", ifn);
 			mod = load_module(ifn, &sample_bank);
 			
 			if (NULL != mod)
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
 				merge_samples(&master_sample_bank, &sample_bank, mod);
 				
 				/* dump module */
-				printf("dumping %s...\n", ofn);
+				if (isatty(STDOUT_FILENO)) printf("dumping %s...\n", ofn);
 				dump_module(mod, ofn);
 			}
 		}
@@ -179,7 +180,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	
-	printf("dumping %s\n", sample_bank_fn);
+	if (isatty(STDOUT_FILENO)) printf("dumping %s\n", sample_bank_fn);
 	fp = fopen(sample_bank_fn, "wb");
 	if (NULL == fp)
 	{
