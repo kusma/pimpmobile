@@ -642,13 +642,6 @@ static void pimp_mod_context_update_tick(struct pimp_mod_context *ctx)
 	ctx->curr_tick++;
 }
 
-#ifndef MAX
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#endif
-#ifndef MIN
-#define MIN(x, y) ((x) > (y) ? (y) : (x))
-#endif
-
 void pimp_render(struct pimp_mod_context *ctx, s8 *buf, u32 samples)
 {
 	while (TRUE)
