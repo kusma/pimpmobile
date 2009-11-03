@@ -20,13 +20,13 @@ CTAGS ?= ctags
 
 ifneq ($(strip $(DEVKITPRO)),)
 DEVKITARM = $(DEVKITPRO)/devkitARM
-export PATH	:=	$(DEVKITARM)/bin:$(PATH)
+export PATH := $(DEVKITARM)/bin:$(PATH)
 endif
 
 ifdef COMSPEC
-EXE_EXT=.exe
+EXE_EXT = .exe
 else
-EXE_EXT=
+EXE_EXT =
 endif
 
 ifeq ($(TARGET), arm-gba)
@@ -37,22 +37,22 @@ endif
 
 #$(eval $(call setup-gcc, out-prefix, toolchain-prefix))
 define setup-gcc
-	$(1)CC      = $(2)gcc
-	$(1)CXX     = $(2)g++
-	$(1)STRIP   = $(2)strip
-	$(1)LD      = $(2)ld
-	$(1)AS      = $(2)as
-	$(1)AR      = $(2)ar
+	$(1)CC    = $(2)gcc
+	$(1)CXX   = $(2)g++
+	$(1)STRIP = $(2)strip
+	$(1)LD    = $(2)ld
+	$(1)AS    = $(2)as
+	$(1)AR    = $(2)ar
 endef
 
 #$(eval $(call setup-armcc, out-prefix))
 define setup-armcc
-	$(1)CC      = armcc
-	$(1)CXX     = armcpp
-	$(1)STRIP   = strip
-	$(1)LD      = armlink
-	$(1)AS      = armasm
-	$(1)AR      = armar
+	$(1)CC    = armcc
+	$(1)CXX   = armcpp
+	$(1)STRIP = strip
+	$(1)LD    = armlink
+	$(1)AS    = armasm
+	$(1)AR    = armar
 endef
 
 $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
@@ -60,11 +60,11 @@ $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
 $(eval $(call setup-gcc,,))
 
 ifneq ($(findstring $(MAKEFLAGS),s),s)
-	QUIET_CC       = @echo '   ' CC $@;
-	QUIET_CXX      = @echo '   ' CXX $@;
-	QUIET_AS       = @echo '   ' AS $@;
-	QUIET_AR       = @echo '   ' AR $@;
-	QUIET_LINK     = @echo '   ' LINK $@;
+	QUIET_CC   = @echo '   ' CC $@;
+	QUIET_CXX  = @echo '   ' CXX $@;
+	QUIET_AS   = @echo '   ' AS $@;
+	QUIET_AR   = @echo '   ' AR $@;
+	QUIET_LINK = @echo '   ' LINK $@;
 endif
 
 MKDIR = mkdir -p
@@ -77,11 +77,11 @@ ifeq ($(TARGET), arm-gba)
 	TARGET_ASFLAGS  = -mthumb-interwork
 endif
 
-CPPFLAGS = 
+CPPFLAGS =
 CFLAGS   = -pedantic -Wall -Wno-long-long
 CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  =
-ASFLAGS  = 
+ASFLAGS  =
 ARFLAGS  = rcs
 
 ifeq ($(HOST), x86_64-linux-gnu)
