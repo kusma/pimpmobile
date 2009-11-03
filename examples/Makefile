@@ -1,4 +1,4 @@
-# Makefile for pimpmobile module player example
+# Makefile for pimpmobile module player examples
 # Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
@@ -11,7 +11,6 @@ EXE_EXT=.exe
 else
 EXE_EXT=
 endif
-
 
 DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
@@ -31,23 +30,33 @@ AR      = $(PREFIX)ar
 CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -I$(PIMPMOBILE)/include
 CFLAGS   = -mthumb-interwork -mlong-calls
 CXXFLAGS = -mthumb-interwork -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
-LDFLAGS  = -mthumb-interwork -Wl,--gc-section -Wl,-Map,$(basename $@).map -L$(LIBGBA)/lib -lgba
+LDFLAGS  = -mthumb-interwork -Wl,--gc-section
 ASFLAGS  = -mthumb-interwork
+LDLIBS   = -L$(PIMPMOBILE)/lib -lpimp_gba -L$(LIBGBA)/lib -lgba
+TARGET_ARCH = -specs=gba.specs
 
 ARM   = -marm
 THUMB = -mthumb
 
-OBJS = \
-	example.o \
+EXAMPLES = example example2
+
+.PHONY: all clean run
+all: $(EXAMPLES:=.gba)
+
+example-data.gbfs: data/dxn-oopk.xm
+	$(CONVERTER) $<
+	gbfs $@ sample_bank.bin $(<:=.bin)
+
+example2-data.gbfs: data/dxn-oopk.xm
+
+EXTRA_OBJS = \
 	libgbfs.o \
-	gbfs_stdio.o
+	gbfs_stdio.o \
+	../src/load_xm.o \
+	../src/convert_sample.o \
+	../src/pimp_sample_bank.o
 
-MODULES = $(shell find data -iname "*.xm" -or -iname "*.mod")
-
-BIN_MODULES = $(MODULES:=.bin)
-
-TARGET = ../bin/example.gba
-CONVERTER = ../bin/pimpconv$(EXE_EXT)
+CONVERTER = $(PIMPMOBILE)/bin/pimpconv$(EXE_EXT)
 
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
@@ -58,32 +67,26 @@ else
 	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
 endif
-	
-.PHONY: all clean run
-
-all: $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(TARGET:.gba=.elf) $(OBJS) $(OBJS:.o=.d) data.gbfs sample_bank.bin $(BIN_MODULES) *~
+	$(RM) $(EXAMPLES:=.gba) $(EXAMPLES:=-data.gbfs) $(EXTRA_OBJS) \
+	$(EXTRA_OBJS:.o=.d) sample_bank.bin
 
-data.gbfs: $(CONVERTER) $(MODULES)
-	$(CONVERTER) $(MODULES)
-	gbfs $@ sample_bank.bin $(BIN_MODULES)
+%.gbfs:
+	gbfs $@ $<
 
 $(CONVERTER)::
 	$(MAKE) -C .. bin/pimpconv$(EXE_EXT)
 
-$(TARGET:.gba=.elf): $(OBJS) $(PIMPMOBILE)/lib/libpimp_gba.a
-
-%.elf:
-	$(LD) -specs=gba.specs $^ $(LDFLAGS) -o $@
+%.elf: %.cpp $(EXTRA_OBJS)
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 	padbin 256 $@
 	gbafix $@ -t$(basename $@)
 
-%.gba: %.bin data.gbfs
+%.gba: %.bin %-data.gbfs
 	cat $^ > $@
 
 %.o: %.cpp

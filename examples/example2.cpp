@@ -18,8 +18,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../include/pimp_gba.h"
-#include "../converter/load_module.h"
+#include <pimp_gba.h>
+#include "../src/load_module.h"
 #include "../src/pimp_sample_bank.h"
 #include "gbfs_stdio.h"
 

@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../include/pimp_gba.h"
+#include <pimp_gba.h>
 #include "gbfs.h"
 
 const void *mod = NULL;
