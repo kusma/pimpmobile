@@ -169,7 +169,7 @@ distclean:
 	$(RM) -r $(BUILD_DIR)
 
 check:
-	$(MAKE) -C testbench run
+	$(MAKE) -C t run
 
 check-syntax:
 	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
