@@ -20,7 +20,7 @@ CTAGS ?= ctags
 
 ifneq ($(strip $(DEVKITPRO)),)
 DEVKITARM = $(DEVKITPRO)/devkitARM
-export PATH	:=	$(DEVKITARM)/bin:$(PATH)
+export PATH = $(DEVKITARM)/bin:$(PATH)
 endif
 
 ifdef COMSPEC
@@ -77,11 +77,11 @@ ifeq ($(TARGET), arm-gba)
 	TARGET_ASFLAGS  = -mthumb-interwork
 endif
 
-CPPFLAGS = 
+CPPFLAGS =
 CFLAGS   = -pedantic -Wall -Wno-long-long
 CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  =
-ASFLAGS  = 
+ASFLAGS  =
 ARFLAGS  = rcs
 
 ifeq ($(HOST), x86_64-linux-gnu)
