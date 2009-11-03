@@ -96,9 +96,16 @@ static void note_on(const struct pimp_mod_context *ctx, struct pimp_mixer_channe
 	}                                                                     \
 } while(0)
 
+static
+const struct pimp_pattern_entry *pimp_mod_context_get_row_data(const struct pimp_mod_context *ctx, int row)
+{
+	return &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count];
+}
+
 static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 {
 	u32 c;
+	const struct pimp_pattern_entry *row_data;
 	ASSERT(ctx != 0);
 	
 	ctx->curr_tick    = 0;
@@ -106,7 +113,9 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 	ctx->curr_order   = ctx->next_order;
 	ctx->curr_pattern = ctx->next_pattern;
 	pimp_mod_context_update_next_pos(ctx);
-	
+
+	row_data = pimp_mod_context_get_row_data(ctx, ctx->curr_row);
+
 	for (c = 0; c < ctx->mod->channel_count; ++c)
 	{
 		BOOL period_dirty = FALSE;
@@ -115,7 +124,7 @@ static void pimp_mod_context_update_row(struct pimp_mod_context *ctx)
 		struct pimp_channel_state *chan = &ctx->channels[c];
 		struct pimp_mixer_channel_state *mc = &ctx->mixer->channels[c];
 		
-		const struct pimp_pattern_entry *note = &pimp_pattern_get_data(ctx->curr_pattern)[ctx->curr_row * ctx->mod->channel_count + c];
+		const struct pimp_pattern_entry *note = &row_data[c];
 		
 #ifdef PRINT_PATTERNS
 		print_pattern_entry(*note);
