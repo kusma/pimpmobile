@@ -14,10 +14,6 @@ SORT  ?= sort
 PR    ?= pr
 CTAGS ?= ctags
 
-#ifeq ($(strip $(DEVKITPRO)),)
-#$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
-#endif
-
 ifneq ($(strip $(DEVKITPRO)),)
 DEVKITARM = $(DEVKITPRO)/devkitARM
 export PATH := $(DEVKITARM)/bin:$(PATH)
