@@ -51,8 +51,12 @@ define setup-armcc
 	$(1)AR    = armar
 endef
 
+ifdef USE_ARMCC
+$(eval $(call setup-armcc,TARGET_))
+else
 $(eval $(call setup-gcc,TARGET_, $(TARGET_PREFIX)))
-# $(eval $(call setup-armcc,TARGET_))
+endif
+
 $(eval $(call setup-gcc,,))
 
 ifneq ($(findstring $(MAKEFLAGS),s),s)
