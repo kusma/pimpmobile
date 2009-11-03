@@ -157,13 +157,14 @@ make-host-deps   = $(addprefix $(HOST_BUILD_DIR)/,   $(call source-to-depend, $1
 
 OBJS = $(call make-target-objs, $(SOURCES))
 
-.PHONY: all clean check check-syntax
+.PHONY: all clean check check-syntax examples
 
 all: lib/libpimp_gba.a bin/pimpconv$(EXE_EXT)
 
 clean:
 	$(RM) lib/libpimp_gba.a $(call make-target-objs, $(SOURCES)) $(call make-target-deps, $(SOURCES))
 	$(RM) bin/pimpconv$(EXE_EXT) $(call make-host-objs, $(PIMPCONV_SOURCES)) $(call make-host-deps, $(PIMPCONV_SOURCES))
+	$(MAKE) -C examples clean
 
 distclean:
 	$(RM) -r $(BUILD_DIR)
@@ -173,6 +174,9 @@ check:
 
 check-syntax:
 	$(TARGET_CC) $(CPPFLAGS) $(TARGET_CPPFLAGS) $(CFLAGS) -fsyntax-only $(filter %.c,$(SOURCES))
+
+examples: lib/libpimp_gba.a bin/pimpconv$(EXE_EXT)
+	$(MAKE) -C examples
 
 TAGS:
 	$(CTAGS) $(filter %.c,$(SOURCES))

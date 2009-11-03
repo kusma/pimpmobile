@@ -34,6 +34,7 @@ LDFLAGS  = -mthumb-interwork -Wl,--gc-section
 ASFLAGS  = -mthumb-interwork
 LDLIBS   = -L$(PIMPMOBILE)/lib -lpimp_gba -L$(LIBGBA)/lib -lgba
 TARGET_ARCH = -specs=gba.specs
+CONVERTER = $(PIMPMOBILE)/bin/pimpconv$(EXE_EXT)
 
 ARM   = -marm
 THUMB = -mthumb
@@ -56,8 +57,6 @@ EXTRA_OBJS = \
 	../src/convert_sample.o \
 	../src/pimp_sample_bank.o
 
-CONVERTER = $(PIMPMOBILE)/bin/pimpconv$(EXE_EXT)
-
 ifeq ($(DEBUG), 1)
 	CPPFLAGS += -DDEBUG
 	CXXFLAGS += -g3 -ggdb
@@ -74,9 +73,6 @@ clean:
 
 %.gbfs:
 	gbfs $@ $<
-
-$(CONVERTER)::
-	$(MAKE) -C .. bin/pimpconv$(EXE_EXT)
 
 %.elf: %.cpp $(EXTRA_OBJS)
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
