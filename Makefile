@@ -31,7 +31,6 @@ else
 TARGET_PREFIX = $(TARGET)
 endif
 
-#$(eval $(call setup-gcc, out-prefix, toolchain-prefix))
 define setup-gcc
 	$(1)CC    = $(2)gcc
 	$(1)CXX   = $(2)g++
@@ -41,7 +40,6 @@ define setup-gcc
 	$(1)AR    = $(2)ar
 endef
 
-#$(eval $(call setup-armcc, out-prefix))
 define setup-armcc
 	$(1)CC    = armcc
 	$(1)CXX   = armcpp
