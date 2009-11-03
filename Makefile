@@ -193,6 +193,7 @@ lib/libpimp_gba.a: $(OBJS)
 $(TARGET_BUILD_DIR)/%.o: CC = $(TARGET_CC)
 $(TARGET_BUILD_DIR)/%.o: CPPFLAGS += $(TARGET_CPPFLAGS)
 $(TARGET_BUILD_DIR)/%.o: CFLAGS += $(TARGET_CFLAGS)
+$(TARGET_BUILD_DIR)/%.o: ASFLAGS += $(TARGET_ASFLAGS)
 
 # Override CC for host-builds
 $(HOST_BUILD_DIR)/%.o: CFLAGS += $(HOST_CFLAGS)
@@ -224,7 +225,7 @@ $(HOST_BUILD_DIR)/%.o: %.cpp
 
 $(TARGET_BUILD_DIR)/%.o: %.S
 	@$(MKDIR) $(dir $@)
-	$(QUIET_AS)$(TARGET_CC) -MMD -MF $(@:.o=.d) -x assembler-with-cpp -trigraphs $(ASFLAGS) -c $< -o $@
+	$(QUIET_AS)$(COMPILE.S) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 # deps
 -include $(call make-target-deps, $(SOURCES))
