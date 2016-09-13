@@ -26,7 +26,7 @@ EXE_EXT =
 endif
 
 ifeq ($(TARGET), arm-gba)
-TARGET_PREFIX ?= arm-eabi-
+TARGET_PREFIX ?= arm-none-eabi-
 else
 TARGET_PREFIX = $(TARGET)
 endif

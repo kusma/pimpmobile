@@ -18,7 +18,7 @@ export PATH := $(DEVKITARM)/bin:$(PATH)
 
 PIMPMOBILE = ..
 
-PREFIX ?= arm-eabi-
+PREFIX ?= arm-none-eabi-
 CC      = $(PREFIX)gcc
 CXX     = $(PREFIX)g++
 OBJCOPY = $(PREFIX)objcopy
