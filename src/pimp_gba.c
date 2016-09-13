@@ -5,7 +5,6 @@
 
 #include "pimp_render.h"
 #include "pimp_debug.h"
-#include <stdio.h>
 
 typedef volatile u16 vu16;
 typedef volatile u32 vu32;
