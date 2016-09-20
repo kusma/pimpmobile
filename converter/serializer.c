@@ -113,6 +113,7 @@ void serialize_word(struct serializer *s, uint32_t w)
 /* why on earth does this routine support zero len? */
 void serialize_string(struct serializer *s, const char *str, const size_t len)
 {
+	int i;
 	size_t real_len, slen;
 
 	ASSERT(NULL != s);
@@ -125,7 +126,7 @@ void serialize_string(struct serializer *s, const char *str, const size_t len)
 	if (len > 0) real_len = (len > slen) ? slen : len;
 	else real_len = slen;
 	
-	for (int i = 0; i < real_len; ++i)
+	for (i = 0; i < real_len; ++i)
 	{
 		s->data[s->pos + i] = str[i];
 	}
@@ -161,9 +162,11 @@ void serialize_pointer(struct serializer *s, void *ptr)
 
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
 {
+	int i;
+
 	ASSERT(NULL != s);
 
-	for (int i = 0; i < s->num_relocs; ++i) {
+	for (i = 0; i < s->num_relocs; ++i) {
 		unsigned int *target;
 
 		if (s->relocs[i].ptr != ptr)
@@ -181,9 +184,11 @@ void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
 
 void serializer_fixup_pointers(struct serializer *s)
 {
+	int i;
+
 	ASSERT(NULL != s);
 
-	for (int i = 0; i < s->num_relocs; ++i) {
+	for (i = 0; i < s->num_relocs; ++i) {
 		unsigned int *target = (unsigned int*)(s->data + s->relocs[i].pos);
 		if (*target == 0xdeadbeef) {
 			fputs("reloc not fixed up!\n", stderr);
