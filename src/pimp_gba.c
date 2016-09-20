@@ -58,21 +58,21 @@ static struct pimp_mixer       pimp_gba_mixer IWRAM_DATA;
 static struct pimp_mod_context pimp_gba_ctx   EWRAM_DATA;
 
 /* setup some constants */
+static const float samplerate = (float)(1 << 24) / PIMP_GBA_PERIOD;
 #define CYCLES_PR_FRAME 280896
-#define CYCLES_PR_SAMPLE  ((int)((1 << 24) / ((float)PIMP_GBA_SAMPLERATE)))
-#define SOUND_BUFFER_SIZE ((int)((float)CYCLES_PR_FRAME / CYCLES_PR_SAMPLE))
+#define SOUND_BUFFER_SIZE (CYCLES_PR_FRAME / PIMP_GBA_PERIOD)
 
 /* mix and playback-buffers */
-static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s8  pimp_gba_sound_buffers[2][SOUND_BUFFER_SIZE];
 static u32 pimp_gba_sound_buffer_index = 0;
-static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE] IWRAM_DATA;
+static s32 pimp_gba_mix_buffer[SOUND_BUFFER_SIZE];
 
 void pimp_gba_init(const struct pimp_module *module, const void *sample_bank)
 {
 	u32 zero = 0;
 	pimp_gba_mixer.mix_buffer = pimp_gba_mix_buffer;
-	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer, PIMP_GBA_SAMPLERATE);
-	
+	pimp_mod_context_init(&pimp_gba_ctx, (const pimp_module*)module, (const u8*)sample_bank, &pimp_gba_mixer, samplerate);
+
 	/* call BIOS-function CpuFastSet() to clear buffer */
 	CpuFastSet(&zero, &pimp_gba_sound_buffers[0][0], DMA_SRC_FIXED | ((SOUND_BUFFER_SIZE / 4) * 2));
 	REG_SOUNDCNT_H = SNDA_VOL_100 | SNDA_L_ENABLE | SNDA_R_ENABLE | SNDA_RESET_FIFO;
@@ -81,7 +81,7 @@ void pimp_gba_init(const struct pimp_module *module, const void *sample_bank)
 	DEBUG_PRINT(DEBUG_LEVEL_INFO, ("samples pr frame: 0x%x\nsound buffer size: %d\n", SAMPLES_PR_FRAME, SOUND_BUFFER_SIZE));
 	
 	/* setup timer */
-	REG_TM0CNT_L = (1 << 16) - CYCLES_PR_SAMPLE;
+	REG_TM0CNT_L = (1 << 16) - PIMP_GBA_PERIOD;
 	REG_TM0CNT_H = TIMER_START;
 }
 
