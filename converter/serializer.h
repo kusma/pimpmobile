@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <stdint.h>
 
 struct reloc {
 	unsigned pos;
@@ -34,9 +35,9 @@ void serializer_align(struct serializer *s, int alignment);
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos);
 void serializer_fixup_pointers(struct serializer *s);
 
-void serialize_byte(struct serializer *s, unsigned char b);
-void serialize_halfword(struct serializer *s, unsigned short h);
-void serialize_word(struct serializer *s, unsigned int w);
+void serialize_byte(struct serializer *s, uint8_t b);
+void serialize_halfword(struct serializer *s, uint16_t h);
+void serialize_word(struct serializer *s, uint32_t w);
 void serialize_string(struct serializer *s, const char *str, const size_t len);
 void serialize_pointer(struct serializer *s, void *ptr);
 

@@ -82,7 +82,7 @@ void serializer_align(struct serializer *s, int alignment)
 	}
 }
 
-void serialize_byte(struct serializer *s, unsigned char b)
+void serialize_byte(struct serializer *s, uint8_t b)
 {
 	ASSERT(NULL != s);
 	TRACE();
@@ -94,7 +94,7 @@ void serialize_byte(struct serializer *s, unsigned char b)
 	s->data[s->pos++] = b;
 }
 
-void serialize_halfword(struct serializer *s, unsigned short h)
+void serialize_halfword(struct serializer *s, uint16_t h)
 {
 	ASSERT(NULL != s);
 	TRACE();
@@ -108,7 +108,7 @@ void serialize_halfword(struct serializer *s, unsigned short h)
 	s->data[s->pos++] = (unsigned char)(h >> 8);
 }
 
-void serialize_word(struct serializer *s, unsigned int w)
+void serialize_word(struct serializer *s, uint32_t w)
 {
 	ASSERT(NULL != s);
 	TRACE();

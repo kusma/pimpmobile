@@ -4,9 +4,8 @@
 
 CC = g++
 CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG
-CFLAGS   = -g -m32
-CXXFLAGS = -g -m32
-# TARGET_ARCH = -m32
+CFLAGS   = -g
+CXXFLAGS = -g
 
 ifdef COMSPEC
 EXE_EXT=.exe

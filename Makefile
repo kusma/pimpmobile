@@ -82,12 +82,6 @@ LDFLAGS  =
 ASFLAGS  =
 ARFLAGS  = rcs
 
-ifeq ($(HOST), x86_64-linux-gnu)
-	HOST_CFLAGS += -m32
-	HOST_CXXFLAGS += -m32
-	HOST_LDFLAGS += -m32
-endif
-
 ARM   = -marm
 THUMB = -mthumb
 
