@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/kusma/pimpmobile.svg?branch=master)](https://travis-ci.org/kusma/pimpmobile)
 [![License: Zlib](https://img.shields.io/badge/License-Zlib-blue.svg)](https://opensource.org/licenses/Zlib)
+[![Coverage Status](https://coveralls.io/repos/github/kusma/pimpmobile/badge.svg?branch=master)](https://coveralls.io/github/kusma/pimpmobile?branch=master)
 
 Pimpmobile is a high performance sample-based music playback engine
 targeting the Nintendo Game Boy Advance. It is released under the
