@@ -4,7 +4,7 @@
 
 CC = gcc
 CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG
-CFLAGS   = -g
+CFLAGS   = -g -fprofile-arcs -ftest-coverage
 
 ifdef COMSPEC
 EXE_EXT=.exe

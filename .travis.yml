@@ -6,7 +6,11 @@ install:
   - wget http://sourceforge.net/projects/devkitpro/files/Automated%20Installer/devkitARMupdate.pl &&
     perl devkitARMupdate.pl
   - export DEVKITPRO=$HOME/devkitPro
+  - pip install --user cpp-coveralls
 
 script:
-  - make all examples &&
-    make check
+  - make all examples
+  - make check
+
+after_success:
+  - coveralls --include src --gcov-options '\-lp'
