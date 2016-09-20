@@ -21,11 +21,6 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
-/* TODO: get rid of this C++ dependency */
-#include <map>
-std::multimap<void *, unsigned> pointer_map;
-std::map<void *, unsigned> pointer_back_map;
-
 void serializer_init(struct serializer *s)
 {
 	ASSERT(NULL != s);
@@ -34,9 +29,9 @@ void serializer_init(struct serializer *s)
 	s->data = NULL;
 	s->buffer_size = 0;
 	s->pos = 0;
-	
-	pointer_map.clear();
-	pointer_back_map.clear();
+
+	s->relocs = NULL;
+	s->num_relocs = 0;
 }
 
 void serializer_deinit(struct serializer *s)
@@ -156,27 +151,48 @@ void serialize_string(struct serializer *s, const char *str, const size_t len)
 
 void serialize_pointer(struct serializer *s, void *ptr)
 {
-	int iptr;
 	ASSERT(NULL != s);
 	TRACE();
 	
 	serializer_align(s, 4);
 	serializer_check_size(s, 4);
-	
-/*	printf("dumping ptr: %p\n", ptr); */
-	if (NULL != ptr) pointer_map.insert(std::make_pair(ptr, s->pos));
-	
-/*	iptr = ptr & ((1ULL<<32) - 1);
-	ASSERT(ptr == iptr); */
-	serialize_word(s, (unsigned int)ptr);
+
+	if (!ptr) {
+		serialize_word(s, 0);
+		return;
+	}
+
+	s->relocs = (struct reloc *)realloc(s->relocs, sizeof(struct reloc) * (s->num_relocs + 1));
+	if (!s->relocs) {
+		fputs("out of memory\n", stderr);
+		abort();
+	}
+
+	s->relocs[s->num_relocs].pos = s->pos;
+	s->relocs[s->num_relocs].ptr = ptr;
+	s->num_relocs++;
+
+	serialize_word(s, 0xdeadbeef);
 }
 
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
 {
 	ASSERT(NULL != s);
 	TRACE();
-	
-	pointer_back_map.insert(std::make_pair(ptr, pos));
+
+	for (int i = 0; i < s->num_relocs; ++i) {
+		unsigned int *target;
+
+		if (s->relocs[i].ptr != ptr)
+			continue;
+
+		ASSERT(s->relocs[i].pos & 3 == 0); /* location muet be word-aligned */
+
+		target = (unsigned int*)(s->data + s->relocs[i].pos);
+		ASSERT(*target == 0xdeadbeef);
+
+		*target = pos - s->relocs[i].pos;
+	}
 }
 
 
@@ -184,18 +200,12 @@ void serializer_fixup_pointers(struct serializer *s)
 {
 	ASSERT(NULL != s);
 	TRACE();
-	
-	std::multimap<void *, unsigned>::iterator it;
-	
-	for (it = pointer_map.begin(); it != pointer_map.end(); ++it)
-	{
-		ASSERT(pointer_back_map.count(it->first) != 0);
-		
-		unsigned *target = (unsigned*)(&s->data[it->second]);
-		
-		ASSERT(*target == (unsigned)it->first);
-		
-		*target = pointer_back_map[it->first] - it->second;
+
+	for (int i = 0; i < s->num_relocs; ++i) {
+		unsigned int *target = (unsigned int*)(s->data + s->relocs[i].pos);
+		if (*target == 0xdeadbeef) {
+			fputs("reloc not fixed up!\n", stderr);
+			abort();
+		}
 	}
 }
-

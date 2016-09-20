@@ -12,11 +12,18 @@ extern "C" {
 
 #include <stdlib.h>
 
+struct reloc {
+	unsigned pos;
+	void *ptr;
+};
+
 struct serializer
 {
 	unsigned buffer_size;
 	unsigned char *data;
 	unsigned pos;
+	struct reloc *relocs;
+	int num_relocs;
 };
 
 void serializer_init(struct serializer *s);
