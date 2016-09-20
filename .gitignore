@@ -1,3 +1,4 @@
+bin/pimpconv
 bin/pimpconv.exe
 bin/*.map
 bin/*.gba
@@ -5,8 +6,11 @@ bin/*.elf
 build/
 lib/libpimp_gba.a
 examples/*.gbfs
+examples/example.gba
+examples/example2.gba
 examples/sample_bank.bin
 examples/data/*.bin
 *.o
 *.d
 t/*.exe
+t/unit_test
