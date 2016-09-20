@@ -11,12 +11,6 @@
 #include <assert.h>
 #define ASSERT assert
 
-#if 0
-#define TRACE() printf("AT %s:%d\n", __FILE__, __LINE__);
-#else
-#define TRACE()
-#endif
-
 #ifndef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
@@ -24,7 +18,6 @@
 void serializer_init(struct serializer *s)
 {
 	ASSERT(NULL != s);
-	TRACE();
 
 	s->data = NULL;
 	s->buffer_size = 0;
@@ -37,7 +30,6 @@ void serializer_init(struct serializer *s)
 void serializer_deinit(struct serializer *s)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	if (NULL != s->data)
 	{
@@ -49,12 +41,10 @@ void serializer_deinit(struct serializer *s)
 void serializer_check_size(struct serializer *s, size_t needed_size)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	if (s->buffer_size < (s->pos + needed_size))
 	{
 		int old_size = s->buffer_size;
-		TRACE();
 		s->buffer_size = MAX(s->buffer_size * 2, s->buffer_size + needed_size);
 
 		s->data = realloc(s->data, s->buffer_size);
@@ -72,7 +62,6 @@ void serializer_check_size(struct serializer *s, size_t needed_size)
 void serializer_align(struct serializer *s, int alignment)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	if ((s->pos % alignment) != 0)
 	{
@@ -85,7 +74,6 @@ void serializer_align(struct serializer *s, int alignment)
 void serialize_byte(struct serializer *s, uint8_t b)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	/* no alignment needed, make room for new data */
 	serializer_check_size(s, 1);
@@ -97,7 +85,6 @@ void serialize_byte(struct serializer *s, uint8_t b)
 void serialize_halfword(struct serializer *s, uint16_t h)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	/* align and make room for new data */
 	serializer_align(s, 2);
@@ -111,7 +98,6 @@ void serialize_halfword(struct serializer *s, uint16_t h)
 void serialize_word(struct serializer *s, uint32_t w)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	/* align and make room for new data */
 	serializer_align(s, 4);
@@ -130,7 +116,6 @@ void serialize_string(struct serializer *s, const char *str, const size_t len)
 	size_t real_len, slen;
 
 	ASSERT(NULL != s);
-	TRACE();
 	
 	/* no alignment needed */
 	serializer_check_size(s, len);
@@ -152,7 +137,6 @@ void serialize_string(struct serializer *s, const char *str, const size_t len)
 void serialize_pointer(struct serializer *s, void *ptr)
 {
 	ASSERT(NULL != s);
-	TRACE();
 	
 	serializer_align(s, 4);
 	serializer_check_size(s, 4);
@@ -178,7 +162,6 @@ void serialize_pointer(struct serializer *s, void *ptr)
 void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
 {
 	ASSERT(NULL != s);
-	TRACE();
 
 	for (int i = 0; i < s->num_relocs; ++i) {
 		unsigned int *target;
@@ -199,7 +182,6 @@ void serializer_set_pointer(struct serializer *s, void *ptr, int pos)
 void serializer_fixup_pointers(struct serializer *s)
 {
 	ASSERT(NULL != s);
-	TRACE();
 
 	for (int i = 0; i < s->num_relocs; ++i) {
 		unsigned int *target = (unsigned int*)(s->data + s->relocs[i].pos);
