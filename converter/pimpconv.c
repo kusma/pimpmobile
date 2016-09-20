@@ -3,6 +3,7 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
