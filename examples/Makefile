@@ -28,10 +28,11 @@ AS      = $(PREFIX)as
 AR      = $(PREFIX)ar
 
 CPPFLAGS = -I$(DEVKITARM)/include -I$(LIBGBA)/include -I$(PIMPMOBILE)/include
-CFLAGS   = -mthumb-interwork -mlong-calls
-CXXFLAGS = -mthumb-interwork -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
-LDFLAGS  = -mthumb-interwork -Wl,--gc-section
-ASFLAGS  = -mthumb-interwork
+TARGET_COMMON = -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork
+CFLAGS   = $(TARGET_COMMON) -mlong-calls
+CXXFLAGS = $(TARGET_COMMON) -mlong-calls -fconserve-space -fno-rtti -fno-exceptions
+LDFLAGS  = $(TARGET_COMMON) -Wl,--gc-section
+ASFLAGS  = $(TARGET_COMMON)
 LDLIBS   = -L$(PIMPMOBILE)/lib -lpimp_gba -L$(LIBGBA)/lib -lgba
 TARGET_ARCH = -specs=gba.specs
 CONVERTER = $(PIMPMOBILE)/bin/pimpconv$(EXE_EXT)

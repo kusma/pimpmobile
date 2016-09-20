@@ -69,10 +69,11 @@ MKDIR = mkdir -p
 
 ifeq ($(TARGET), arm-gba)
 	TARGET_CPPFLAGS = -I$(DEVKITARM)/include -DTARGET_GBA
-	TARGET_CFLAGS   = -mthumb-interwork -mlong-calls
-	TARGET_CXXFLAGS = -mthumb-interwork -mlong-calls
-	TARGET_LDFLAGS  = -mthumb-interwork -Wl,--gc-section
-	TARGET_ASFLAGS  = -mthumb-interwork
+	TARGET_COMMON   = -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork
+	TARGET_CFLAGS   = $(TARGET_COMMON) -mlong-calls
+	TARGET_CXXFLAGS = $(TARGET_COMMON) -mlong-calls
+	TARGET_LDFLAGS  = $(TARGET_COMMON) -Wl,--gc-section
+	TARGET_ASFLAGS  = $(TARGET_COMMON)
 endif
 
 CPPFLAGS =
