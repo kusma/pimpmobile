@@ -1,0 +1,12 @@
+language: c
+
+sudo: false
+
+install:
+  - wget http://sourceforge.net/projects/devkitpro/files/Automated%20Installer/devkitARMupdate.pl &&
+    perl devkitARMupdate.pl
+  - export DEVKITPRO=$HOME/devkitPro
+
+script:
+  - make all examples &&
+    make check
