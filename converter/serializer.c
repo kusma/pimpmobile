@@ -1,4 +1,4 @@
-/* serializer.cpp -- low-level serializer for pimpconv
+/* serializer.c -- low-level serializer for pimpconv
  * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
@@ -57,7 +57,7 @@ void serializer_check_size(struct serializer *s, size_t needed_size)
 		TRACE();
 		s->buffer_size = MAX(s->buffer_size * 2, s->buffer_size + needed_size);
 
-		s->data = (unsigned char*)realloc(s->data, s->buffer_size);
+		s->data = realloc(s->data, s->buffer_size);
 		
 		if (NULL == s->data)
 		{
@@ -162,7 +162,7 @@ void serialize_pointer(struct serializer *s, void *ptr)
 		return;
 	}
 
-	s->relocs = (struct reloc *)realloc(s->relocs, sizeof(struct reloc) * (s->num_relocs + 1));
+	s->relocs = realloc(s->relocs, sizeof(struct reloc) * (s->num_relocs + 1));
 	if (!s->relocs) {
 		fputs("out of memory\n", stderr);
 		abort();

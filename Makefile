@@ -33,7 +33,6 @@ endif
 
 define setup-gcc
 	$(1)CC    = $(2)gcc
-	$(1)CXX   = $(2)g++
 	$(1)STRIP = $(2)strip
 	$(1)LD    = $(2)ld
 	$(1)AS    = $(2)as
@@ -42,7 +41,6 @@ endef
 
 define setup-armcc
 	$(1)CC    = armcc
-	$(1)CXX   = armcpp
 	$(1)STRIP = strip
 	$(1)LD    = armlink
 	$(1)AS    = armasm
@@ -59,7 +57,6 @@ $(eval $(call setup-gcc,,))
 
 ifneq ($(findstring $(MAKEFLAGS),s),s)
 	QUIET_CC   = @echo '   ' CC $@;
-	QUIET_CXX  = @echo '   ' CXX $@;
 	QUIET_AS   = @echo '   ' AS $@;
 	QUIET_AR   = @echo '   ' AR $@;
 	QUIET_LINK = @echo '   ' LINK $@;
@@ -71,14 +68,12 @@ ifeq ($(TARGET), arm-gba)
 	TARGET_CPPFLAGS = -I$(DEVKITARM)/include -DTARGET_GBA
 	TARGET_COMMON   = -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork
 	TARGET_CFLAGS   = $(TARGET_COMMON) -mlong-calls
-	TARGET_CXXFLAGS = $(TARGET_COMMON) -mlong-calls
 	TARGET_LDFLAGS  = $(TARGET_COMMON) -Wl,--gc-section
 	TARGET_ASFLAGS  = $(TARGET_COMMON)
 endif
 
 CPPFLAGS =
 CFLAGS   = -pedantic -Wall -Wno-long-long
-CXXFLAGS = -fconserve-space -fno-rtti -fno-exceptions
 LDFLAGS  =
 ASFLAGS  =
 ARFLAGS  = rcs
@@ -103,7 +98,7 @@ ARM_SOURCES = \
 
 PIMPCONV_SOURCES = \
 	converter/pimpconv.c \
-	converter/serializer.cpp \
+	converter/serializer.c \
 	converter/serialize_module.c \
 	converter/serialize_instrument.c \
 	src/convert_sample.c \
@@ -113,13 +108,11 @@ PIMPCONV_SOURCES = \
 
 ifeq ($(CONFIG), debug)
 	CPPFLAGS += -DDEBUG
-	CXXFLAGS += -g -ggdb
 	CFLAGS   += -g -ggdb
 	SOURCES  += src/pimp_mixer_portable.c
 	SOURCES  += src/pimp_debug.c
 else
 	CPPFLAGS += -DRELEASE -DNDEBUG
-	CXXFLAGS += -O3 -fomit-frame-pointer
 	CFLAGS   += -O3 -fomit-frame-pointer
 	SOURCES  += src/pimp_mixer_arm.S
 	SOURCES  += src/pimp_mixer_clip_arm.S
@@ -127,7 +120,6 @@ endif
 
 ifeq ($(PROFILING), 1)
 	CFLAGS   += -finstrument-functions
-	CXXFLAGS += -finstrument-functions
 	SOURCES  += profiling/cyg-profile.c
 endif
 
@@ -137,8 +129,6 @@ HOST_BUILD_DIR = $(BUILD_DIR)/$(HOST)/$(CONFIG)
 source-to-object = \
 	$(subst .c,.o,        $(filter-out $(ARM_SOURCES), $(filter %.c,$1))) \
 	$(subst .c,.iwram.o,  $(filter     $(ARM_SOURCES), $(filter %.c,$1))) \
-	$(subst .cpp,.o,      $(filter-out $(ARM_SOURCES), $(filter %.cpp,$1))) \
-	$(subst .cpp,.iwram.o,$(filter     $(ARM_SOURCES), $(filter %.cpp,$1))) \
 	$(subst .S,.o,        $(filter-out $(ARM_SOURCES), $(filter %.S,$1))) \
 	$(subst .S,.iwram.o,  $(filter     $(ARM_SOURCES), $(filter %.S,$1)))
 
@@ -179,7 +169,6 @@ TAGS:
 $(call make-target-objs, $(filter-out $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -mthumb
 $(call make-target-objs, $(filter     $(ARM_SOURCES), $(SOURCES))): TARGET_CFLAGS += -marm
 
-bin/pimpconv$(EXE_EXT): CC = $(HOST_CXX) # make sure we use the c++ compiler for this
 bin/pimpconv$(EXE_EXT): $(call make-host-objs, $(PIMPCONV_SOURCES))
 	$(QUIET_LINK)$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) $(OUTPUT_OPTION)
 
@@ -193,10 +182,7 @@ $(TARGET_BUILD_DIR)/%.o: CFLAGS += $(TARGET_CFLAGS)
 $(TARGET_BUILD_DIR)/%.o: ASFLAGS += $(TARGET_ASFLAGS)
 
 # Override CC for host-builds
-$(HOST_BUILD_DIR)/%.o: CFLAGS += $(HOST_CFLAGS)
-$(HOST_BUILD_DIR)/%.o: CXXFLAGS += $(HOST_CXXFLAGS)
-bin/pimpconv$(EXE_EXT): CC = $(CXX)
-bin/pimpconv$(EXE_EXT): LDFLAGS += $(HOST_LDFLAGS) -lstdc++
+bin/pimpconv$(EXE_EXT): LOADLIBES += -lm
 
 ### C
 
@@ -211,12 +197,6 @@ $(TARGET_BUILD_DIR)/%.o: %.c
 $(HOST_BUILD_DIR)/%.o: %.c
 	@$(MKDIR) $(dir $@)
 	$(QUIET_CC)$(COMPILE.c) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
-
-### C++
-
-$(HOST_BUILD_DIR)/%.o: %.cpp
-	@$(MKDIR) $(dir $@)
-	$(QUIET_CXX)$(COMPILE.cpp) $(OUTPUT_OPTION) $< -MMD -MP -MF $(@:.o=.d)
 
 ### ASM
 

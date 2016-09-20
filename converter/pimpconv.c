@@ -91,12 +91,12 @@ static void merge_samples(struct pimp_sample_bank *dst, const struct pimp_sample
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
 		int j;
-		pimp_instrument *instr = pimp_module_get_instrument(mod, i);
+		struct pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		for (j = 0; j < instr->sample_count; ++j)
 		{
 			int pos;
 			void *data = NULL;
-			pimp_sample *samp = pimp_instrument_get_sample(instr, j);
+			struct pimp_sample *samp = pimp_instrument_get_sample(instr, j);
 			ASSERT(NULL != samp);
 			
 			data = pimp_sample_bank_get_sample_data(src, samp->data_ptr);

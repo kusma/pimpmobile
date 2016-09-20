@@ -15,7 +15,7 @@
 #define TRACE()
 #endif
 
-int serialize_sample(struct serializer *s, const pimp_sample *samp)
+int serialize_sample(struct serializer *s, const struct pimp_sample *samp)
 {
 	int pos;
 	
@@ -46,7 +46,7 @@ int serialize_sample(struct serializer *s, const pimp_sample *samp)
 	return pos;
 }
 
-int serialize_envelope(struct serializer *s, const pimp_envelope *env)
+int serialize_envelope(struct serializer *s, const struct pimp_envelope *env)
 {
 	int pos, i;
 	
@@ -85,10 +85,10 @@ int serialize_envelope(struct serializer *s, const pimp_envelope *env)
 }
 
 /* dumps all samples in an instrument, returns position of first sample */
-void serialize_instrument_data(struct serializer *s, const pimp_instrument *instr)
+void serialize_instrument_data(struct serializer *s, const struct pimp_instrument *instr)
 {
+	struct pimp_envelope *vol_env, *pan_env;
 	int i;
-	pimp_envelope *vol_env, *pan_env;
 	
 	ASSERT(NULL != instr);
 	ASSERT(NULL != s);
@@ -110,7 +110,7 @@ void serialize_instrument_data(struct serializer *s, const pimp_instrument *inst
 }
 
 /* dump instrument structure, return position */
-void serialize_instrument(struct serializer *s, const pimp_instrument *instr)
+void serialize_instrument(struct serializer *s, const struct pimp_instrument *instr)
 {
 	int i;
 	

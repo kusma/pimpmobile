@@ -51,7 +51,7 @@ void serialize_module_struct(struct serializer *s, const pimp_module *mod)
 	serialize_byte(s, mod->channel_count);
 }
 
-void serialize_channels(struct serializer *s, const pimp_module *mod)
+void serialize_channels(struct serializer *s, const struct pimp_module *mod)
 {
 	int i;
 	
@@ -64,14 +64,14 @@ void serialize_channels(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->channel_ptr), s->pos);
 	for (i = 0; i < mod->channel_count; ++i)
 	{
-		const pimp_channel *chan = pimp_module_get_channel(mod, i);
+		const struct pimp_channel *chan = pimp_module_get_channel(mod, i);
 		serialize_byte(s, chan->pan);
 		serialize_byte(s, chan->volume);
 		serialize_byte(s, chan->mute);
 	}
 }
 
-void serialize_instruments(struct serializer *s, const pimp_module *mod)
+void serialize_instruments(struct serializer *s, const struct pimp_module *mod)
 {
 	int i;
 
@@ -84,19 +84,19 @@ void serialize_instruments(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->instrument_ptr), s->pos);
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
-		const pimp_instrument *instr = pimp_module_get_instrument(mod, i);
+		const struct pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		serialize_instrument(s, instr);
 	}
 	
 	/* dump instrument data (samples, envelopes etc) */
 	for (i = 0; i < mod->instrument_count; ++i)
 	{
-		const pimp_instrument *instr = pimp_module_get_instrument(mod, i);
+		const struct pimp_instrument *instr = pimp_module_get_instrument(mod, i);
 		serialize_instrument_data(s, instr);
 	}
 }
 
-void serialize_orders(struct serializer *s, const pimp_module *mod)
+void serialize_orders(struct serializer *s, const struct pimp_module *mod)
 {
 	int i;
 
@@ -112,7 +112,7 @@ void serialize_orders(struct serializer *s, const pimp_module *mod)
 	}
 }
 
-void serialize_patterns(struct serializer *s, const pimp_module *mod)
+void serialize_patterns(struct serializer *s, const struct pimp_module *mod)
 {
 	int i;
 
@@ -125,7 +125,7 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	serializer_set_pointer(s, pimp_get_ptr(&mod->pattern_ptr), s->pos);
 	for (i = 0; i < mod->pattern_count; ++i)
 	{
-		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
+		const struct pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		serializer_align(s, 4);
 		
 		serialize_pointer(s, pimp_get_ptr(&pattern->data_ptr)); /* data_ptr */
@@ -136,9 +136,9 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	for (i = 0; i < mod->pattern_count; ++i)
 	{
 		int j;
-		const pimp_pattern_entry *pattern_data = NULL;
+		const struct pimp_pattern_entry *pattern_data = NULL;
 		
-		const pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
+		const struct pimp_pattern *pattern = pimp_module_get_pattern(mod, i);
 		if (NULL == pattern) continue;
 		
 		pattern_data = pimp_pattern_get_data(pattern);
@@ -149,7 +149,7 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 		/* write the actual pattern data data */
 		for (j = 0; j < pattern->row_count * mod->channel_count; ++j)
 		{
-			const pimp_pattern_entry *pe = &pattern_data[j];
+			const struct pimp_pattern_entry *pe = &pattern_data[j];
 			serialize_byte(s, pe->note);
 			serialize_byte(s, pe->instrument);
 			serialize_byte(s, pe->volume_command);
@@ -159,7 +159,7 @@ void serialize_patterns(struct serializer *s, const pimp_module *mod)
 	}
 }
 
-void serialize_module(struct serializer *s, const pimp_module *mod)
+void serialize_module(struct serializer *s, const struct pimp_module *mod)
 {
 	ASSERT(NULL != s);
 	ASSERT(NULL != mod);

@@ -43,7 +43,7 @@ static void test_mixer_basic(struct test_suite *suite)
 	*/
 	int target_size;
 	
-	pimp_mixer mixer;
+	struct pimp_mixer mixer;
 	pimp_mixer_reset(&mixer);
 	mixer.mix_buffer = mix_buffer + 1;
 	
@@ -99,7 +99,7 @@ static void test_looping(struct test_suite *suite)
 		- that a loop happens at the correct sub-sample
 	*/
 
-	pimp_mixer_channel_state chan;
+	struct pimp_mixer_channel_state chan;
 	
 	const u8 sample_data[] = { 0x00, 0x01, 0x02, 0x03, 0x04 };
 	

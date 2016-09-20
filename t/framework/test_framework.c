@@ -37,7 +37,7 @@ char *test_printf(struct test_suite *suite, const char* fmt, ...)
 	len = vsnprintf(temp, MAX_TEST_PRINTF_STRING_LEN, fmt, arglist);
 	va_end(arglist);
 
-	string = (char*)malloc(len + 1);
+	string = malloc(len + 1);
 	if (NULL != string)
 	{
 		va_start(arglist, fmt);

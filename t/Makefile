@@ -2,10 +2,9 @@
 # Copyright (C) 2005-2007 Jørn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
-CC = g++
+CC = gcc
 CPPFLAGS = -I.. -DUNIT_TESTING -DDEBUG
 CFLAGS   = -g
-CXXFLAGS = -g
 
 ifdef COMSPEC
 EXE_EXT=.exe
@@ -43,8 +42,8 @@ clean:
 run: unit_test$(EXE_EXT)
 	./unit_test$(EXE_EXT)
 
-unit_test$(EXE_EXT): $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) ../converter/serializer.cpp
-	$(LINK.cpp) $^$(LOADLIBES) $(LDLIBS) -o $@
+unit_test$(EXE_EXT): $(TEST_SOURCES) $(TEST_DEPS_SOURCES) $(FRAMEWORK_SOURCES) ../converter/serializer.c
+	$(LINK.c) $^$(LOADLIBES) $(LDLIBS) -o $@
 
 dump_render$(EXE_EXT): toplevel/dump_render.c $(TEST_DEPS_SOURCES)
 	$(LINK.c) $^$(LOADLIBES) $(LDLIBS) -o $@

@@ -129,7 +129,7 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	pimp_set_ptr(&instr->vol_env_ptr, NULL);
 	if ((ih.vol_type & 1) == 1)
 	{
-		struct pimp_envelope *env = (struct pimp_envelope*)malloc(sizeof(struct pimp_envelope));
+		struct pimp_envelope *env = malloc(sizeof(struct pimp_envelope));
 		if (NULL == env) return FALSE;
 		memset(env, 0, sizeof(struct pimp_envelope));
 		
@@ -168,7 +168,7 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	if ((ih.pan_type & 1) == 1)
 	{
 		/* panning envelope */
-		struct pimp_envelope *env = (struct pimp_envelope*)malloc(sizeof(struct pimp_envelope));
+		struct pimp_envelope *env = malloc(sizeof(struct pimp_envelope));
 		if (NULL == env) return FALSE;
 		memset(env, 0, sizeof(struct pimp_envelope));
 		
@@ -217,7 +217,7 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 		struct pimp_sample *samples = NULL;
 		if (instr->sample_count > 0)
 		{
-			samples = (struct pimp_sample *)malloc(sizeof(struct pimp_sample) * instr->sample_count);
+			samples = malloc(sizeof(struct pimp_sample) * instr->sample_count);
 			if (NULL == samples) return FALSE;
 		}
 		pimp_set_ptr(&instr->sample_ptr, samples);
@@ -226,7 +226,7 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
 	
 	/* sample headers allocated dynamically because data needs to be remembered. we're doing two passes here - one for sample headers, and one for sample data. */
-	sample_headers = (xm_sample_header *)malloc(sizeof(xm_sample_header) * ih.samples);
+	sample_headers = malloc(sizeof(xm_sample_header) * ih.samples);
 	if (NULL == sample_headers) return FALSE;
 		
 	memset(sample_headers, 0, sizeof(xm_sample_header) * ih.samples);
@@ -459,7 +459,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 		}
 	}
 	
-	mod = (pimp_module *)malloc(sizeof(pimp_module));
+	mod = malloc(sizeof(pimp_module));
 	if (NULL == mod) return NULL;
 	
 	memset(mod, 0, sizeof(pimp_module));
@@ -542,7 +542,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	{
 		struct pimp_channel *channels;
 		mod->channel_count = xm_header.channels;
-		channels = (struct pimp_channel *)malloc(sizeof(struct pimp_channel) * mod->channel_count);
+		channels = malloc(sizeof(struct pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
 		
 		pimp_set_ptr(&mod->channel_ptr, channels);
@@ -565,7 +565,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 		
 		mod->pattern_count = xm_header.patterns;
 		/* allocate memory for patterns */
-		patterns = (struct pimp_pattern *)malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
+		patterns = malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
 		if (NULL == patterns) return NULL;
 		
 		pimp_set_ptr(&mod->pattern_ptr, patterns);
@@ -593,7 +593,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			pat->row_count = pattern_header.rows;
 			
 			/* allocate memory for pattern data */
-			pattern_data = (struct pimp_pattern_entry *)malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			pattern_data = malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			if (NULL == pattern_data)
 			{
 				return NULL;
@@ -696,7 +696,7 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 		
 		mod->instrument_count = xm_header.instruments;
 		/* allocate instruments */
-		instruments = (struct pimp_instrument *)malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
+		instruments = malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
 		if (NULL == instruments) return NULL;
 			
 		pimp_set_ptr(&mod->instrument_ptr, instruments);

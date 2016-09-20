@@ -47,7 +47,7 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	fread(buf, 1, 22, fp);
 	buf[22] = '\0';
 
-	sample = (struct pimp_sample *)malloc(sizeof(struct pimp_sample));
+	sample = malloc(sizeof(struct pimp_sample));
 	if (NULL == sample) return FALSE;
 
 	/* only one sample per instrument in MOD */
@@ -168,7 +168,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	channel_count = get_channel_count(sig);
 	if (channel_count <= 0) return NULL;
 	
-	mod = (pimp_module *)malloc(sizeof(pimp_module));
+	mod = malloc(sizeof(pimp_module));
 	if (NULL == mod) return NULL;
 	
 	memset(mod, 0, sizeof(pimp_module));
@@ -202,7 +202,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		mod->channel_count = channel_count;
 		
 		/* allocate channel array */
-		channels = (struct pimp_channel *)malloc(sizeof(struct pimp_channel) * mod->channel_count);
+		channels = malloc(sizeof(struct pimp_channel) * mod->channel_count);
 		if (NULL == channels) return NULL;
 		
 		memset(channels, 0, sizeof(struct pimp_channel) * mod->channel_count);
@@ -222,7 +222,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	{
 		struct pimp_instrument *instruments;
 		mod->instrument_count = 31;
-		instruments = (struct pimp_instrument *)malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
+		instruments = malloc(sizeof(struct pimp_instrument) * mod->instrument_count);
 		if (NULL == instruments) return NULL;
 			
 		memset(instruments, 0, sizeof(struct pimp_instrument) * mod->instrument_count);
@@ -257,7 +257,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	{
 		/* allocate memory */
-		unsigned char *orders = (unsigned char *)malloc(mod->order_count);
+		unsigned char *orders = malloc(mod->order_count);
 		if (NULL == orders) return NULL;
 		
 		memset(orders, 0, mod->order_count);
@@ -296,7 +296,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		struct pimp_pattern *patterns;
 		mod->pattern_count = max_pattern + 1;
 		
-		patterns = (struct pimp_pattern *)malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
+		patterns = malloc(sizeof(struct pimp_pattern) * mod->pattern_count);
 		if (NULL == patterns) return NULL;
 		
 		memset(patterns, 0, sizeof(struct pimp_pattern) * mod->pattern_count);
@@ -310,7 +310,7 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 			struct pimp_pattern *pat = &patterns[p];
 			pat->row_count = 64;
 	
-			pattern_data = (struct pimp_pattern_entry *)malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
+			pattern_data = malloc(sizeof(struct pimp_pattern_entry) * mod->channel_count * pat->row_count);
 			if (NULL == pattern_data) return NULL;
 			pimp_set_ptr(&pat->data_ptr, pattern_data);
 	
