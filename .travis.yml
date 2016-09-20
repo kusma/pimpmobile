@@ -2,6 +2,10 @@ language: c
 
 sudo: false
 
+cache:
+  directories:
+    - $HOME/devkitPro
+
 install:
   - wget http://sourceforge.net/projects/devkitpro/files/Automated%20Installer/devkitARMupdate.pl &&
     perl devkitARMupdate.pl
