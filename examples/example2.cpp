@@ -20,6 +20,7 @@
 
 #include <pimp_gba.h>
 #include "../src/load_module.h"
+#define PIMP_DONT_DECLARE_BASIC_TYPES
 #include "../src/pimp_sample_bank.h"
 #include "gbfs_stdio.h"
 
