@@ -1,5 +1,5 @@
 /* convert_sample.c -- Sample converter code
- * Copyright (C) 2006-2007 Jørn Nystad and Erik Faye-Lund
+ * Copyright (C) 2006-2007 JÃ¸rn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 

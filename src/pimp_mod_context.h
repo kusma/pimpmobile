@@ -1,5 +1,5 @@
 /* pimp_mod_context.h -- The rendering-context for a module
- * Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+ * Copyright (C) 2005-2006 JÃ¸rn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 

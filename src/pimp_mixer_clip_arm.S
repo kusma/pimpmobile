@@ -1,5 +1,5 @@
 /* pimp_mixer_clip_arm.S -- ARM optimized sample clipping code
- * Copyright (C) 2005-2008 Jørn Nystad and Erik Faye-Lund
+ * Copyright (C) 2005-2008 JÃ¸rn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 

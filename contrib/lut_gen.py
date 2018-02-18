@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 # lut_gen.cpp -- Look-up table generator for Pimpmobile
-# Copyright (C) 2005-2006 Jørn Nystad and Erik Faye-Lund
+# Copyright (C) 2005-2006 JÃ¸rn Nystad and Erik Faye-Lund
 # For conditions of distribution and use, see copyright notice in LICENSE.TXT
 
 AMIGA_DELTA_LUT_LOG2_SIZE = 7

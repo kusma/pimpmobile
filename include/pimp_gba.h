@@ -4,7 +4,7 @@ pimp_gba.h -- The interface of Pimpmobile, a module playback library
 targeting the Nintendo GameBoy Advance
 
 
-Copyright (c) 2005 Jørn Nystad and Erik Faye-Lund
+Copyright (c) 2005 JÃ¸rn Nystad and Erik Faye-Lund
 
 This software is provided 'as-is', without any express or implied warranty. In
 no event will the authors be held liable for any damages arising from the use

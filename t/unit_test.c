@@ -1,5 +1,5 @@
 /* unit_test.c -- Main entry for Pimpmobile unit tests
- * Copyright (C) 2007 Jørn Nystad and Erik Faye-Lund
+ * Copyright (C) 2007 JÃ¸rn Nystad and Erik Faye-Lund
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
