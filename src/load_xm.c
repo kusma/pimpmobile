@@ -17,66 +17,66 @@
 
 typedef struct
 {
-	unsigned int   header_size;
-	unsigned short len;
-	unsigned short restart_pos;
-	unsigned short channels;
-	unsigned short patterns;
-	unsigned short instruments;
-	unsigned short flags;
-	unsigned short tempo;
-	unsigned short bpm;
+	uint32_t header_size;
+	uint16_t len;
+	uint16_t restart_pos;
+	uint16_t channels;
+	uint16_t patterns;
+	uint16_t instruments;
+	uint16_t flags;
+	uint16_t tempo;
+	uint16_t bpm;
 } xm_header;
 
 typedef struct
 {
-	unsigned int   header_size;
-	unsigned char  packing_type;
-	unsigned short rows;
-	unsigned short data_size;
+	uint32_t header_size;
+	uint8_t  packing_type;
+	uint16_t rows;
+	uint16_t data_size;
 } xm_pattern_header;
 
 typedef struct
 {
 	/* part 1 */
-	unsigned int   header_size;
-	char           name[22 + 1];
-	unsigned char  type;
-	unsigned short samples;
+	uint32_t header_size;
+	char     name[22 + 1];
+	uint8_t  type;
+	uint16_t samples;
 	
 	/* part 2 */
-	unsigned int   sample_header_size;
-	unsigned char  sample_number[96];
-	unsigned short vol_env[48];
-	unsigned short pan_env[48];
-	unsigned char  vol_env_points;
-	unsigned char  pan_env_points;
-	unsigned char  vol_sustain;
-	unsigned char  vol_loop_start;
-	unsigned char  vol_loop_end;
-	unsigned char  pan_sustain;
-	unsigned char  pan_loop_start;
-	unsigned char  pan_loop_end;
-	unsigned char  vol_type;
-	unsigned char  pan_type;
-	unsigned char  vibrato_type;
-	unsigned char  vibrato_sweep;
-	unsigned char  vibrato_depth;
-	unsigned char  vibrato_rate;
-	unsigned short volume_fadeout;
+	uint32_t sample_header_size;
+	uint8_t  sample_number[96];
+	uint16_t vol_env[48];
+	uint16_t pan_env[48];
+	uint8_t  vol_env_points;
+	uint8_t  pan_env_points;
+	uint8_t  vol_sustain;
+	uint8_t  vol_loop_start;
+	uint8_t  vol_loop_end;
+	uint8_t  pan_sustain;
+	uint8_t  pan_loop_start;
+	uint8_t  pan_loop_end;
+	uint8_t  vol_type;
+	uint8_t  pan_type;
+	uint8_t  vibrato_type;
+	uint8_t  vibrato_sweep;
+	uint8_t  vibrato_depth;
+	uint8_t  vibrato_rate;
+	uint16_t volume_fadeout;
 } xm_instrument_header;
 
 typedef struct
 {
-	unsigned int  length;
-	unsigned int  loop_start;
-	unsigned int  loop_length;
-	unsigned char volume;
-	signed char   fine_tune;
-	unsigned char type;
-	unsigned char pan;
-	signed char   rel_note;
-	char          name[22 + 1];
+	uint32_t length;
+	uint32_t loop_start;
+	uint32_t loop_length;
+	uint8_t  volume;
+	int8_t   fine_tune;
+	uint8_t  type;
+	uint8_t  pan;
+	int8_t   rel_note;
+	char     name[22 + 1];
 } xm_sample_header;
 
 static BOOL read_byte(uint8_t *dst, FILE *fp)
