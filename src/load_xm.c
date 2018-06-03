@@ -3,6 +3,7 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.TXT
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,30 @@ typedef struct
 	signed char   rel_note;
 	char          name[22 + 1];
 } xm_sample_header;
+
+static BOOL read_byte(uint8_t *dst, FILE *fp)
+{
+	return fread(dst, 1, 1, fp) == 1;
+}
+
+static BOOL read_word(uint16_t *dst, FILE *fp)
+{
+	return fread(dst, 2, 1, fp) == 1;
+}
+
+static BOOL read_dword(uint32_t *dst, FILE *fp)
+{
+	return fread(dst, 4, 1, fp) == 1;
+}
+
+static BOOL read_string(char *dst, int size, FILE *fp)
+{
+	if (fread(dst, size - 1, 1, fp) != 1)
+		return FALSE;
+
+	dst[size - 1] = '\0';
+	return TRUE;
+}
 
 static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp_sample_bank *sample_bank)
 {
