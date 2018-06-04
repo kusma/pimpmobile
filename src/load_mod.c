@@ -43,8 +43,9 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 {
 	unsigned char buf[256];
 	struct pimp_sample *sample;
-		
-	fread(buf, 1, 22, fp);
+
+	if (fread(buf, 1, 22, fp) != 22)
+		return FALSE;
 	buf[22] = '\0';
 
 	sample = malloc(sizeof(struct pimp_sample));
@@ -83,20 +84,25 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	sample->vibrato_sweep = 0;
 	sample->vibrato_waveform = SAMPLE_VIBRATO_SINE; /* just a dummy */
 	
-	fread(buf, 1, 2, fp);
+	if (fread(buf, 1, 2, fp) != 2)
+		return FALSE;
 	sample->length = ((buf[0] << 8) | buf[1]) << 1;
 	
-	fread(buf, 1, 1, fp);
+	if (fread(buf, 1, 1, fp) != 1)
+		return FALSE;
 	if (buf[0] > 7) sample->fine_tune = (buf[0] - 16) << 4;
 	else sample->fine_tune = buf[0] << 4;
 	
-	fread(&sample->volume, 1, 1, fp);
-	
-	fread(buf, 1, 2, fp);
+	if (fread(&sample->volume, 1, 1, fp) != 1)
+		return FALSE;
+
+	if (fread(buf, 1, 2, fp) != 2)
+		return FALSE;
 	sample->loop_start = ((buf[0] << 8) | buf[1]) << 1;
 	if (sample->loop_start > sample->length) sample->loop_start = 0;
 	
-	fread(buf, 1, 2, fp);
+	if (fread(buf, 1, 2, fp) != 2)
+		return FALSE;
 	sample->loop_length = ((buf[0] << 8) | buf[1]) << 1;
 	if (sample->loop_start + sample->loop_length > sample->length) sample->loop_length = sample->length - sample->loop_start;
 	
@@ -161,9 +167,10 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	u8 sig_data[4];
 	u32 sig;
 	
-	fseek(fp, 1080, SEEK_SET);
-	
-	fread(&sig_data, 1, 4, fp);
+	if (fseek(fp, 1080, SEEK_SET) < 0 ||
+	    fread(&sig_data, 1, 4, fp) != 4)
+		return NULL;
+
 	sig = MAKE_WORD(sig_data[0], sig_data[1], sig_data[2], sig_data[3]);
 	channel_count = get_channel_count(sig);
 	if (channel_count <= 0) return NULL;
@@ -191,7 +198,8 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	rewind(fp);
 	{
 		char name[20 + 1];
-		fread(name, 20, 1, fp);
+		if (fread(name, 20, 1, fp) != 1)
+			return NULL;
 		name[20] = '\0'; /* make sure name is zero-terminated */
 		strcpy(mod->name, name);
 	}
@@ -243,7 +251,8 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 	{
 		/* read byte */
 		unsigned char order_count;
-		fread(&order_count, 1, 1, fp);
+		if (fread(&order_count, 1, 1, fp) != 1)
+			return NULL;
 		
 		/* clamp and warn */
 		if (order_count > 128)
@@ -265,7 +274,9 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 
 #if 1
 		/* we're assuming this byte to be repeat position, but we don't really know ;) */
-		fread(&mod->order_repeat, 1, 1, fp);
+		if (fread(&mod->order_repeat, 1, 1, fp) != 1)
+			return NULL;
+
 		if (mod->order_repeat >= mod->order_count)
 		{
 			fprintf(stderr, "warning: repeating at out-of-range order, setting repeat order to 0\n");
@@ -279,14 +290,16 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 		max_pattern = 0;
 		for (i = 0; i < mod->order_count; ++i)
 		{
-			fread(&orders[i], 1, 1, fp);
+			if (fread(&orders[i], 1, 1, fp) != 1)
+				return NULL;
 			if (orders[i] > max_pattern) max_pattern = orders[i];
 		}
 	}
 	
-	fseek(fp, 128 - mod->order_count, SEEK_CUR); /* discard unused orders */
-	fseek(fp, 4, SEEK_CUR); /* discard mod-signature (already loaded) */
-	
+	if (fseek(fp, 128 - mod->order_count, SEEK_CUR) < 0 || /* discard unused orders */
+	    fseek(fp, 4, SEEK_CUR) < 0) /* discard mod-signature (already loaded) */
+		return NULL;
+
 	/* load patterns */
 	{
 		/* track the min and max note. this is used to detect if the module has notes outside traditional mod-limits */
@@ -326,7 +339,8 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 					int period;
 					
 					struct pimp_pattern_entry *pe = &pattern_data[i * mod->channel_count + j];
-					fread(buf, 1, 4, fp);
+					if (fread(buf, 1, 4, fp) != 4)
+						return NULL;
 					period = ((buf[0] & 0x0F) << 8) + buf[1];
 					
 					pe->instrument       = (buf[0] & 0x0F0) + (buf[2] >> 4);
@@ -363,9 +377,10 @@ pimp_module *load_module_mod(FILE *fp, struct pimp_sample_bank *sample_bank)
 			void *dst_waveform;
 			void *src_waveform = malloc(samp->length * pimp_sample_format_get_size(src_format));
 
-			if (NULL == src_waveform) return FALSE;
-			fread(src_waveform, 1, samp->length * pimp_sample_format_get_size(src_format), fp);
-			
+			if (NULL == src_waveform ||
+			    fread(src_waveform, samp->length * pimp_sample_format_get_size(src_format), 1, fp) != 1)
+				return FALSE;
+
 			ASSERT(pimp_sample_format_get_size(src_format) == pimp_sample_format_get_size(dst_format));
 			
 			dst_waveform = malloc(samp->length * pimp_sample_format_get_size(dst_format));
