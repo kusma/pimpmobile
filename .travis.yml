@@ -7,9 +7,10 @@ cache:
     - $HOME/devkitPro
 
 install:
-  - wget http://sourceforge.net/projects/devkitpro/files/Automated%20Installer/devkitARMupdate.pl &&
-    perl devkitARMupdate.pl
-  - export DEVKITPRO=$HOME/devkitPro
+  - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb &&
+    sudo dpkg -i devkitpro-pacman.deb
+  - sudo dkp-pacman --noconfirm -S gba-dev
+  - export DEVKITPRO=/opt/devkitpro
   - pip install --user cpp-coveralls
 
 script:
