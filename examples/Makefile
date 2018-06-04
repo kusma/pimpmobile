@@ -14,7 +14,7 @@ endif
 
 DEVKITARM  = $(DEVKITPRO)/devkitARM
 LIBGBA     = $(DEVKITPRO)/libgba
-export PATH := $(DEVKITARM)/bin:$(PATH)
+export PATH := $(DEVKITARM)/bin:$(DEVKITPRO)/tools/bin:$(PATH)
 
 PIMPMOBILE = ..
 
