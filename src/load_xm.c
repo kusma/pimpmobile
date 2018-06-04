@@ -121,34 +121,35 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 	memset(&ih, 0, sizeof(ih));
 	
 	/* read part 1 */
-	fread(&ih.header_size,  4,  1, fp);
-	fread(&ih.name,         1, 22, fp);
-	fread(&ih.type,         1,  1, fp);
-	fread(&ih.samples,      2,  1, fp);
-	ih.name[22] = '\0';
-	
+	if (!read_dword(&ih.header_size, fp) ||
+	    !read_string(ih.name, sizeof(ih.name), fp) ||
+	    !read_byte(&ih.type, fp) ||
+	    !read_word(&ih.samples, fp))
+		return FALSE;
+
 	if (ih.samples != 0)
 	{
 		/* read part 2 */
-		fread(&ih.sample_header_size, 4,  1, fp);
-		fread(&ih.sample_number,      1, 96, fp);
-		fread(&ih.vol_env,            2, 24, fp);
-		fread(&ih.pan_env,            2, 24, fp);
-		fread(&ih.vol_env_points,     1,  1, fp);
-		fread(&ih.pan_env_points,     1,  1, fp);
-		fread(&ih.vol_sustain,        1,  1, fp);
-		fread(&ih.vol_loop_start,     1,  1, fp);
-		fread(&ih.vol_loop_end,       1,  1, fp);
-		fread(&ih.pan_sustain,        1,  1, fp);
-		fread(&ih.pan_loop_start,     1,  1, fp);
-		fread(&ih.pan_loop_end,       1,  1, fp);
-		fread(&ih.vol_type,           1,  1, fp);
-		fread(&ih.pan_type,           1,  1, fp);
-		fread(&ih.vibrato_type,       1,  1, fp);
-		fread(&ih.vibrato_sweep,      1,  1, fp);
-		fread(&ih.vibrato_depth,      1,  1, fp);
-		fread(&ih.vibrato_rate,       1,  1, fp);
-		fread(&ih.volume_fadeout,     2,  1, fp);
+		if (!read_dword(&ih.sample_header_size, fp) ||
+		    fread(&ih.sample_number,      1, 96, fp) != 96 ||
+		    fread(&ih.vol_env,            2, 24, fp) != 24 ||
+		    fread(&ih.pan_env,            2, 24, fp) != 24 ||
+		    !read_byte(&ih.vol_env_points, fp) ||
+		    !read_byte(&ih.pan_env_points, fp) ||
+		    !read_byte(&ih.vol_sustain,    fp) ||
+		    !read_byte(&ih.vol_loop_start, fp) ||
+		    !read_byte(&ih.vol_loop_end,   fp) ||
+		    !read_byte(&ih.pan_sustain,    fp) ||
+		    !read_byte(&ih.pan_loop_start, fp) ||
+		    !read_byte(&ih.pan_loop_end,   fp) ||
+		    !read_byte(&ih.vol_type,       fp) ||
+		    !read_byte(&ih.pan_type,       fp) ||
+		    !read_byte(&ih.vibrato_type,   fp) ||
+		    !read_byte(&ih.vibrato_sweep,  fp) ||
+		    !read_byte(&ih.vibrato_depth,  fp) ||
+		    !read_byte(&ih.vibrato_rate,   fp) ||
+		    !read_word(&ih.volume_fadeout, fp))
+			return FALSE;
 	}
 	
 	pimp_set_ptr(&instr->vol_env_ptr, NULL);
@@ -248,7 +249,8 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 		pimp_set_ptr(&instr->sample_ptr, samples);
 	}
 	
-	fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR);
+	if (fseek(fp, ih.header_size - (ftell(fp) - last_pos), SEEK_CUR) < 0)
+		return FALSE;
 	
 	/* sample headers allocated dynamically because data needs to be remembered. we're doing two passes here - one for sample headers, and one for sample data. */
 	sample_headers = malloc(sizeof(xm_sample_header) * ih.samples);
@@ -263,17 +265,17 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 		xm_sample_header *sh = &sample_headers[s];
 		
 		/* load sample-header */
-		fread(&sh->length,      4,  1, fp);
-		fread(&sh->loop_start,  4,  1, fp);
-		fread(&sh->loop_length, 4,  1, fp);
-		fread(&sh->volume,      1,  1, fp);
-		fread(&sh->fine_tune,    1,  1, fp);
-		fread(&sh->type,        1,  1, fp);
-		fread(&sh->pan,         1,  1, fp);
-		fread(&sh->rel_note,    1,  1, fp);
-		fseek(fp, 1, SEEK_CUR);
-		fread(&sh->name,        1, 22, fp);
-		sh->name[22] = '\0';
+		if (!read_dword(&sh->length, fp) ||
+		    !read_dword(&sh->loop_start,  fp) ||
+		    !read_dword(&sh->loop_length, fp) ||
+		    !read_byte(&sh->volume, fp) ||
+		    fread(&sh->fine_tune, 1, 1, fp) != 1 ||
+		    !read_byte(&sh->type, fp) ||
+		    !read_byte(&sh->pan, fp) ||
+		    fread(&sh->rel_note, 1, 1, fp) != 1 ||
+		    fseek(fp, 1, SEEK_CUR) < 0 ||
+		    !read_string(sh->name, sizeof(sh->name), fp))
+			return FALSE;
 		
 		/* fill converter-struct */
 		samp = pimp_instrument_get_sample(instr, s);
@@ -370,10 +372,11 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 			prev = 0;
 			for (i = 0; i < (int)(sh->length / 2); ++i)
 			{
-				signed short data = 0;
-				fread(&data, 1, 2, fp);
+				uint16_t data = 0;
+				if (!read_word(&data, fp))
+					return FALSE;
 				prev += data;
-				((signed short*)src_waveform)[i] = prev;
+				((int16_t *)src_waveform)[i] = prev;
 			}
 			
 			/* adjust loop points */
@@ -394,10 +397,11 @@ static BOOL load_instrument(FILE *fp, struct pimp_instrument *instr, struct pimp
 			prev = 0;
 			for (i = 0; i < sh->length; ++i)
 			{
-				signed char data = 0;
-				fread(&data, 1, 1, fp);
+				uint8_t data = 0;
+				if (!read_byte(&data, fp))
+					return FALSE;
 				prev += data;
-				((signed char*)src_waveform)[i] = prev;
+				((int8_t *)src_waveform)[i] = prev;
 			}
 		}
 		
@@ -452,31 +456,35 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 	/* check header */
 	{
-		char temp[17];
+		char temp[17 + 1];
 		rewind(fp);
-		fread(temp, 17, 1, fp);
-		if (memcmp(temp, "Extended Module: ", 17) != 0) return NULL;
+		if (read_string(temp, sizeof(temp), fp) != 1 ||
+		    strcmp(temp, "Extended Module: ") != 0)
+			return NULL;
 	}
 	
 	/* read song name */
-	fread(name, 20, 1, fp);
-	name[20] = '\0';
+	if (!read_string(name, sizeof(name), fp))
+		return NULL;
 
 	/* just another file-sanity-check */
 	{
-		unsigned char magic;
-		fread(&magic, 1, 1, fp);
-		if (magic != 0x1a) return NULL;
+		uint8_t magic;
+		if (!read_byte(&magic, fp) ||
+		    magic != 0x1a)
+			return NULL;
 	}
 	
 	/* read tracker name (seems to not be very reliable for bug-emulating) */
-	fread(tracker_name, 20, 1, fp);
-	tracker_name[20] = '\0';
+	if (!read_string(tracker_name, sizeof(tracker_name), fp))
+		return NULL;
 	
 	/* check version */
 	{
-		unsigned short version;
-		fread(&version, 2, 1, fp);
+		uint16_t version;
+		if (!read_word(&version, fp))
+			return NULL;
+
 		if (version < 0x104)
 		{
 			fprintf(stderr, "too old file format version, please open and resave in ft2\n");
@@ -494,15 +502,16 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	memset(&xm_header, 0, sizeof(xm_header));
 	
 	/* load song-header */
-	fread(&xm_header.header_size, 4, 1, fp);
-	fread(&xm_header.len,         2, 1, fp);
-	fread(&xm_header.restart_pos, 2, 1, fp);
-	fread(&xm_header.channels,    2, 1, fp);
-	fread(&xm_header.patterns,    2, 1, fp);
-	fread(&xm_header.instruments, 2, 1, fp);
-	fread(&xm_header.flags,       2, 1, fp);
-	fread(&xm_header.tempo,       2, 1, fp);
- 	fread(&xm_header.bpm,         2, 1, fp);
+	if (!read_dword(&xm_header.header_size, fp) ||
+	    !read_word(&xm_header.len, fp) ||
+	    !read_word(&xm_header.restart_pos, fp) ||
+	    !read_word(&xm_header.channels, fp) ||
+	    !read_word(&xm_header.patterns, fp) ||
+	    !read_word(&xm_header.instruments, fp) ||
+	    !read_word(&xm_header.flags, fp) ||
+	    !read_word(&xm_header.tempo, fp) ||
+	    !read_word(&xm_header.bpm, fp))
+		return NULL;
 	
 	/* this is the index of the highest pattern,
 	not the number of patterns as documented.
@@ -559,7 +568,9 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 		void *orders = malloc(mod->order_count);
 		if (NULL == orders) return NULL;
 		
-		fread(orders, sizeof(u8), mod->order_count, fp);
+		if (fread(orders, sizeof(uint8_t), mod->order_count, fp) != mod->order_count)
+			return NULL;
+
 		pimp_set_ptr(&mod->order_ptr, orders);
 	}
 	mod->order_repeat = xm_header.restart_pos;
@@ -582,7 +593,8 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	}
 	
 	/* seek to start of pattern */
-	fseek(fp, 60 + xm_header.header_size, SEEK_SET);
+	if (fseek(fp, 60 + xm_header.header_size, SEEK_SET) < 0)
+		return NULL;
 	
 	{
 		int p;
@@ -609,10 +621,11 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			memset(&pattern_header, 0, sizeof(pattern_header));
 			
 			/* load pattern-header */
-			fread(&pattern_header.header_size,  4, 1, fp);
-			fread(&pattern_header.packing_type, 1, 1, fp);
-			fread(&pattern_header.rows,         2, 1, fp);
-			fread(&pattern_header.data_size,    2, 1, fp);
+			if (!read_dword(&pattern_header.header_size, fp) ||
+			    !read_byte(&pattern_header.packing_type, fp) ||
+			    !read_word(&pattern_header.rows, fp) ||
+			    !read_word(&pattern_header.data_size, fp))
+				return NULL;
 			
 			pat = &patterns[p];
 			pat->row_count = pattern_header.rows;
@@ -639,7 +652,8 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 	
 			
 			/* seek to start of pattern data */
-			fseek(fp, last_pos + pattern_header.header_size, SEEK_SET);
+			if (fseek(fp, last_pos + pattern_header.header_size, SEEK_SET) < 0)
+				return NULL;
 			
 			/* load pattern data */
 			if (pattern_header.data_size > 0)
@@ -654,15 +668,16 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 					for (n = 0; n < xm_header.channels; ++n)
 					{
 						struct pimp_pattern_entry *dat = NULL;
-						unsigned char pack;
-						unsigned char
+						uint8_t pack;
+						uint8_t
 							note      = 0,
 							instr     = 0,
 							vol       = 0,
 							eff       = 0,
 							eff_param = 0;
 						
-						fread(&note, 1, 1, fp);
+						if (!read_byte(&note, fp))
+							return NULL;
 						
 						pack = 0x1E;
 						if (note & (1 << 7))
@@ -673,12 +688,22 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 						
 						note &= (1 << 7) - 1; /* we never need the top-bit. */
 						
-						if (pack & (1 << 0)) fread(&note,      1, 1, fp);
-						if (pack & (1 << 1)) fread(&instr,     1, 1, fp);
-						if (pack & (1 << 2)) fread(&vol,       1, 1, fp);
-						if (pack & (1 << 3)) fread(&eff,       1, 1, fp);
-						if (pack & (1 << 4)) fread(&eff_param, 1, 1, fp);
-						
+						if (pack & (1 << 0))
+							if (!read_byte(&note, fp))
+								return NULL;
+						if (pack & (1 << 1))
+							if (!read_byte(&instr, fp))
+								return NULL;
+						if (pack & (1 << 2))
+							if (!read_byte(&vol, fp))
+								return NULL;
+						if (pack & (1 << 3))
+							if (!read_byte(&eff, fp))
+								return NULL;
+						if (pack & (1 << 4))
+							if (!read_byte(&eff_param, fp))
+								return NULL;
+
 						dat = &pattern_data[r * mod->channel_count + n];
 						
 						if (note == 0x61) dat->note = 121;
@@ -711,7 +736,8 @@ pimp_module *load_module_xm(FILE *fp, struct pimp_sample_bank *sample_bank)
 			}
 			
 			/* seek to end of block */
-			fseek(fp, last_pos + pattern_header.header_size + pattern_header.data_size, SEEK_SET);
+			if (fseek(fp, last_pos + pattern_header.header_size + pattern_header.data_size, SEEK_SET) < 0)
+				return NULL;
 		}
 	}
 
