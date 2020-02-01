@@ -20,7 +20,7 @@
 @irq-safe:   1121327
 @irq-unsafe: 1105083
 
-// #define IRQ_SAFE
+#define IRQ_SAFE /* on by default */
 #define USE_BRESENHAM_MIXER
 // #define NO_MIXING
 // #define NO_CLIPPING
@@ -214,13 +214,14 @@ pimp_mixer_mix_samples:
 	ldr r4, =0x4000208 @ load address of REG_IME
 	ldr r5, .ime_store @ stash for later
 	str r5, [r4]       @ write value to REG_IME
+
+	ldr sp, .stack_store    @ restore stack pointer
 #endif
 	
 .ret:
 	@ clean return
 	mov r0, SAMPLE_CURSOR
 	
-	ldr sp, .stack_store    @ restore stack pointer
 	ldmfd sp!, {r4-r12, lr} @ restore rest of registers
 	bx lr                   @ return to caller
 	
@@ -298,9 +299,10 @@ pimp_mixer_mix_samples:
 	ldr r4, =0x4000208 @ load address of REG_IME
 	ldr r5, .ime_store @ stash for later
 	str r5, [r4]       @ write value to REG_IME
-#endif
 	
 	ldr sp, .stack_store       @ restore stack pointer
+#endif
+
 	ldr r0, .sample_data_store @ restore the old sample data
 	
 	@ calculate how the sample cursor changed
