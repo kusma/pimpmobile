@@ -29,4 +29,9 @@
 /* #define ASSERT_ENABLE */
 /* #define PRINT_PATTERNS */
 
+#define PIMP_MIXER_IRQ_SAFE /* on by default */
+#define PIMP_MIXER_USE_BRESENHAM_MIXER
+/* #define PIMP_MIXER_NO_MIXING */
+/* #define PIMP_MIXER_NO_CLIPPING */
+
 #endif /* PIMP_CONFIG_H */

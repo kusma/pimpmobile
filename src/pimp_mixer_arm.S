@@ -20,19 +20,16 @@
 @irq-safe:   1121327
 @irq-unsafe: 1105083
 
-#define IRQ_SAFE /* on by default */
-#define USE_BRESENHAM_MIXER
-// #define NO_MIXING
-// #define NO_CLIPPING
+#include "pimp_config.h"
 
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 .stack_store:
 .word 0
 .ime_store:
 .word 0
 #endif
 
-#ifdef USE_BRESENHAM_MIXER
+#ifdef PIMP_MIXER_USE_BRESENHAM_MIXER
 .sample_data_store:
 .word 0
 #endif
@@ -52,12 +49,12 @@
 pimp_mixer_mix_samples:
 	stmfd sp!, {r4-r12, lr} @ store all registers but parameters and stack
 	
-#ifdef NO_MIXING
+#ifdef PIMP_MIXER_NO_MIXING
 	ldmfd sp!, {r4-r12, lr} @ restore rest of registers
 	bx lr                   @ return to caller
 #endif
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	str sp, .stack_store    @ store stack pointer so we can use that register in our mixer (note, interrupts must be disabled for this to be safe)
 #endif
 	
@@ -134,7 +131,7 @@ pimp_mixer_mix_samples:
 	movs COUNTER, COUNTER, asr #3 @ divide counter by 8
 	beq .ret                      @ if no more samples, return
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	ldr r4, =0x4000208 @ load address of REG_IME
 	ldr r5, [r4]       @ load value of REG_IME
 	str r5, .ime_store @ stash for later
@@ -142,7 +139,7 @@ pimp_mixer_mix_samples:
 	str r6, [r4]       @ disable interrupt	
 #endif
 	
-#ifdef USE_BRESENHAM_MIXER
+#ifdef PIMP_MIXER_USE_BRESENHAM_MIXER
 	// if ((sample_cursor_delta & ~((1UL << 12) - 1)) == 0)
 	@ check if bresenham mixer can be used or not 
 	ldr r4, =0xfffff000         @ ~((1UL << 12) - 1))
@@ -150,7 +147,7 @@ pimp_mixer_mix_samples:
 	beq .bresenham_mixer        @ no? lets go!
 #endif
 	
-#ifdef IRQ_SAFE
+#ifdef PIMP_MIXER_IRQ_SAFE
 #define TEMP                r11
 #define UNROLL_RANGE        r4-r10
 #else
@@ -189,7 +186,7 @@ pimp_mixer_mix_samples:
 	mla   r10, TEMP, VOLUME, r10
 	add   SAMPLE_CURSOR, SAMPLE_CURSOR, SAMPLE_CURSOR_DELTA
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	ldrb  TEMP, [SAMPLE_DATA, SAMPLE_CURSOR, lsr #12]
 	mla   r11, TEMP, VOLUME, r11
 	add   SAMPLE_CURSOR, SAMPLE_CURSOR, SAMPLE_CURSOR_DELTA
@@ -209,7 +206,7 @@ pimp_mixer_mix_samples:
 	subs COUNTER, COUNTER, #1
 	bne .simple_loop
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	ldr r4, =0x4000208 @ load address of REG_IME
 	ldr r5, .ime_store @ stash for later
 	str r5, [r4]       @ write value to REG_IME
@@ -224,7 +221,7 @@ pimp_mixer_mix_samples:
 	ldmfd sp!, {r4-r12, lr} @ restore rest of registers
 	bx lr                   @ return to caller
 	
-#ifdef USE_BRESENHAM_MIXER
+#ifdef PIMP_MIXER_USE_BRESENHAM_MIXER
 	
 .bresenham_mixer:
 	str SAMPLE_DATA, .sample_data_store                  @ stash away SAMPLE_DATA for later use
@@ -273,7 +270,7 @@ pimp_mixer_mix_samples:
 	ldrcsb TEMP, [SAMPLE_DATA], #1
 	mulcs  TEMP, VOLUME, TEMP
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	add   r11, TEMP, r11
 	adds  SAMPLE_CURSOR, SAMPLE_CURSOR, SAMPLE_CURSOR_DELTA
 	ldrcsb TEMP, [SAMPLE_DATA], #1
@@ -294,7 +291,7 @@ pimp_mixer_mix_samples:
 	subs  COUNTER, COUNTER, #1
 	bne .bresenham_loop
 	
-#ifndef IRQ_SAFE
+#ifndef PIMP_MIXER_IRQ_SAFE
 	ldr r4, =0x4000208 @ load address of REG_IME
 	ldr r5, .ime_store @ stash for later
 	str r5, [r4]       @ write value to REG_IME
