@@ -25,10 +25,9 @@
 // #define NO_MIXING
 // #define NO_CLIPPING
 
+#ifndef IRQ_SAFE
 .stack_store:
 .word 0
-
-#ifndef IRQ_SAFE
 .ime_store:
 .word 0
 #endif
