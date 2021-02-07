@@ -1,15 +1,15 @@
 language: c
 
+sudo: required
+
+services: docker
+
 install:
-  - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb &&
-    sudo dpkg -i devkitpro-pacman.deb
-  - sudo dkp-pacman --noconfirm -S gba-dev
-  - export DEVKITPRO=/opt/devkitpro
+  - docker build -t build .ci/
   - pip install --user cpp-coveralls
 
 script:
-  - make all examples
-  - make check
+  - docker run -v $TRAVIS_BUILD_DIR:/build build make -C /build all examples check
 
 after_success:
   - coveralls --include src --gcov-options '\-lp'
